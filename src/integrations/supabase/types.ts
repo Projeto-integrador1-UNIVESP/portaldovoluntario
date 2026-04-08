@@ -14,16 +14,311 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      doacoes: {
+        Row: {
+          created_at: string
+          data_doacao: string
+          id: string
+          id_ong: string
+          id_usuario: string | null
+          tipo_doacao: string | null
+          valor: number
+        }
+        Insert: {
+          created_at?: string
+          data_doacao?: string
+          id?: string
+          id_ong: string
+          id_usuario?: string | null
+          tipo_doacao?: string | null
+          valor: number
+        }
+        Update: {
+          created_at?: string
+          data_doacao?: string
+          id?: string
+          id_ong?: string
+          id_usuario?: string | null
+          tipo_doacao?: string | null
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doacoes_id_ong_fkey"
+            columns: ["id_ong"]
+            isOneToOne: false
+            referencedRelation: "ongs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ongs: {
+        Row: {
+          agencia: number | null
+          banco: string | null
+          cep: string | null
+          cidade: string | null
+          cnpj: string | null
+          conta: number | null
+          created_at: string
+          data_cadastro: string
+          descricao: string | null
+          estado: string | null
+          id: string
+          img_url: string | null
+          logradouro: string | null
+          nome: string
+          pix: string | null
+          status: boolean | null
+          telefone: string | null
+          updated_at: string
+        }
+        Insert: {
+          agencia?: number | null
+          banco?: string | null
+          cep?: string | null
+          cidade?: string | null
+          cnpj?: string | null
+          conta?: number | null
+          created_at?: string
+          data_cadastro?: string
+          descricao?: string | null
+          estado?: string | null
+          id?: string
+          img_url?: string | null
+          logradouro?: string | null
+          nome: string
+          pix?: string | null
+          status?: boolean | null
+          telefone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agencia?: number | null
+          banco?: string | null
+          cep?: string | null
+          cidade?: string | null
+          cnpj?: string | null
+          conta?: number | null
+          created_at?: string
+          data_cadastro?: string
+          descricao?: string | null
+          estado?: string | null
+          id?: string
+          img_url?: string | null
+          logradouro?: string | null
+          nome?: string
+          pix?: string | null
+          status?: boolean | null
+          telefone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          cep: string | null
+          cidade: string | null
+          contato_ong: boolean | null
+          created_at: string
+          data_cadastro: string
+          data_nascimento: string | null
+          email: string
+          estado: string | null
+          id: string
+          logradouro: string | null
+          nome: string
+          numero: number | null
+          telefone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cep?: string | null
+          cidade?: string | null
+          contato_ong?: boolean | null
+          created_at?: string
+          data_cadastro?: string
+          data_nascimento?: string | null
+          email: string
+          estado?: string | null
+          id?: string
+          logradouro?: string | null
+          nome: string
+          numero?: number | null
+          telefone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cep?: string | null
+          cidade?: string | null
+          contato_ong?: boolean | null
+          created_at?: string
+          data_cadastro?: string
+          data_nascimento?: string | null
+          email?: string
+          estado?: string | null
+          id?: string
+          logradouro?: string | null
+          nome?: string
+          numero?: number | null
+          telefone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      projetos: {
+        Row: {
+          created_at: string
+          data_fim: string | null
+          data_inicio: string | null
+          descricao: string | null
+          id: string
+          id_ong: string
+          img_url: string | null
+          nome_projeto: string
+          status: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string | null
+          descricao?: string | null
+          id?: string
+          id_ong: string
+          img_url?: string | null
+          nome_projeto: string
+          status?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string | null
+          descricao?: string | null
+          id?: string
+          id_ong?: string
+          img_url?: string | null
+          nome_projeto?: string
+          status?: boolean | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projetos_id_ong_fkey"
+            columns: ["id_ong"]
+            isOneToOne: false
+            referencedRelation: "ongs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      usuarios_ong: {
+        Row: {
+          created_at: string
+          data_inicio: string
+          id: string
+          id_ong: string
+          id_usuario: string
+          status: boolean | null
+        }
+        Insert: {
+          created_at?: string
+          data_inicio?: string
+          id?: string
+          id_ong: string
+          id_usuario: string
+          status?: boolean | null
+        }
+        Update: {
+          created_at?: string
+          data_inicio?: string
+          id?: string
+          id_ong?: string
+          id_usuario?: string
+          status?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usuarios_ong_id_ong_fkey"
+            columns: ["id_ong"]
+            isOneToOne: false
+            referencedRelation: "ongs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voluntariado: {
+        Row: {
+          created_at: string
+          data_inscricao: string
+          id: string
+          id_projeto: string
+          id_usuario: string
+          status: string | null
+        }
+        Insert: {
+          created_at?: string
+          data_inscricao?: string
+          id?: string
+          id_projeto: string
+          id_usuario: string
+          status?: string | null
+        }
+        Update: {
+          created_at?: string
+          data_inscricao?: string
+          id?: string
+          id_projeto?: string
+          id_usuario?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voluntariado_id_projeto_fkey"
+            columns: ["id_projeto"]
+            isOneToOne: false
+            referencedRelation: "projetos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "ong" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +445,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "ong", "user"],
+    },
   },
 } as const
