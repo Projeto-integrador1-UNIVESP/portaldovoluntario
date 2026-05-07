@@ -3,17 +3,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LayoutDashboard, Building2, Users, DollarSign, FolderOpen } from "lucide-react";
+import { LayoutDashboard, Building2, Users, DollarSign, FolderOpen, Calendar } from "lucide-react";
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState({ ongs: 0, usuarios: 0, projetos: 0, doacoes: 0, totalDoado: 0 });
+  const [stats, setStats] = useState({ ongs: 0, usuarios: 0, projetos: 0, eventos: 0, doacoes: 0, totalDoado: 0 });
 
   useEffect(() => {
     const fetch = async () => {
-      const [ongs, usuarios, projetos, doacoes] = await Promise.all([
+      const [ongs, usuarios, projetos, eventos, doacoes] = await Promise.all([
         supabase.from("ongs").select("id", { count: "exact", head: true }),
         supabase.from("profiles").select("id", { count: "exact", head: true }),
         supabase.from("projetos").select("id", { count: "exact", head: true }),
+        (supabase as any).from("eventos").select("id", { count: "exact", head: true }),
         supabase.from("doacoes").select("valor"),
       ]);
       const total = doacoes.data?.reduce((s, d) => s + d.valor, 0) || 0;
@@ -21,6 +22,7 @@ export default function AdminDashboard() {
         ongs: ongs.count || 0,
         usuarios: usuarios.count || 0,
         projetos: projetos.count || 0,
+        eventos: eventos.count || 0,
         doacoes: doacoes.data?.length || 0,
         totalDoado: total,
       });
@@ -32,6 +34,7 @@ export default function AdminDashboard() {
     { title: "ONGs", value: stats.ongs, icon: <Building2 className="h-5 w-5" />, color: "text-primary" },
     { title: "Usuários", value: stats.usuarios, icon: <Users className="h-5 w-5" />, color: "text-success" },
     { title: "Projetos", value: stats.projetos, icon: <FolderOpen className="h-5 w-5" />, color: "text-warning" },
+    { title: "Eventos", value: stats.eventos, icon: <Calendar className="h-5 w-5" />, color: "text-primary" },
     { title: "Total doado", value: `R$ ${stats.totalDoado.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, icon: <DollarSign className="h-5 w-5" />, color: "text-primary" },
   ];
 
