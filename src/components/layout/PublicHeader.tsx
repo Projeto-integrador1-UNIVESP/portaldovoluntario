@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   Heart, LogOut, LayoutDashboard, Building2, Users, FolderOpen,
-  DollarSign, UserCheck, User, ChevronDown,
+  DollarSign, UserCheck, User, ChevronDown, Calendar,
 } from "lucide-react";
 
 const adminLinks = [
@@ -19,6 +19,7 @@ const adminLinks = [
   { label: "ONGs", href: "/admin/ongs", icon: Building2 },
   { label: "Usuários", href: "/admin/usuarios", icon: Users },
   { label: "Projetos", href: "/admin/projetos", icon: FolderOpen },
+  { label: "Eventos", href: "/admin/eventos", icon: Calendar },
   { label: "Doações", href: "/admin/doacoes", icon: DollarSign },
   { label: "Voluntários", href: "/admin/voluntarios", icon: UserCheck },
 ];
