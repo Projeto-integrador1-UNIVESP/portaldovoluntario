@@ -20,6 +20,7 @@ import AdminUsuarios from "./pages/admin/AdminUsuarios";
 import AdminProjetos from "./pages/admin/AdminProjetos";
 import AdminDoacoes from "./pages/admin/AdminDoacoes";
 import AdminVoluntarios from "./pages/admin/AdminVoluntarios";
+import AdminEventos from "./pages/admin/AdminEventos";
 
 import OngDashboard from "./pages/ong/OngDashboard";
 import OngProjetos from "./pages/ong/OngProjetos";
@@ -51,6 +52,7 @@ const App = () => (
             <Route path="/admin/projetos" element={<ProtectedRoute allowedRoles={["admin"]}><AdminProjetos /></ProtectedRoute>} />
             <Route path="/admin/doacoes" element={<ProtectedRoute allowedRoles={["admin"]}><AdminDoacoes /></ProtectedRoute>} />
             <Route path="/admin/voluntarios" element={<ProtectedRoute allowedRoles={["admin"]}><AdminVoluntarios /></ProtectedRoute>} />
+            <Route path="/admin/eventos" element={<ProtectedRoute allowedRoles={["admin"]}><AdminEventos /></ProtectedRoute>} />
 
             {/* ONG */}
             <Route path="/ong" element={<ProtectedRoute allowedRoles={["ong"]}><OngDashboard /></ProtectedRoute>} />

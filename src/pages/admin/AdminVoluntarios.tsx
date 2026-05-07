@@ -6,7 +6,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UserCheck } from "lucide-react";
+import { UserCheck, Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { exportToCsv } from "@/lib/exportCsv";
 
 export default function AdminVoluntarios() {
   const [voluntarios, setVoluntarios] = useState<any[]>([]);
@@ -56,7 +58,22 @@ export default function AdminVoluntarios() {
 
   return (
     <DashboardLayout type="admin">
-      <PageHeader title="Voluntários" description="Gerencie as inscrições de voluntariado" icon={<UserCheck className="h-6 w-6" />} />
+      <PageHeader
+        title="Voluntários"
+        description="Gerencie as inscrições de voluntariado"
+        icon={<UserCheck className="h-6 w-6" />}
+        action={
+          <Button variant="outline" onClick={() => exportToCsv("voluntarios.csv", voluntarios.map((v: any) => ({
+            nome: v.profiles?.nome || "",
+            email: v.profiles?.email || "",
+            projeto: v.projetos?.nome_projeto || "",
+            data: new Date(v.data_inscricao).toLocaleDateString("pt-BR"),
+            status: v.status,
+          })))}>
+            <Download className="h-4 w-4 mr-2" />Exportar CSV
+          </Button>
+        }
+      />
       <Tabs defaultValue="pendentes">
         <TabsList>
           <TabsTrigger value="pendentes">Pendentes ({pendentes.length})</TabsTrigger>

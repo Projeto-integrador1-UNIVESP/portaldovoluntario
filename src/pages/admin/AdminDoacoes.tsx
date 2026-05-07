@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DollarSign } from "lucide-react";
+import { DollarSign, Download } from "lucide-react";
+import { exportToCsv } from "@/lib/exportCsv";
 
 export default function AdminDoacoes() {
   const [doacoes, setDoacoes] = useState<any[]>([]);
@@ -17,7 +19,22 @@ export default function AdminDoacoes() {
 
   return (
     <DashboardLayout type="admin">
-      <PageHeader title="Doações" description="Todas as doações da plataforma" icon={<DollarSign className="h-6 w-6" />} />
+      <PageHeader
+        title="Doações"
+        description="Todas as doações da plataforma"
+        icon={<DollarSign className="h-6 w-6" />}
+        action={
+          <Button variant="outline" onClick={() => exportToCsv("doacoes.csv", doacoes.map((d: any) => ({
+            doador: d.profiles?.nome || "Anônimo",
+            ong: d.ongs?.nome || "",
+            valor: d.valor,
+            tipo: d.tipo_doacao,
+            data: new Date(d.data_doacao).toLocaleDateString("pt-BR"),
+          })))}>
+            <Download className="h-4 w-4 mr-2" />Exportar CSV
+          </Button>
+        }
+      />
       <Card>
         <CardContent className="p-0">
           <Table>

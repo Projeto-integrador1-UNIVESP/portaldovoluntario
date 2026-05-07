@@ -52,6 +52,48 @@ export type Database = {
           },
         ]
       }
+      eventos: {
+        Row: {
+          created_at: string
+          data_evento: string
+          descricao: string | null
+          id: string
+          id_ong: string | null
+          img_url: string | null
+          local: string | null
+          nome: string
+          status: boolean | null
+          updated_at: string
+          vagas: number | null
+        }
+        Insert: {
+          created_at?: string
+          data_evento: string
+          descricao?: string | null
+          id?: string
+          id_ong?: string | null
+          img_url?: string | null
+          local?: string | null
+          nome: string
+          status?: boolean | null
+          updated_at?: string
+          vagas?: number | null
+        }
+        Update: {
+          created_at?: string
+          data_evento?: string
+          descricao?: string | null
+          id?: string
+          id_ong?: string | null
+          img_url?: string | null
+          local?: string | null
+          nome?: string
+          status?: boolean | null
+          updated_at?: string
+          vagas?: number | null
+        }
+        Relationships: []
+      }
       ongs: {
         Row: {
           agencia: number | null
@@ -117,6 +159,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          ativo: boolean
           cep: string | null
           cidade: string | null
           contato_ong: boolean | null
@@ -134,6 +177,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          ativo?: boolean
           cep?: string | null
           cidade?: string | null
           contato_ong?: boolean | null
@@ -151,6 +195,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          ativo?: boolean
           cep?: string | null
           cidade?: string | null
           contato_ong?: boolean | null
