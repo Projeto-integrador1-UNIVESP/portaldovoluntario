@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Heart, LayoutDashboard, Building2, Users, FolderOpen,
-  DollarSign, LogOut, Home, UserCheck,
+  DollarSign, LogOut, Home, UserCheck, Calendar,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -19,6 +19,7 @@ const adminNav: NavItem[] = [
   { label: "ONGs", href: "/admin/ongs", icon: <Building2 className="h-4 w-4" /> },
   { label: "Usuários", href: "/admin/usuarios", icon: <Users className="h-4 w-4" /> },
   { label: "Projetos", href: "/admin/projetos", icon: <FolderOpen className="h-4 w-4" /> },
+  { label: "Eventos", href: "/admin/eventos", icon: <Calendar className="h-4 w-4" /> },
   { label: "Doações", href: "/admin/doacoes", icon: <DollarSign className="h-4 w-4" /> },
   { label: "Voluntários", href: "/admin/voluntarios", icon: <UserCheck className="h-4 w-4" /> },
 ];
