@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { PublicHeader } from "@/components/layout/PublicHeader";
+import { PublicShell } from "@/components/layout/PublicShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -47,17 +47,15 @@ export default function ProjetoDetalhePage() {
   };
 
   if (!projeto) return (
-    <div className="min-h-screen bg-background">
-      <PublicHeader />
+    <PublicShell>
       <div className="flex items-center justify-center py-20">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
-    </div>
+    </PublicShell>
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      <PublicHeader />
+    <PublicShell>
       <div className="container py-12 max-w-3xl">
         <Card className="animate-fade-in">
           {projeto.img_url && (
@@ -104,6 +102,6 @@ export default function ProjetoDetalhePage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </PublicShell>
   );
 }

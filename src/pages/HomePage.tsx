@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { PublicHeader } from "@/components/layout/PublicHeader";
+import { PublicShell } from "@/components/layout/PublicShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -63,9 +63,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
-      <PublicHeader />
-
+    <PublicShell>
       {/* Hero */}
       <section className="relative py-20 md:py-28 bg-gradient-to-br from-primary/10 via-background to-accent">
         <div className="container text-center">
@@ -245,6 +243,6 @@ export default function HomePage() {
           </p>
         </div>
       </footer>
-    </div>
+    </PublicShell>
   );
 }

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { PublicHeader } from "@/components/layout/PublicHeader";
+import { PublicShell } from "@/components/layout/PublicShell";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,17 +49,15 @@ export default function DoarPage() {
   };
 
   if (!ong) return (
-    <div className="min-h-screen bg-background">
-      <PublicHeader />
+    <PublicShell>
       <div className="flex items-center justify-center py-20">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
-    </div>
+    </PublicShell>
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      <PublicHeader />
+    <PublicShell>
       <div className="container py-12 max-w-md">
         <Card className="animate-fade-in">
           <CardHeader className="text-center">
@@ -103,6 +101,6 @@ export default function DoarPage() {
           </form>
         </Card>
       </div>
-    </div>
+    </PublicShell>
   );
 }

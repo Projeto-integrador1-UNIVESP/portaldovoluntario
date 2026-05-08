@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { PublicHeader } from "@/components/layout/PublicHeader";
+import { PublicShell } from "@/components/layout/PublicShell";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Building2, ArrowRight } from "lucide-react";
@@ -16,8 +16,7 @@ export default function OngsPublicPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
-      <PublicHeader />
+    <PublicShell>
       <div className="container py-12">
         <h1 className="text-3xl font-bold text-foreground mb-2">ONGs parceiras</h1>
         <p className="text-muted-foreground mb-8">Conheça as organizações e contribua</p>
@@ -53,6 +52,6 @@ export default function OngsPublicPage() {
           </div>
         )}
       </div>
-    </div>
+    </PublicShell>
   );
 }
