@@ -17,7 +17,6 @@ export default function OngsPublicPage() {
 
   return (
     <PublicShell>
-      <PublicHeader />
       <div className="container py-12">
         <h1 className="text-3xl font-bold text-foreground mb-2">ONGs parceiras</h1>
         <p className="text-muted-foreground mb-8">Conheça as organizações e contribua</p>
@@ -53,6 +52,6 @@ export default function OngsPublicPage() {
           </div>
         )}
       </div>
-    </div>
+    </PublicShell>
   );
 }

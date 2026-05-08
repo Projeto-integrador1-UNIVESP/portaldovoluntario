@@ -245,6 +245,6 @@ export default function HomePage() {
           </p>
         </div>
       </footer>
-    </div>
+    </PublicShell>
   );
 }

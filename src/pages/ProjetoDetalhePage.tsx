@@ -48,16 +48,14 @@ export default function ProjetoDetalhePage() {
 
   if (!projeto) return (
     <PublicShell>
-      <PublicHeader />
       <div className="flex items-center justify-center py-20">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
-    </div>
+    </PublicShell>
   );
 
   return (
     <PublicShell>
-      <PublicHeader />
       <div className="container py-12 max-w-3xl">
         <Card className="animate-fade-in">
           {projeto.img_url && (
