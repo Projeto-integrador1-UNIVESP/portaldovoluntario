@@ -102,6 +102,6 @@ export default function ProjetoDetalhePage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </PublicShell>
   );
 }
