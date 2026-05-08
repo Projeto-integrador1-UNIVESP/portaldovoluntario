@@ -64,8 +64,6 @@ export default function HomePage() {
 
   return (
     <PublicShell>
-      <PublicHeader />
-
       {/* Hero */}
       <section className="relative py-20 md:py-28 bg-gradient-to-br from-primary/10 via-background to-accent">
         <div className="container text-center">
