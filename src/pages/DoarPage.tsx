@@ -101,6 +101,6 @@ export default function DoarPage() {
           </form>
         </Card>
       </div>
-    </div>
+    </PublicShell>
   );
 }
