@@ -5,14 +5,44 @@ import { PublicHeader } from "@/components/layout/PublicHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Users, Calendar, ArrowRight, Building2, HandHeart } from "lucide-react";
+import { Heart, Users, Calendar, ArrowRight, Building2, HandHeart, Quote } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import volunteersImg from "@/assets/login-volunteers.jpg";
+import donationImg from "@/assets/login-donation.jpg";
+import communityImg from "@/assets/login-community.jpg";
+
+const newsSlides = [
+  {
+    img: volunteersImg,
+    tag: "Voluntariado",
+    title: "O poder do voluntariado",
+    text: "Mais de 60% das ONGs brasileiras dependem do trabalho voluntário para manter seus projetos ativos. Sua hora doada transforma vidas.",
+  },
+  {
+    img: donationImg,
+    tag: "Doações",
+    title: "Cada doação importa",
+    text: "Pequenos gestos de solidariedade somados constroem grandes mudanças. Doe, voluntarie-se, multiplique impacto.",
+  },
+  {
+    img: communityImg,
+    tag: "Comunidade",
+    title: "Comunidades fortalecidas",
+    text: "Quando nos unimos por uma causa, criamos redes de apoio que protegem quem mais precisa.",
+  },
+];
 
 export default function HomePage() {
   const { user } = useAuth();
   const [projetos, setProjetos] = useState<any[]>([]);
   const [ongs, setOngs] = useState<any[]>([]);
   const [stats, setStats] = useState({ projetos: 0, ongs: 0, voluntarios: 0 });
+  const [slide, setSlide] = useState(0);
+
+  useEffect(() => {
+    const t = setInterval(() => setSlide((s) => (s + 1) % newsSlides.length), 5500);
+    return () => clearInterval(t);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -71,6 +101,44 @@ export default function HomePage() {
             <div className="text-center">
               <p className="text-3xl font-bold text-primary">{stats.voluntarios}</p>
               <p className="text-sm text-muted-foreground">Voluntários</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* News Carousel */}
+      <section className="py-16 bg-background">
+        <div className="container">
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-foreground">Notícias e inspiração</h2>
+            <p className="text-muted-foreground">Histórias sobre doações e o poder do voluntariado</p>
+          </div>
+          <div className="relative h-[360px] md:h-[420px] rounded-xl overflow-hidden shadow-md">
+            {newsSlides.map((s, i) => (
+              <div
+                key={i}
+                className="absolute inset-0 transition-opacity duration-1000"
+                style={{ opacity: i === slide ? 1 : 0, pointerEvents: i === slide ? "auto" : "none" }}
+              >
+                <img src={s.img} alt={s.title} className="absolute inset-0 h-full w-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-foreground/90 via-foreground/50 to-transparent" />
+                <div className="relative z-10 flex h-full flex-col justify-end p-8 md:p-12 text-background max-w-3xl">
+                  <Badge variant="secondary" className="w-fit mb-3">{s.tag}</Badge>
+                  <Quote className="h-8 w-8 mb-3 opacity-80" />
+                  <h3 className="text-2xl md:text-3xl font-bold mb-3 leading-tight">{s.title}</h3>
+                  <p className="text-base md:text-lg opacity-95">{s.text}</p>
+                </div>
+              </div>
+            ))}
+            <div className="absolute bottom-5 right-6 z-20 flex gap-2">
+              {newsSlides.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setSlide(i)}
+                  aria-label={`Slide ${i + 1}`}
+                  className={`h-2 rounded-full transition-all ${i === slide ? "w-8 bg-background" : "w-2 bg-background/60"}`}
+                />
+              ))}
             </div>
           </div>
         </div>
