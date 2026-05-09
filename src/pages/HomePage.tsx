@@ -5,30 +5,30 @@ import { PublicShell } from "@/components/layout/PublicShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Users, Calendar, ArrowRight, Building2, HandHeart, Quote } from "lucide-react";
+import { Heart, Users, Calendar, ArrowRight, Building2, HandHeart, Quote, UserCheck } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import volunteersImg from "@/assets/login-volunteers.jpg";
-import donationImg from "@/assets/login-donation.jpg";
-import communityImg from "@/assets/login-community.jpg";
+import boxesImg from "@/assets/news-donation-boxes.jpg";
+import heartImg from "@/assets/news-giving-heart.jpg";
+import suppliesImg from "@/assets/news-supplies.jpg";
 
 const newsSlides = [
   {
-    img: volunteersImg,
-    tag: "Voluntariado",
-    title: "O poder do voluntariado",
-    text: "Mais de 60% das ONGs brasileiras dependem do trabalho voluntário para manter seus projetos ativos. Sua hora doada transforma vidas.",
+    img: boxesImg,
+    tag: "Doações",
+    title: "Doações que transformam",
+    text: "Itens essenciais como alimentos, roupas e cobertores chegam a milhares de famílias todos os meses por meio das ONGs parceiras.",
   },
   {
-    img: donationImg,
+    img: heartImg,
     tag: "Doações",
     title: "Cada doação importa",
     text: "Pequenos gestos de solidariedade somados constroem grandes mudanças. Doe, voluntarie-se, multiplique impacto.",
   },
   {
-    img: communityImg,
-    tag: "Comunidade",
-    title: "Comunidades fortalecidas",
-    text: "Quando nos unimos por uma causa, criamos redes de apoio que protegem quem mais precisa.",
+    img: suppliesImg,
+    tag: "Solidariedade",
+    title: "Suprimentos para quem precisa",
+    text: "Cada caixa preparada representa esperança e dignidade para quem enfrenta momentos difíceis.",
   },
 ];
 
@@ -38,6 +38,10 @@ export default function HomePage() {
   const [ongs, setOngs] = useState<any[]>([]);
   const [stats, setStats] = useState({ projetos: 0, ongs: 0, voluntarios: 0 });
   const [slide, setSlide] = useState(0);
+
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   useEffect(() => {
     const t = setInterval(() => setSlide((s) => (s + 1) % newsSlides.length), 5500);
@@ -88,18 +92,18 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-3 gap-8 max-w-lg mx-auto mt-12">
-            <div className="text-center">
-              <p className="text-3xl font-bold text-primary">{stats.ongs}</p>
-              <p className="text-sm text-muted-foreground">ONGs ativas</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-primary">{stats.projetos}</p>
-              <p className="text-sm text-muted-foreground">Projetos</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-primary">{stats.voluntarios}</p>
-              <p className="text-sm text-muted-foreground">Voluntários</p>
-            </div>
+            <button onClick={() => scrollTo("ongs-section")} className="text-center group cursor-pointer">
+              <p className="text-3xl font-bold text-primary group-hover:scale-110 transition-transform">{stats.ongs}</p>
+              <p className="text-sm text-muted-foreground group-hover:text-primary transition-colors">ONGs ativas</p>
+            </button>
+            <button onClick={() => scrollTo("projetos-section")} className="text-center group cursor-pointer">
+              <p className="text-3xl font-bold text-primary group-hover:scale-110 transition-transform">{stats.projetos}</p>
+              <p className="text-sm text-muted-foreground group-hover:text-primary transition-colors">Projetos</p>
+            </button>
+            <button onClick={() => scrollTo("voluntarios-section")} className="text-center group cursor-pointer">
+              <p className="text-3xl font-bold text-primary group-hover:scale-110 transition-transform">{stats.voluntarios}</p>
+              <p className="text-sm text-muted-foreground group-hover:text-primary transition-colors">Voluntários</p>
+            </button>
           </div>
         </div>
       </section>
@@ -143,7 +147,7 @@ export default function HomePage() {
       </section>
 
       {/* Projects */}
-      <section className="py-16">
+      <section id="projetos-section" className="py-16 scroll-mt-20">
         <div className="container">
           <div className="flex items-center justify-between mb-8">
             <div>
@@ -201,7 +205,7 @@ export default function HomePage() {
 
       {/* ONGs */}
       {ongs.length > 0 && (
-        <section className="py-16 bg-muted/50">
+        <section id="ongs-section" className="py-16 bg-muted/50 scroll-mt-20">
           <div className="container">
             <h2 className="text-2xl font-bold text-foreground mb-8">ONGs parceiras</h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -234,6 +238,25 @@ export default function HomePage() {
           </div>
         </section>
       )}
+
+      {/* Volunteers CTA */}
+      <section id="voluntarios-section" className="py-16 scroll-mt-20">
+        <div className="container">
+          <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-background to-accent p-10 md:p-14 text-center">
+            <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-primary/15 text-primary mb-4">
+              <UserCheck className="h-7 w-7" />
+            </div>
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">Seja voluntário</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto mb-6">
+              Já são <span className="font-semibold text-primary">{stats.voluntarios}</span> pessoas dedicando tempo às causas sociais.
+              Escolha um projeto abaixo e some-se a essa rede de transformação.
+            </p>
+            <Button size="lg" onClick={() => scrollTo("projetos-section")}>
+              <HandHeart className="h-4 w-4 mr-2" /> Ver projetos para voluntariar
+            </Button>
+          </div>
+        </div>
+      </section>
 
       {/* Footer */}
       <footer className="py-8 border-t">
