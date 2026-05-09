@@ -29,7 +29,7 @@ export default function DoarPage() {
 
   const handleDoar = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) { navigate("/login"); return; }
+    if (!user) { navigate(`/login?redirect=/doar/${ongId}`); return; }
 
     setLoading(true);
     const { error } = await supabase.from("doacoes").insert({
@@ -59,6 +59,13 @@ export default function DoarPage() {
   return (
     <PublicShell>
       <div className="container py-12 max-w-md">
+        {!user && (
+          <Card className="mb-4 border-primary/40 bg-primary/5">
+            <CardContent className="p-4 text-sm">
+              Para concluir uma doação você precisa <a href={`/login?redirect=/doar/${ongId}`} className="font-semibold text-primary hover:underline">entrar na plataforma</a>.
+            </CardContent>
+          </Card>
+        )}
         <Card className="animate-fade-in">
           <CardHeader className="text-center">
             <div className="mx-auto h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">

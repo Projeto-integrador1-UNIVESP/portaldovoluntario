@@ -97,6 +97,7 @@ export type Database = {
       ongs: {
         Row: {
           agencia: number | null
+          area_atuacao: string | null
           banco: string | null
           cep: string | null
           cidade: string | null
@@ -107,16 +108,21 @@ export type Database = {
           descricao: string | null
           estado: string | null
           id: string
+          img_capa: string | null
           img_url: string | null
+          instagram: string | null
           logradouro: string | null
+          missao: string | null
           nome: string
           pix: string | null
+          site: string | null
           status: boolean | null
           telefone: string | null
           updated_at: string
         }
         Insert: {
           agencia?: number | null
+          area_atuacao?: string | null
           banco?: string | null
           cep?: string | null
           cidade?: string | null
@@ -127,16 +133,21 @@ export type Database = {
           descricao?: string | null
           estado?: string | null
           id?: string
+          img_capa?: string | null
           img_url?: string | null
+          instagram?: string | null
           logradouro?: string | null
+          missao?: string | null
           nome: string
           pix?: string | null
+          site?: string | null
           status?: boolean | null
           telefone?: string | null
           updated_at?: string
         }
         Update: {
           agencia?: number | null
+          area_atuacao?: string | null
           banco?: string | null
           cep?: string | null
           cidade?: string | null
@@ -147,10 +158,14 @@ export type Database = {
           descricao?: string | null
           estado?: string | null
           id?: string
+          img_capa?: string | null
           img_url?: string | null
+          instagram?: string | null
           logradouro?: string | null
+          missao?: string | null
           nome?: string
           pix?: string | null
+          site?: string | null
           status?: boolean | null
           telefone?: string | null
           updated_at?: string
