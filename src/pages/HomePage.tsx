@@ -215,28 +215,54 @@ export default function HomePage() {
       {ongs.length > 0 && (
         <section id="ongs-section" className="py-16 bg-muted/50 scroll-mt-20">
           <div className="container">
-            <h2 className="text-2xl font-bold text-foreground mb-8">ONGs parceiras</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-foreground">ONGs parceiras</h2>
+              <p className="text-muted-foreground">Conheça as organizações e suas histórias</p>
+            </div>
+            <div className="grid md:grid-cols-2 gap-6">
               {ongs.map((o) => (
-                <Card key={o.id} className="animate-fade-in hover:shadow-md transition-shadow">
-                  <CardHeader>
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Building2 className="h-5 w-5 text-primary" />
-                      </div>
-                      <CardTitle className="text-base">{o.nome}</CardTitle>
+                <Card key={o.id} className="animate-fade-in hover:shadow-lg transition-shadow overflow-hidden">
+                  <div className="relative h-40 bg-gradient-to-br from-primary/30 to-accent">
+                    {o.img_capa && (
+                      <img src={o.img_capa} alt={`Capa ${o.nome}`} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent" />
+                    {o.area_atuacao && (
+                      <Badge variant="secondary" className="absolute top-3 left-3">{o.area_atuacao}</Badge>
+                    )}
+                    <div className="absolute -bottom-6 left-4 h-14 w-14 rounded-full border-4 border-background bg-background flex items-center justify-center overflow-hidden shadow">
+                      {o.img_url ? (
+                        <img src={o.img_url} alt={o.nome} className="w-full h-full object-cover" />
+                      ) : (
+                        <Building2 className="h-6 w-6 text-primary" />
+                      )}
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground line-clamp-2">{o.descricao || "Organização parceira"}</p>
+                  </div>
+                  <CardHeader className="pt-8">
+                    <CardTitle className="text-lg">{o.nome}</CardTitle>
                     {o.cidade && (
-                      <p className="text-xs text-muted-foreground mt-2">{o.cidade}, {o.estado}</p>
+                      <p className="text-xs text-muted-foreground">{o.cidade}{o.estado && `, ${o.estado}`}</p>
+                    )}
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {o.missao && (
+                      <div>
+                        <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-1">Missão</p>
+                        <p className="text-sm text-muted-foreground line-clamp-2">{o.missao}</p>
+                      </div>
+                    )}
+                    <p className="text-sm text-muted-foreground line-clamp-3">{o.descricao || "Organização parceira"}</p>
+                    {(o.site || o.instagram) && (
+                      <div className="flex gap-3 text-xs text-primary">
+                        {o.site && <a href={o.site} target="_blank" rel="noreferrer" className="hover:underline">Site</a>}
+                        {o.instagram && <a href={`https://instagram.com/${o.instagram.replace(/^@/, "")}`} target="_blank" rel="noreferrer" className="hover:underline">@{o.instagram.replace(/^@/, "")}</a>}
+                      </div>
                     )}
                   </CardContent>
                   <CardFooter>
-                    <Button size="sm" variant="outline" asChild className="w-full">
-                      <Link to={`/doar/${o.id}`}>
-                        Doar <ArrowRight className="h-4 w-4 ml-1" />
+                    <Button size="sm" asChild className="w-full">
+                      <Link to={`/doar/${o.id}`} onClick={(e) => handleDoarClick(e, o.id)}>
+                        <Heart className="h-4 w-4 mr-1" /> Doar para esta ONG <ArrowRight className="h-4 w-4 ml-1" />
                       </Link>
                     </Button>
                   </CardFooter>
