@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { PublicShell } from "@/components/layout/PublicShell";
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,7 @@ const newsSlides = [
 
 export default function HomePage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [projetos, setProjetos] = useState<any[]>([]);
   const [ongs, setOngs] = useState<any[]>([]);
   const [stats, setStats] = useState({ projetos: 0, ongs: 0, voluntarios: 0 });
@@ -41,6 +42,13 @@ export default function HomePage() {
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const handleDoarClick = (e: React.MouseEvent, ongId: string) => {
+    if (!user) {
+      e.preventDefault();
+      navigate(`/login?redirect=/doar/${ongId}`);
+    }
   };
 
   useEffect(() => {
@@ -191,7 +199,7 @@ export default function HomePage() {
                       </Link>
                     </Button>
                     <Button size="sm" variant="outline" asChild className="flex-1">
-                      <Link to={`/doar/${p.id_ong}`}>
+                      <Link to={`/doar/${p.id_ong}`} onClick={(e) => handleDoarClick(e, p.id_ong)}>
                         <Heart className="h-4 w-4 mr-1" /> Doar
                       </Link>
                     </Button>
