@@ -419,7 +419,6 @@ export type Database = {
         Args: { _ong_id: string; _user_id: string }
         Returns: boolean
       }
-      validate_ong_code: { Args: { _code: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "ong" | "user"
