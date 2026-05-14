@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Heart, LayoutDashboard, Building2, Users, FolderOpen,
-  DollarSign, LogOut, Home, UserCheck, Calendar,
+  DollarSign, LogOut, Home, UserCheck, Calendar, ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -22,13 +22,16 @@ const adminNav: NavItem[] = [
   { label: "Eventos", href: "/admin/eventos", icon: <Calendar className="h-4 w-4" /> },
   { label: "Doações", href: "/admin/doacoes", icon: <DollarSign className="h-4 w-4" /> },
   { label: "Voluntários", href: "/admin/voluntarios", icon: <UserCheck className="h-4 w-4" /> },
+  { label: "Auditoria", href: "/admin/auditoria", icon: <ShieldCheck className="h-4 w-4" /> },
 ];
 
 const ongNav: NavItem[] = [
   { label: "Dashboard", href: "/ong", icon: <LayoutDashboard className="h-4 w-4" /> },
   { label: "Projetos", href: "/ong/projetos", icon: <FolderOpen className="h-4 w-4" /> },
+  { label: "Voluntários", href: "/ong/voluntarios", icon: <UserCheck className="h-4 w-4" /> },
   { label: "Membros", href: "/ong/membros", icon: <Users className="h-4 w-4" /> },
   { label: "Doações", href: "/ong/doacoes", icon: <DollarSign className="h-4 w-4" /> },
+  { label: "Auditoria", href: "/ong/auditoria", icon: <ShieldCheck className="h-4 w-4" /> },
 ];
 
 export function DashboardLayout({ children, type }: { children: ReactNode; type: "admin" | "ong" }) {

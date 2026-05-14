@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   LayoutDashboard, Building2, Users, FolderOpen, DollarSign,
-  UserCheck, Calendar, ChevronLeft, ChevronRight, Shield,
+  UserCheck, Calendar, ChevronLeft, ChevronRight, Shield, ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -15,13 +15,16 @@ const adminLinks = [
   { label: "Eventos", href: "/admin/eventos", icon: Calendar },
   { label: "Doações", href: "/admin/doacoes", icon: DollarSign },
   { label: "Voluntários", href: "/admin/voluntarios", icon: UserCheck },
+  { label: "Auditoria", href: "/admin/auditoria", icon: ShieldCheck },
 ];
 
 const ongLinks = [
   { label: "Dashboard", href: "/ong", icon: LayoutDashboard },
   { label: "Projetos", href: "/ong/projetos", icon: FolderOpen },
+  { label: "Voluntários", href: "/ong/voluntarios", icon: UserCheck },
   { label: "Membros", href: "/ong/membros", icon: Users },
   { label: "Doações", href: "/ong/doacoes", icon: DollarSign },
+  { label: "Auditoria", href: "/ong/auditoria", icon: ShieldCheck },
 ];
 
 export function RolePanelSidebar() {
