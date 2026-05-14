@@ -21,11 +21,14 @@ import AdminProjetos from "./pages/admin/AdminProjetos";
 import AdminDoacoes from "./pages/admin/AdminDoacoes";
 import AdminVoluntarios from "./pages/admin/AdminVoluntarios";
 import AdminEventos from "./pages/admin/AdminEventos";
+import AdminAuditoria from "./pages/admin/AdminAuditoria";
 
 import OngDashboard from "./pages/ong/OngDashboard";
 import OngProjetos from "./pages/ong/OngProjetos";
 import OngMembros from "./pages/ong/OngMembros";
 import OngDoacoes from "./pages/ong/OngDoacoes";
+import OngVoluntarios from "./pages/ong/OngVoluntarios";
+import OngAuditoria from "./pages/ong/OngAuditoria";
 
 const queryClient = new QueryClient();
 
@@ -53,12 +56,15 @@ const App = () => (
             <Route path="/admin/doacoes" element={<ProtectedRoute allowedRoles={["admin"]}><AdminDoacoes /></ProtectedRoute>} />
             <Route path="/admin/voluntarios" element={<ProtectedRoute allowedRoles={["admin"]}><AdminVoluntarios /></ProtectedRoute>} />
             <Route path="/admin/eventos" element={<ProtectedRoute allowedRoles={["admin"]}><AdminEventos /></ProtectedRoute>} />
+            <Route path="/admin/auditoria" element={<ProtectedRoute allowedRoles={["admin"]}><AdminAuditoria /></ProtectedRoute>} />
 
             {/* ONG */}
             <Route path="/ong" element={<ProtectedRoute allowedRoles={["ong"]}><OngDashboard /></ProtectedRoute>} />
             <Route path="/ong/projetos" element={<ProtectedRoute allowedRoles={["ong"]}><OngProjetos /></ProtectedRoute>} />
             <Route path="/ong/membros" element={<ProtectedRoute allowedRoles={["ong"]}><OngMembros /></ProtectedRoute>} />
             <Route path="/ong/doacoes" element={<ProtectedRoute allowedRoles={["ong"]}><OngDoacoes /></ProtectedRoute>} />
+            <Route path="/ong/voluntarios" element={<ProtectedRoute allowedRoles={["ong"]}><OngVoluntarios /></ProtectedRoute>} />
+            <Route path="/ong/auditoria" element={<ProtectedRoute allowedRoles={["ong"]}><OngAuditoria /></ProtectedRoute>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
