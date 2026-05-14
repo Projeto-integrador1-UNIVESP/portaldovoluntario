@@ -80,7 +80,7 @@ export default function AdminCodigos() {
         title="Códigos de cadastro de ONGs"
         description="Gere códigos exclusivos para que organizações se cadastrem na plataforma."
         icon={<KeyRound className="h-6 w-6 text-primary" />}
-        actions={
+        action={
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button onClick={openNew}>
