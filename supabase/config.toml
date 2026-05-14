@@ -1,1 +1,4 @@
 project_id = "btndhagrhykrajpaxmru"
+
+[functions.ong-signup]
+verify_jwt = false

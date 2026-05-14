@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Heart, LayoutDashboard, Building2, Users, FolderOpen,
-  DollarSign, LogOut, Home, UserCheck, Calendar, ShieldCheck,
+  DollarSign, LogOut, Home, UserCheck, Calendar, ShieldCheck, KeyRound,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -23,6 +23,7 @@ const adminNav: NavItem[] = [
   { label: "Doações", href: "/admin/doacoes", icon: <DollarSign className="h-4 w-4" /> },
   { label: "Voluntários", href: "/admin/voluntarios", icon: <UserCheck className="h-4 w-4" /> },
   { label: "Auditoria", href: "/admin/auditoria", icon: <ShieldCheck className="h-4 w-4" /> },
+  { label: "Códigos ONG", href: "/admin/codigos", icon: <KeyRound className="h-4 w-4" /> },
 ];
 
 const ongNav: NavItem[] = [

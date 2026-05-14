@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Heart, Eye, EyeOff, Check, X } from "lucide-react";
+import { Heart, Eye, EyeOff, Check, X, HandHeart, Search, Building2 } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 const passwordRules = [
   { label: "Mínimo 8 caracteres", test: (v: string) => v.length >= 8 },
@@ -19,9 +20,11 @@ export default function CadastroPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [accountType, setAccountType] = useState<"doador" | "interessado" | "ong" | null>(null);
   const [form, setForm] = useState({
     nome: "", email: "", senha: "", telefone: "",
     data_nascimento: "", cidade: "", estado: "", cep: "", logradouro: "",
+    nome_ong: "", codigo_ong: "",
   });
 
   const update = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }));
@@ -41,11 +44,42 @@ export default function CadastroPage() {
       return;
     }
     setLoading(true);
+
+    // ONG flow: requires access code, handled by edge function
+    if (accountType === "ong") {
+      if (!form.codigo_ong.trim() || !form.nome_ong.trim()) {
+        toast.error("Informe o código e o nome da ONG.");
+        setLoading(false);
+        return;
+      }
+      const { data, error } = await supabase.functions.invoke("ong-signup", {
+        body: {
+          email: form.email,
+          password: form.senha,
+          nome: form.nome,
+          code: form.codigo_ong.trim().toUpperCase(),
+          nome_ong: form.nome_ong,
+          telefone: form.telefone,
+          cidade: form.cidade,
+          estado: form.estado,
+        },
+      });
+      if (error || (data as any)?.error) {
+        toast.error("Erro no cadastro: " + (((data as any)?.error) || error?.message));
+        setLoading(false);
+        return;
+      }
+      toast.success("ONG cadastrada! Faça login para continuar.");
+      setLoading(false);
+      navigate("/login");
+      return;
+    }
+
     const { error } = await supabase.auth.signUp({
       email: form.email,
       password: form.senha,
       options: {
-        data: { nome: form.nome },
+        data: { nome: form.nome, contato_ong: accountType === "interessado" },
         emailRedirectTo: window.location.origin,
       },
     });
@@ -73,6 +107,66 @@ export default function CadastroPage() {
     navigate("/");
   };
 
+  const typeOptions = [
+    {
+      key: "doador" as const,
+      icon: HandHeart,
+      title: "Sou doador",
+      desc: "Quero contribuir financeiramente com projetos sociais.",
+    },
+    {
+      key: "interessado" as const,
+      icon: Search,
+      title: "Quero acompanhar projetos",
+      desc: "Desejo conhecer e ser voluntário em ações de ONGs.",
+    },
+    {
+      key: "ong" as const,
+      icon: Building2,
+      title: "Sou uma ONG",
+      desc: "Cadastro institucional. Requer código de acesso fornecido pelo administrador.",
+    },
+  ];
+
+  if (!accountType) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent p-4">
+        <Card className="w-full max-w-2xl animate-fade-in">
+          <CardHeader className="text-center">
+            <Link to="/" className="inline-flex items-center justify-center gap-2 mb-4">
+              <Heart className="h-8 w-8 text-primary" />
+            </Link>
+            <CardTitle className="text-2xl">Como você quer participar?</CardTitle>
+            <CardDescription>Escolha o tipo de conta que melhor representa você.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-3 md:grid-cols-3">
+            {typeOptions.map((opt) => (
+              <button
+                key={opt.key}
+                type="button"
+                onClick={() => setAccountType(opt.key)}
+                className={cn(
+                  "text-left rounded-lg border-2 border-border p-5 transition-all",
+                  "hover:border-primary hover:shadow-md hover:-translate-y-0.5",
+                )}
+              >
+                <opt.icon className="h-8 w-8 text-primary mb-3" />
+                <div className="font-semibold mb-1">{opt.title}</div>
+                <p className="text-sm text-muted-foreground">{opt.desc}</p>
+              </button>
+            ))}
+          </CardContent>
+          <CardFooter className="justify-center">
+            <p className="text-sm text-muted-foreground">
+              Já tem conta?{" "}
+              <Link to="/login" className="text-primary hover:underline">Entrar</Link>
+            </p>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent p-4">
       <Card className="w-full max-w-lg animate-fade-in">
@@ -80,14 +174,41 @@ export default function CadastroPage() {
           <Link to="/" className="inline-flex items-center justify-center gap-2 mb-4">
             <Heart className="h-8 w-8 text-primary" />
           </Link>
-          <CardTitle className="text-2xl">Criar conta</CardTitle>
-          <CardDescription>Cadastre-se para doar e ser voluntário</CardDescription>
+          <CardTitle className="text-2xl">
+            {accountType === "ong" ? "Cadastro de ONG" : accountType === "doador" ? "Cadastro de doador" : "Cadastro de voluntário"}
+          </CardTitle>
+          <CardDescription>
+            <button type="button" onClick={() => setAccountType(null)} className="text-primary hover:underline">
+              ← Trocar tipo de conta
+            </button>
+          </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
+            {accountType === "ong" && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2 col-span-2">
+                  <Label>Nome da ONG *</Label>
+                  <Input required value={form.nome_ong} onChange={(e) => update("nome_ong", e.target.value)} />
+                </div>
+                <div className="space-y-2 col-span-2">
+                  <Label>Código de acesso *</Label>
+                  <Input
+                    required
+                    placeholder="ONG-XXXX-XXXX"
+                    value={form.codigo_ong}
+                    onChange={(e) => update("codigo_ong", e.target.value.toUpperCase())}
+                    className="font-mono"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Código fornecido pelo administrador da plataforma.
+                  </p>
+                </div>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2 col-span-2">
-                <Label>Nome completo *</Label>
+                <Label>{accountType === "ong" ? "Nome do responsável *" : "Nome completo *"}</Label>
                 <Input required value={form.nome} onChange={(e) => update("nome", e.target.value)} />
               </div>
               <div className="space-y-2">

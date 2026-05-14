@@ -94,6 +94,45 @@ export type Database = {
         }
         Relationships: []
       }
+      ong_access_codes: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          nome_ong_sugerido: string | null
+          observacoes: string | null
+          used: boolean
+          used_at: string | null
+          used_by: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          nome_ong_sugerido?: string | null
+          observacoes?: string | null
+          used?: boolean
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          nome_ong_sugerido?: string | null
+          observacoes?: string | null
+          used?: boolean
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Relationships: []
+      }
       ongs: {
         Row: {
           agencia: number | null
