@@ -22,17 +22,30 @@ export default function AdminVoluntarios() {
   const [form, setForm] = useState({ id_usuario: "", id_projeto: "", status: "pendente" });
 
   const fetchAll = async () => {
-    const { data } = await supabase
-      .from("voluntariado")
-      .select("*, projetos(nome_projeto), profiles:id_usuario(nome, email)")
-      .order("data_inscricao", { ascending: false });
-    if (data) setVoluntarios(data);
+    const { data: rows, error } = await supabase.from("voluntariado").select("*").order("data_inscricao", { ascending: false });
+    if (error) { toast.error("Erro ao carregar voluntários: " + error.message); return; }
+    const [profilesRes, projetosRes] = await Promise.all([
+      supabase.from("profiles").select("user_id, nome, email"),
+      supabase.from("projetos").select("id, nome_projeto"),
+    ]);
+    const profiles = new Map((profilesRes.data || []).map((u: any) => [u.user_id, u]));
+    const projetosMap = new Map((projetosRes.data || []).map((p: any) => [p.id, p]));
+    setVoluntarios((rows || []).map((v: any) => ({ ...v, profiles: profiles.get(v.id_usuario), projetos: projetosMap.get(v.id_projeto) })));
   };
 
   useEffect(() => {
     fetchAll();
-    supabase.from("profiles").select("user_id, nome, email").then(({ data }) => data && setUsuarios(data));
-    supabase.from("projetos").select("id, nome_projeto").then(({ data }) => data && setProjetos(data));
+    const loadOptions = async () => {
+      const [profilesRes, rolesRes, projetosRes] = await Promise.all([
+        supabase.from("profiles").select("user_id, nome, email"),
+        supabase.from("user_roles").select("user_id, role"),
+        supabase.from("projetos").select("id, nome_projeto"),
+      ]);
+      const blocked = new Set((rolesRes.data || []).filter((r: any) => r.role === "ong" || r.role === "admin").map((r: any) => r.user_id));
+      setUsuarios((profilesRes.data || []).filter((u: any) => !blocked.has(u.user_id)));
+      setProjetos(projetosRes.data || []);
+    };
+    loadOptions();
   }, []);
 
   const updateStatus = async (id: string, status: string) => {
