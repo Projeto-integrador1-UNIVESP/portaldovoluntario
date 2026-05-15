@@ -51,7 +51,12 @@ Deno.serve(async (req) => {
       email_confirm: true,
       user_metadata: { nome },
     });
-    if (createErr) return json({ error: createErr.message }, 400);
+    if (createErr) {
+      const msg = /already been registered|already registered|exists/i.test(createErr.message)
+        ? "Este email já está cadastrado. Faça login ou use outro email."
+        : createErr.message;
+      return json({ error: msg }, 400);
+    }
     const userId = created.user!.id;
 
     // 3. Promote to 'ong' role
