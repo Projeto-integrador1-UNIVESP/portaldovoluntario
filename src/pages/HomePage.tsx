@@ -58,17 +58,19 @@ export default function HomePage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const [projRes, ongRes, volRes] = await Promise.all([
-        supabase.from("projetos").select("*, ongs(nome)").eq("status", true).limit(6),
+      const [projRes, ongRes, statsRes] = await Promise.all([
+        supabase.from("projetos").select("*").eq("status", true).limit(6),
         supabase.from("ongs").select("*").eq("status", true).limit(4),
-        supabase.from("voluntariado").select("id", { count: "exact", head: true }),
+        (supabase as any).rpc("get_public_home_stats"),
       ]);
-      if (projRes.data) setProjetos(projRes.data);
+      const ongMap = new Map((ongRes.data || []).map((o: any) => [o.id, o]));
+      if (projRes.data) setProjetos(projRes.data.map((p: any) => ({ ...p, ongs: ongMap.get(p.id_ong) })));
       if (ongRes.data) setOngs(ongRes.data);
+      const publicStats = Array.isArray(statsRes.data) ? statsRes.data[0] : statsRes.data;
       setStats({
-        projetos: projRes.data?.length || 0,
-        ongs: ongRes.data?.length || 0,
-        voluntarios: volRes.count || 0,
+        projetos: Number(publicStats?.projetos || projRes.data?.length || 0),
+        ongs: Number(publicStats?.ongs || ongRes.data?.length || 0),
+        voluntarios: Number(publicStats?.voluntarios || 0),
       });
     };
     fetchData();

@@ -25,10 +25,12 @@ export default function AdminEventos() {
 
   const fetchAll = async () => {
     const [e, o] = await Promise.all([
-      (supabase as any).from("eventos").select("*, ongs(nome)").order("data_evento", { ascending: false }),
+      (supabase as any).from("eventos").select("*").order("data_evento", { ascending: false }),
       supabase.from("ongs").select("id, nome").eq("status", true).order("nome"),
     ]);
-    if (e.data) setEventos(e.data);
+    const ongMap = new Map((o.data || []).map((ong: any) => [ong.id, ong]));
+    if (e.error) toast.error("Erro ao carregar eventos: " + e.error.message);
+    setEventos((e.data || []).map((ev: any) => ({ ...ev, ongs: ongMap.get(ev.id_ong) })));
     if (o.data) setOngs(o.data);
   };
   useEffect(() => { fetchAll(); }, []);
@@ -36,7 +38,7 @@ export default function AdminEventos() {
   const update = (k: string, v: string) => setForm((p) => ({ ...p, [k]: v }));
 
   const handleSave = async () => {
-    if (!form.nome || !form.data_evento) { toast.error("Nome e data são obrigatórios"); return; }
+    if (!form.nome.trim() || !form.data_evento || !form.local.trim() || !form.vagas || !form.id_ong) { toast.error("Preencha todos os campos obrigatórios"); return; }
     const payload: any = {
       nome: form.nome,
       descricao: form.descricao || null,
@@ -95,11 +97,11 @@ export default function AdminEventos() {
                 <div className="space-y-1"><Label>Nome *</Label><Input value={form.nome} onChange={(e) => update("nome", e.target.value)} /></div>
                 <div className="space-y-1"><Label>Data e hora *</Label><Input type="datetime-local" value={form.data_evento} onChange={(e) => update("data_evento", e.target.value)} /></div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1"><Label>Local</Label><Input value={form.local} onChange={(e) => update("local", e.target.value)} /></div>
-                  <div className="space-y-1"><Label>Vagas</Label><Input type="number" value={form.vagas} onChange={(e) => update("vagas", e.target.value)} /></div>
+                  <div className="space-y-1"><Label>Local *</Label><Input required value={form.local} onChange={(e) => update("local", e.target.value)} /></div>
+                  <div className="space-y-1"><Label>Vagas *</Label><Input required type="number" min="1" value={form.vagas} onChange={(e) => update("vagas", e.target.value)} /></div>
                 </div>
                 <div className="space-y-1">
-                  <Label>ONG (opcional)</Label>
+                  <Label>ONG *</Label>
                   <Select value={form.id_ong} onValueChange={(v) => update("id_ong", v)}>
                     <SelectTrigger><SelectValue placeholder="Selecione a ONG" /></SelectTrigger>
                     <SelectContent>

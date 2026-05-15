@@ -1,13 +1,14 @@
-import { useState, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useMemo, useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Heart, Eye, EyeOff, Check, X, HandHeart, Search, Building2 } from "lucide-react";
+import { Heart, Eye, EyeOff, Check, X, HandHeart, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { isFutureDate, isValidCep, isValidEmail, isValidPhone, onlyDigits } from "@/lib/validators";
 
 const passwordRules = [
   { label: "Mínimo 8 caracteres", test: (v: string) => v.length >= 8 },
@@ -16,18 +17,27 @@ const passwordRules = [
   { label: "Contém caractere especial", test: (v: string) => /[^a-zA-Z0-9]/.test(v) },
 ];
 
+type AccountType = "doador" | "ong";
+
 export default function CadastroPage() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [accountType, setAccountType] = useState<"doador" | "interessado" | "ong" | null>(null);
+  const [accountType, setAccountType] = useState<AccountType | null>(null);
   const [form, setForm] = useState({
     nome: "", email: "", senha: "", telefone: "",
     data_nascimento: "", cidade: "", estado: "", cep: "", logradouro: "",
     nome_ong: "", codigo_ong: "",
   });
 
+  useEffect(() => {
+    const tipo = params.get("tipo");
+    if (tipo === "ong" || tipo === "doador") setAccountType(tipo);
+  }, [params]);
+
   const update = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }));
+  const updateDigits = (field: string, value: string, maxLength: number) => update(field, onlyDigits(value, maxLength));
 
   const ruleResults = useMemo(() => passwordRules.map(r => ({
     ...r,
@@ -37,31 +47,44 @@ export default function CadastroPage() {
   const allRulesPass = ruleResults.every(r => r.pass);
   const senhaStarted = form.senha.length > 0;
 
+  const validateForm = () => {
+    const requiredCommon = [
+      form.nome, form.email, form.senha, form.telefone,
+      form.data_nascimento, form.cidade, form.estado, form.cep, form.logradouro,
+    ];
+    if (requiredCommon.some((v) => !v.trim())) return "Preencha todos os campos obrigatórios.";
+    if (accountType === "ong" && (!form.nome_ong.trim() || !form.codigo_ong.trim())) return "Informe o nome da ONG e a chave de acesso.";
+    if (!isValidEmail(form.email)) return "Informe um email válido com domínio, como nome@email.com.";
+    if (!isValidPhone(form.telefone)) return "Telefone deve conter 10 ou 11 números.";
+    if (!isValidCep(form.cep)) return "CEP deve conter exatamente 8 números.";
+    if (isFutureDate(form.data_nascimento)) return "Data de nascimento não pode ser no futuro.";
+    if (!allRulesPass) return "A senha não atende todos os requisitos.";
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!allRulesPass) {
-      toast.error("A senha não atende todos os requisitos.");
+    const validationError = validateForm();
+    if (validationError) {
+      toast.error(validationError);
       return;
     }
     setLoading(true);
 
-    // ONG flow: requires access code, handled by edge function
     if (accountType === "ong") {
-      if (!form.codigo_ong.trim() || !form.nome_ong.trim()) {
-        toast.error("Informe o código e o nome da ONG.");
-        setLoading(false);
-        return;
-      }
       const { data, error } = await supabase.functions.invoke("ong-signup", {
         body: {
-          email: form.email,
+          email: form.email.trim().toLowerCase(),
           password: form.senha,
-          nome: form.nome,
+          nome: form.nome.trim(),
           code: form.codigo_ong.trim().toUpperCase(),
-          nome_ong: form.nome_ong,
+          nome_ong: form.nome_ong.trim(),
           telefone: form.telefone,
-          cidade: form.cidade,
-          estado: form.estado,
+          data_nascimento: form.data_nascimento,
+          cidade: form.cidade.trim(),
+          estado: form.estado.trim().toUpperCase(),
+          cep: form.cep,
+          logradouro: form.logradouro.trim(),
         },
       });
       if (error || (data as any)?.error) {
@@ -76,10 +99,10 @@ export default function CadastroPage() {
     }
 
     const { error } = await supabase.auth.signUp({
-      email: form.email,
+      email: form.email.trim().toLowerCase(),
       password: form.senha,
       options: {
-        data: { nome: form.nome, contato_ong: accountType === "interessado" },
+        data: { nome: form.nome.trim(), contato_ong: true },
         emailRedirectTo: window.location.origin,
       },
     });
@@ -94,11 +117,12 @@ export default function CadastroPage() {
     if (user) {
       await supabase.from("profiles").update({
         telefone: form.telefone,
-        data_nascimento: form.data_nascimento || null,
-        cidade: form.cidade,
-        estado: form.estado,
+        data_nascimento: form.data_nascimento,
+        cidade: form.cidade.trim(),
+        estado: form.estado.trim().toUpperCase(),
         cep: form.cep,
-        logradouro: form.logradouro,
+        logradouro: form.logradouro.trim(),
+        contato_ong: true,
       }).eq("user_id", user.id);
     }
 
@@ -111,20 +135,14 @@ export default function CadastroPage() {
     {
       key: "doador" as const,
       icon: HandHeart,
-      title: "Sou doador",
-      desc: "Quero contribuir financeiramente com projetos sociais.",
-    },
-    {
-      key: "interessado" as const,
-      icon: Search,
-      title: "Quero acompanhar projetos",
-      desc: "Desejo conhecer e ser voluntário em ações de ONGs.",
+      title: "Doador e acompanhante de projetos",
+      desc: "Quero doar, acompanhar projetos sociais e participar como voluntário.",
     },
     {
       key: "ong" as const,
       icon: Building2,
       title: "Sou uma ONG",
-      desc: "Cadastro institucional. Requer código de acesso fornecido pelo administrador.",
+      desc: "Cadastro institucional com chave de acesso fornecida pelo administrador.",
     },
   ];
 
@@ -137,21 +155,21 @@ export default function CadastroPage() {
               <Heart className="h-8 w-8 text-primary" />
             </Link>
             <CardTitle className="text-2xl">Como você quer participar?</CardTitle>
-            <CardDescription>Escolha o tipo de conta que melhor representa você.</CardDescription>
+            <CardDescription>Escolha seu tipo de conta para continuar.</CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-3 md:grid-cols-3">
+          <CardContent className="grid gap-3 md:grid-cols-2">
             {typeOptions.map((opt) => (
               <button
                 key={opt.key}
                 type="button"
                 onClick={() => setAccountType(opt.key)}
                 className={cn(
-                  "text-left rounded-lg border-2 border-border p-5 transition-all",
+                  "text-left rounded-lg border-2 border-border p-5 transition-all min-h-40",
                   "hover:border-primary hover:shadow-md hover:-translate-y-0.5",
                 )}
               >
                 <opt.icon className="h-8 w-8 text-primary mb-3" />
-                <div className="font-semibold mb-1">{opt.title}</div>
+                <div className="font-semibold mb-1 break-words">{opt.title}</div>
                 <p className="text-sm text-muted-foreground">{opt.desc}</p>
               </button>
             ))}
@@ -174,8 +192,8 @@ export default function CadastroPage() {
           <Link to="/" className="inline-flex items-center justify-center gap-2 mb-4">
             <Heart className="h-8 w-8 text-primary" />
           </Link>
-          <CardTitle className="text-2xl">
-            {accountType === "ong" ? "Cadastro de ONG" : accountType === "doador" ? "Cadastro de doador" : "Cadastro de voluntário"}
+          <CardTitle className="text-2xl break-words">
+            {accountType === "ong" ? "Cadastro de ONG" : "Cadastro de doador e voluntário"}
           </CardTitle>
           <CardDescription>
             <button type="button" onClick={() => setAccountType(null)} className="text-primary hover:underline">
@@ -189,10 +207,10 @@ export default function CadastroPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2 col-span-2">
                   <Label>Nome da ONG *</Label>
-                  <Input required value={form.nome_ong} onChange={(e) => update("nome_ong", e.target.value)} />
+                  <Input required maxLength={80} value={form.nome_ong} onChange={(e) => update("nome_ong", e.target.value)} />
                 </div>
                 <div className="space-y-2 col-span-2">
-                  <Label>Código de acesso *</Label>
+                  <Label>Chave de acesso *</Label>
                   <Input
                     required
                     placeholder="ONG-XXXX-XXXX"
@@ -200,20 +218,18 @@ export default function CadastroPage() {
                     onChange={(e) => update("codigo_ong", e.target.value.toUpperCase())}
                     className="font-mono"
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Código fornecido pelo administrador da plataforma.
-                  </p>
+                  <p className="text-xs text-muted-foreground">Chave fornecida pelo administrador da plataforma.</p>
                 </div>
               </div>
             )}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2 col-span-2">
                 <Label>{accountType === "ong" ? "Nome do responsável *" : "Nome completo *"}</Label>
-                <Input required value={form.nome} onChange={(e) => update("nome", e.target.value)} />
+                <Input required maxLength={80} value={form.nome} onChange={(e) => update("nome", e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label>Email *</Label>
-                <Input type="email" required value={form.email} onChange={(e) => update("email", e.target.value)} />
+                <Input type="email" required value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="nome@email.com" />
               </div>
               <div className="space-y-2">
                 <Label>Senha *</Label>
@@ -230,6 +246,7 @@ export default function CadastroPage() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                     tabIndex={-1}
+                    aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -239,37 +256,37 @@ export default function CadastroPage() {
                     {ruleResults.map((r) => (
                       <li key={r.label} className="flex items-center gap-2 text-xs">
                         {r.pass
-                          ? <Check className="h-3.5 w-3.5 text-green-600" />
+                          ? <Check className="h-3.5 w-3.5 text-success" />
                           : <X className="h-3.5 w-3.5 text-destructive" />}
-                        <span className={r.pass ? "text-green-600" : "text-destructive"}>{r.label}</span>
+                        <span className={r.pass ? "text-success" : "text-destructive"}>{r.label}</span>
                       </li>
                     ))}
                   </ul>
                 )}
               </div>
               <div className="space-y-2">
-                <Label>Telefone</Label>
-                <Input value={form.telefone} onChange={(e) => update("telefone", e.target.value)} />
+                <Label>Telefone *</Label>
+                <Input required inputMode="numeric" maxLength={11} value={form.telefone} onChange={(e) => updateDigits("telefone", e.target.value, 11)} />
               </div>
               <div className="space-y-2">
-                <Label>Data de Nascimento</Label>
-                <Input type="date" value={form.data_nascimento} onChange={(e) => update("data_nascimento", e.target.value)} />
+                <Label>Data de nascimento *</Label>
+                <Input required type="date" max={new Date().toISOString().slice(0, 10)} value={form.data_nascimento} onChange={(e) => update("data_nascimento", e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Cidade</Label>
-                <Input value={form.cidade} onChange={(e) => update("cidade", e.target.value)} />
+                <Label>Cidade *</Label>
+                <Input required maxLength={80} value={form.cidade} onChange={(e) => update("cidade", e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Estado</Label>
-                <Input value={form.estado} onChange={(e) => update("estado", e.target.value)} />
+                <Label>Estado *</Label>
+                <Input required maxLength={2} value={form.estado} onChange={(e) => update("estado", e.target.value.toUpperCase().replace(/[^A-Z]/g, ""))} />
               </div>
               <div className="space-y-2">
-                <Label>CEP</Label>
-                <Input value={form.cep} onChange={(e) => update("cep", e.target.value)} />
+                <Label>CEP *</Label>
+                <Input required inputMode="numeric" maxLength={8} value={form.cep} onChange={(e) => updateDigits("cep", e.target.value, 8)} />
               </div>
               <div className="space-y-2">
-                <Label>Logradouro</Label>
-                <Input value={form.logradouro} onChange={(e) => update("logradouro", e.target.value)} />
+                <Label>Logradouro *</Label>
+                <Input required maxLength={120} value={form.logradouro} onChange={(e) => update("logradouro", e.target.value)} />
               </div>
             </div>
           </CardContent>

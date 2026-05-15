@@ -21,12 +21,19 @@ export default function OngVoluntarios() {
     const { data: projs } = await supabase.from("projetos").select("id").eq("id_ong", ongId);
     const ids = (projs || []).map((p) => p.id);
     if (!ids.length) { setVoluntarios([]); return; }
-    const { data } = await supabase
+    const { data: rows, error } = await supabase
       .from("voluntariado")
-      .select("*, projetos(nome_projeto), profiles:id_usuario(nome, email, telefone)")
+      .select("*")
       .in("id_projeto", ids)
       .order("data_inscricao", { ascending: false });
-    if (data) setVoluntarios(data);
+    if (error) { toast.error("Erro ao carregar voluntários: " + error.message); return; }
+    const [profilesRes, projetosRes] = await Promise.all([
+      supabase.from("profiles").select("user_id, nome, email, telefone"),
+      supabase.from("projetos").select("id, nome_projeto").in("id", ids),
+    ]);
+    const profiles = new Map((profilesRes.data || []).map((u: any) => [u.user_id, u]));
+    const projetosMap = new Map((projetosRes.data || []).map((p: any) => [p.id, p]));
+    setVoluntarios((rows || []).map((v: any) => ({ ...v, profiles: profiles.get(v.id_usuario), projetos: projetosMap.get(v.id_projeto) })));
   };
 
   useEffect(() => { fetchAll(); }, [ongId]);

@@ -19,6 +19,18 @@ export default function DoarPage() {
   const [valor, setValor] = useState("");
   const [tipo, setTipo] = useState("pix");
   const [loading, setLoading] = useState(false);
+  const [minhasDoacoes, setMinhasDoacoes] = useState<any[]>([]);
+
+  const fetchMinhasDoacoes = async () => {
+    if (!ongId || !user) { setMinhasDoacoes([]); return; }
+    const { data } = await supabase
+      .from("doacoes")
+      .select("id, valor, tipo_doacao, data_doacao")
+      .eq("id_ong", ongId)
+      .eq("id_usuario", user.id)
+      .order("data_doacao", { ascending: false });
+    setMinhasDoacoes(data || []);
+  };
 
   useEffect(() => {
     if (!ongId) return;
@@ -27,15 +39,22 @@ export default function DoarPage() {
     });
   }, [ongId]);
 
+  useEffect(() => { fetchMinhasDoacoes(); }, [ongId, user]);
+
   const handleDoar = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) { navigate(`/login?redirect=/doar/${ongId}`); return; }
+    const parsedValor = parseFloat(valor);
+    if (!Number.isFinite(parsedValor) || parsedValor <= 0) {
+      toast.error("Informe um valor válido para doação");
+      return;
+    }
 
     setLoading(true);
     const { error } = await supabase.from("doacoes").insert({
       id_ong: ongId!,
       id_usuario: user.id,
-      valor: parseFloat(valor),
+      valor: parsedValor,
       tipo_doacao: tipo,
     });
     setLoading(false);
@@ -45,6 +64,7 @@ export default function DoarPage() {
     } else {
       toast.success("Doação registrada com sucesso! Obrigado!");
       setValor("");
+      fetchMinhasDoacoes();
     }
   };
 
@@ -107,6 +127,23 @@ export default function DoarPage() {
             </CardContent>
           </form>
         </Card>
+        {user && (
+          <Card className="mt-4">
+            <CardHeader>
+              <CardTitle className="text-base">Minhas doações para esta ONG</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              {minhasDoacoes.length === 0 ? (
+                <p className="text-muted-foreground">Nenhuma doação registrada ainda.</p>
+              ) : minhasDoacoes.map((d) => (
+                <div key={d.id} className="flex items-center justify-between rounded-md border p-3">
+                  <span className="text-muted-foreground">{new Date(d.data_doacao).toLocaleDateString("pt-BR")} · {d.tipo_doacao}</span>
+                  <strong>R$ {d.valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</strong>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
       </div>
     </PublicShell>
   );

@@ -22,11 +22,15 @@ export default function AdminDoacoes() {
   const [form, setForm] = useState({ id_usuario: "", id_ong: "", valor: "", tipo_doacao: "pix" });
 
   const fetchAll = async () => {
-    const { data } = await supabase
-      .from("doacoes")
-      .select("*, ongs(nome), profiles:id_usuario(nome, email, telefone, cidade, estado)")
-      .order("data_doacao", { ascending: false });
-    if (data) setDoacoes(data);
+    const { data: rows, error } = await supabase.from("doacoes").select("*").order("data_doacao", { ascending: false });
+    if (error) { toast.error("Erro ao carregar doações: " + error.message); return; }
+    const [profilesRes, ongsRes] = await Promise.all([
+      supabase.from("profiles").select("user_id, nome, email, telefone, cidade, estado"),
+      supabase.from("ongs").select("id, nome"),
+    ]);
+    const profiles = new Map((profilesRes.data || []).map((u: any) => [u.user_id, u]));
+    const ongMap = new Map((ongsRes.data || []).map((o: any) => [o.id, o]));
+    setDoacoes((rows || []).map((d: any) => ({ ...d, profiles: profiles.get(d.id_usuario), ongs: ongMap.get(d.id_ong) })));
   };
 
   useEffect(() => {
@@ -96,6 +100,9 @@ export default function AdminDoacoes() {
               </TableRow>
             </TableHeader>
             <TableBody>
+              {doacoes.length === 0 && (
+                <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhuma doação registrada.</TableCell></TableRow>
+              )}
               {doacoes.map((d: any) => (
                 <TableRow key={d.id}>
                   <TableCell className="font-medium">{d.profiles?.nome || "Anônimo"}</TableCell>

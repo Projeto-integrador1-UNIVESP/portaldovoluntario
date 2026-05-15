@@ -13,9 +13,13 @@ export default function OngDoacoes() {
 
   useEffect(() => {
     if (!ongId) return;
-    supabase.from("doacoes").select("*, profiles:id_usuario(nome)").eq("id_ong", ongId).order("data_doacao", { ascending: false }).then(({ data }) => {
-      if (data) setDoacoes(data);
-    });
+    const fetchDoacoes = async () => {
+      const { data: rows } = await supabase.from("doacoes").select("*").eq("id_ong", ongId).order("data_doacao", { ascending: false });
+      const { data: profiles } = await supabase.from("profiles").select("user_id, nome");
+      const map = new Map((profiles || []).map((u: any) => [u.user_id, u]));
+      setDoacoes((rows || []).map((d: any) => ({ ...d, profiles: map.get(d.id_usuario) })));
+    };
+    fetchDoacoes();
   }, [ongId]);
 
   const total = doacoes.reduce((s, d) => s + d.valor, 0);
@@ -35,6 +39,9 @@ export default function OngDoacoes() {
               </TableRow>
             </TableHeader>
             <TableBody>
+              {doacoes.length === 0 && (
+                <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground">Nenhuma doação registrada.</TableCell></TableRow>
+              )}
               {doacoes.map((d) => (
                 <TableRow key={d.id}>
                   <TableCell className="font-medium">{(d as any).profiles?.nome || "Anônimo"}</TableCell>

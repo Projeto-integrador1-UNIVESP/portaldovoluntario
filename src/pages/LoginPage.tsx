@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Heart, Eye, EyeOff, Quote } from "lucide-react";
+import { Heart, Eye, EyeOff, Quote, HandHeart, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import volunteers from "@/assets/login-volunteers.jpg";
 import donation from "@/assets/login-donation.jpg";
@@ -133,10 +133,23 @@ export default function LoginPage() {
             <Button type="submit" className="w-full" disabled={loading} size="lg">
               {loading ? "Entrando..." : "Entrar"}
             </Button>
-            <p className="text-sm text-muted-foreground text-center pt-2">
-              Não tem conta?{" "}
-              <Link to="/cadastro" className="text-primary hover:underline font-medium">Cadastre-se</Link>
-            </p>
+            <div className="pt-3 space-y-3">
+              <p className="text-sm text-muted-foreground text-center">Não tem conta? Escolha como participar:</p>
+              <div className="grid grid-cols-2 gap-3">
+                <Button type="button" variant="outline" className="h-auto min-h-24 flex-col gap-2 whitespace-normal text-center" asChild>
+                  <Link to="/cadastro?tipo=doador">
+                    <HandHeart className="h-5 w-5" />
+                    <span>Doador e projetos</span>
+                  </Link>
+                </Button>
+                <Button type="button" variant="outline" className="h-auto min-h-24 flex-col gap-2 whitespace-normal text-center" asChild>
+                  <Link to="/cadastro?tipo=ong">
+                    <Building2 className="h-5 w-5" />
+                    <span>ONG com chave</span>
+                  </Link>
+                </Button>
+              </div>
+            </div>
           </form>
         </div>
       </div>

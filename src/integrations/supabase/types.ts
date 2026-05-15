@@ -408,6 +408,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      count_project_voluntarios: {
+        Args: { _project_id: string }
+        Returns: number
+      }
+      get_public_home_stats: {
+        Args: never
+        Returns: {
+          ongs: number
+          projetos: number
+          voluntarios: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

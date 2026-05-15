@@ -12,8 +12,15 @@ const json = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
+const onlyDigits = (value: unknown) => String(value ?? "").replace(/\D/g, "");
+const requiredText = (value: unknown, max = 255) => String(value ?? "").trim().slice(0, max);
+const validEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(email);
+const futureDate = (date: string) => Boolean(date) && date > new Date().toISOString().slice(0, 10);
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  let userId: string | null = null;
 
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -21,30 +28,36 @@ Deno.serve(async (req) => {
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
     const body = await req.json();
-    const { email, password, nome, code, nome_ong, telefone, cidade, estado } = body ?? {};
+    const email = requiredText(body?.email, 255).toLowerCase();
+    const password = String(body?.password ?? "");
+    const nome = requiredText(body?.nome, 80);
+    const code = requiredText(body?.code, 40).toUpperCase();
+    const nomeOng = requiredText(body?.nome_ong, 80);
+    const telefone = onlyDigits(body?.telefone);
+    const dataNascimento = requiredText(body?.data_nascimento, 10);
+    const cidade = requiredText(body?.cidade, 80);
+    const estado = requiredText(body?.estado, 2).toUpperCase();
+    const cep = onlyDigits(body?.cep);
+    const logradouro = requiredText(body?.logradouro, 120);
 
-    if (!email || !password || !nome || !code || !nome_ong) {
-      return json({ error: "Campos obrigatórios faltando." }, 400);
+    if (!email || !password || !nome || !code || !nomeOng || !telefone || !dataNascimento || !cidade || !estado || !cep || !logradouro) {
+      return json({ error: "Preencha todos os campos obrigatórios." }, 400);
     }
-    if (String(password).length < 8) {
-      return json({ error: "Senha muito curta." }, 400);
-    }
+    if (!validEmail(email)) return json({ error: "Informe um email válido com domínio, como nome@email.com." }, 400);
+    if (password.length < 8) return json({ error: "Senha muito curta." }, 400);
+    if (telefone.length !== 10 && telefone.length !== 11) return json({ error: "Telefone deve conter 10 ou 11 números." }, 400);
+    if (cep.length !== 8) return json({ error: "CEP deve conter exatamente 8 números." }, 400);
+    if (futureDate(dataNascimento)) return json({ error: "Data de nascimento não pode ser no futuro." }, 400);
 
-    // 1. Validate code
     const { data: codeRow, error: codeErr } = await admin
       .from("ong_access_codes")
       .select("id, used, expires_at")
       .eq("code", code)
       .maybeSingle();
     if (codeErr) throw codeErr;
-    if (!codeRow || codeRow.used) {
-      return json({ error: "Código inválido ou já utilizado." }, 400);
-    }
-    if (codeRow.expires_at && new Date(codeRow.expires_at) < new Date()) {
-      return json({ error: "Código expirado." }, 400);
-    }
+    if (!codeRow || codeRow.used) return json({ error: "Código inválido ou já utilizado." }, 400);
+    if (codeRow.expires_at && new Date(codeRow.expires_at) < new Date()) return json({ error: "Código expirado." }, 400);
 
-    // 2. Create auth user
     const { data: created, error: createErr } = await admin.auth.admin.createUser({
       email,
       password,
@@ -57,41 +70,67 @@ Deno.serve(async (req) => {
         : createErr.message;
       return json({ error: msg }, 400);
     }
-    const userId = created.user!.id;
+    userId = created.user!.id;
 
-    // 3. Promote to 'ong' role
+    await admin.from("profiles").delete().eq("user_id", userId);
+    const { error: profileErr } = await admin.from("profiles").insert({
+      user_id: userId,
+      nome,
+      email,
+      telefone,
+      data_nascimento: dataNascimento,
+      cidade,
+      estado,
+      cep,
+      logradouro,
+      contato_ong: false,
+      ativo: true,
+    });
+    if (profileErr) throw profileErr;
+
     await admin.from("user_roles").delete().eq("user_id", userId);
-    await admin.from("user_roles").insert({ user_id: userId, role: "ong" });
+    const { error: roleErr } = await admin.from("user_roles").insert({ user_id: userId, role: "ong" });
+    if (roleErr) throw roleErr;
 
-    // 4. Create ONG record
     const { data: ong, error: ongErr } = await admin
       .from("ongs")
       .insert({
-        nome: nome_ong,
-        telefone: telefone ?? null,
-        cidade: cidade ?? null,
-        estado: estado ?? null,
+        nome: nomeOng,
+        telefone,
+        cidade,
+        estado,
+        cep,
+        logradouro,
         status: true,
       })
       .select("id")
       .single();
     if (ongErr) throw ongErr;
 
-    // 5. Link user as ONG member
-    await admin.from("usuarios_ong").insert({
+    const { error: memberErr } = await admin.from("usuarios_ong").insert({
       id_usuario: userId,
       id_ong: ong.id,
       status: true,
     });
+    if (memberErr) throw memberErr;
 
-    // 6. Mark code as used
-    await admin
+    const { error: codeUpdateErr } = await admin
       .from("ong_access_codes")
       .update({ used: true, used_by: userId, used_at: new Date().toISOString() })
       .eq("id", codeRow.id);
+    if (codeUpdateErr) throw codeUpdateErr;
 
     return json({ ok: true, ong_id: ong.id });
   } catch (e: any) {
+    if (userId) {
+      try {
+        const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+        const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        await createClient(SUPABASE_URL, SERVICE_KEY).auth.admin.deleteUser(userId);
+      } catch (_) {
+        // best-effort cleanup only
+      }
+    }
     return json({ error: e?.message ?? String(e) }, 500);
   }
 });

@@ -11,7 +11,7 @@ import { toast } from "sonner";
 
 export default function ProjetoDetalhePage() {
   const { id } = useParams();
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const navigate = useNavigate();
   const [projeto, setProjeto] = useState<any>(null);
   const [jaInscrito, setJaInscrito] = useState(false);
@@ -20,11 +20,14 @@ export default function ProjetoDetalhePage() {
   useEffect(() => {
     if (!id) return;
     const fetch = async () => {
-      const { data } = await supabase.from("projetos").select("*, ongs(nome, id)").eq("id", id).single();
-      if (data) setProjeto(data);
+      const { data } = await supabase.from("projetos").select("*").eq("id", id).single();
+      if (data) {
+        const { data: ong } = await supabase.from("ongs").select("nome, id").eq("id", data.id_ong).maybeSingle();
+        setProjeto({ ...data, ongs: ong });
+      }
 
-      const { count } = await supabase.from("voluntariado").select("id", { count: "exact", head: true }).eq("id_projeto", id);
-      setVoluntarios(count || 0);
+      const { data: countData } = await (supabase as any).rpc("count_project_voluntarios", { _project_id: id });
+      setVoluntarios(Number(countData || 0));
 
       if (user) {
         const { data: vol } = await supabase.from("voluntariado").select("id").eq("id_projeto", id).eq("id_usuario", user.id);
@@ -35,14 +38,14 @@ export default function ProjetoDetalhePage() {
   }, [id, user]);
 
   const handleParticipar = async () => {
-    if (!user) { navigate("/login"); return; }
+    if (!user) { navigate(`/login?redirect=/projeto/${id}`); return; }
+    if (role === "ong" || role === "admin") { toast.error("Contas de ONG ou administrador não podem se voluntariar."); return; }
     const { error } = await supabase.from("voluntariado").insert({ id_projeto: id!, id_usuario: user.id });
     if (error) {
       toast.error("Erro ao se inscrever");
     } else {
-      toast.success("Inscrição realizada!");
+      toast.success("Inscrição realizada! Aguarde aprovação da ONG.");
       setJaInscrito(true);
-      setVoluntarios((v) => v + 1);
     }
   };
 
@@ -91,7 +94,7 @@ export default function ProjetoDetalhePage() {
             </div>
 
             <div className="flex gap-3 pt-4">
-              <Button onClick={handleParticipar} disabled={jaInscrito} className="flex-1">
+              <Button onClick={handleParticipar} disabled={jaInscrito || role === "ong" || role === "admin"} className="flex-1">
                 <Users className="h-4 w-4 mr-2" />
                 {jaInscrito ? "Já inscrito" : "Participar como voluntário"}
               </Button>
