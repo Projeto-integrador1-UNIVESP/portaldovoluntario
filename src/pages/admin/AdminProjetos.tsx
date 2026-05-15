@@ -25,10 +25,12 @@ export default function AdminProjetos() {
 
   const fetchAll = async () => {
     const [p, o] = await Promise.all([
-      supabase.from("projetos").select("*, ongs(nome)").order("created_at", { ascending: false }),
+      supabase.from("projetos").select("*").order("created_at", { ascending: false }),
       supabase.from("ongs").select("id, nome").eq("status", true).order("nome"),
     ]);
-    if (p.data) setProjetos(p.data);
+    const ongMap = new Map((o.data || []).map((ong: any) => [ong.id, ong]));
+    if (p.error) toast.error("Erro ao carregar projetos: " + p.error.message);
+    setProjetos((p.data || []).map((proj: any) => ({ ...proj, ongs: ongMap.get(proj.id_ong) })));
     if (o.data) setOngs(o.data);
   };
   useEffect(() => { fetchAll(); }, []);
@@ -36,7 +38,8 @@ export default function AdminProjetos() {
   const update = (k: string, v: string) => setForm((p) => ({ ...p, [k]: v }));
 
   const handleSave = async () => {
-    if (!form.nome_projeto || !form.id_ong) { toast.error("Nome e ONG são obrigatórios"); return; }
+    if (!form.nome_projeto.trim() || !form.id_ong || !form.descricao.trim() || !form.data_inicio || !form.data_fim) { toast.error("Preencha todos os campos obrigatórios"); return; }
+    if (form.data_fim < form.data_inicio) { toast.error("Data fim não pode ser menor que a data de início"); return; }
     const payload: any = {
       nome_projeto: form.nome_projeto,
       descricao: form.descricao || null,
@@ -90,7 +93,7 @@ export default function AdminProjetos() {
             <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader><DialogTitle>{editing ? "Editar projeto" : "Novo projeto"}</DialogTitle></DialogHeader>
               <div className="space-y-3">
-                <div className="space-y-1"><Label>Nome *</Label><Input value={form.nome_projeto} onChange={(e) => update("nome_projeto", e.target.value)} /></div>
+                <div className="space-y-1"><Label>Nome *</Label><Input required maxLength={80} value={form.nome_projeto} onChange={(e) => update("nome_projeto", e.target.value)} /></div>
                 <div className="space-y-1">
                   <Label>ONG *</Label>
                   <Select value={form.id_ong} onValueChange={(v) => update("id_ong", v)}>
@@ -101,11 +104,11 @@ export default function AdminProjetos() {
                   </Select>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1"><Label>Início</Label><Input type="date" value={form.data_inicio} onChange={(e) => update("data_inicio", e.target.value)} /></div>
-                  <div className="space-y-1"><Label>Fim</Label><Input type="date" value={form.data_fim} onChange={(e) => update("data_fim", e.target.value)} /></div>
+                  <div className="space-y-1"><Label>Início *</Label><Input required type="date" value={form.data_inicio} onChange={(e) => update("data_inicio", e.target.value)} /></div>
+                  <div className="space-y-1"><Label>Fim *</Label><Input required type="date" value={form.data_fim} onChange={(e) => update("data_fim", e.target.value)} /></div>
                 </div>
                 <div className="space-y-1"><Label>Imagem (URL)</Label><Input value={form.img_url} onChange={(e) => update("img_url", e.target.value)} /></div>
-                <div className="space-y-1"><Label>Descrição</Label><Textarea value={form.descricao} onChange={(e) => update("descricao", e.target.value)} /></div>
+                <div className="space-y-1"><Label>Descrição *</Label><Textarea required maxLength={900} value={form.descricao} onChange={(e) => update("descricao", e.target.value)} /></div>
                 <Button onClick={handleSave} className="w-full">{editing ? "Salvar" : "Criar"}</Button>
               </div>
             </DialogContent>
@@ -128,7 +131,7 @@ export default function AdminProjetos() {
             <TableBody>
               {projetos.map((p) => (
                 <TableRow key={p.id}>
-                  <TableCell className="font-medium">{p.nome_projeto}</TableCell>
+                  <TableCell className="font-medium max-w-64 break-words">{p.nome_projeto}</TableCell>
                   <TableCell className="text-muted-foreground">{(p as any).ongs?.nome || "—"}</TableCell>
                   <TableCell className="text-muted-foreground">{p.data_inicio ? new Date(p.data_inicio).toLocaleDateString("pt-BR") : "—"}</TableCell>
                   <TableCell className="text-muted-foreground">{p.data_fim ? new Date(p.data_fim).toLocaleDateString("pt-BR") : "—"}</TableCell>

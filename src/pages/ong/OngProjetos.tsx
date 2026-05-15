@@ -35,7 +35,9 @@ export default function OngProjetos() {
   const update = (f: string, v: string) => setForm((p) => ({ ...p, [f]: v }));
 
   const handleSave = async () => {
-    const payload = { ...form, id_ong: ongId!, data_inicio: form.data_inicio || null, data_fim: form.data_fim || null };
+    if (!form.nome_projeto.trim() || !form.descricao.trim() || !form.data_inicio || !form.data_fim) { toast.error("Preencha todos os campos obrigatórios"); return; }
+    if (form.data_fim < form.data_inicio) { toast.error("Data fim não pode ser menor que a data de início"); return; }
+    const payload = { ...form, nome_projeto: form.nome_projeto.trim(), descricao: form.descricao.trim(), id_ong: ongId!, data_inicio: form.data_inicio, data_fim: form.data_fim };
     if (editing) {
       const { error } = await supabase.from("projetos").update(payload).eq("id", editing.id);
       if (error) { toast.error("Erro ao atualizar"); return; }
@@ -68,11 +70,11 @@ export default function OngProjetos() {
             <DialogContent>
               <DialogHeader><DialogTitle>{editing ? "Editar Projeto" : "Novo Projeto"}</DialogTitle></DialogHeader>
               <div className="space-y-3">
-                <div className="space-y-1"><Label>Nome *</Label><Input value={form.nome_projeto} onChange={(e) => update("nome_projeto", e.target.value)} /></div>
-                <div className="space-y-1"><Label>Descrição</Label><Textarea value={form.descricao} onChange={(e) => update("descricao", e.target.value)} /></div>
+                <div className="space-y-1"><Label>Nome *</Label><Input required maxLength={80} value={form.nome_projeto} onChange={(e) => update("nome_projeto", e.target.value)} /></div>
+                <div className="space-y-1"><Label>Descrição *</Label><Textarea required maxLength={900} value={form.descricao} onChange={(e) => update("descricao", e.target.value)} /></div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1"><Label>Data início</Label><Input type="date" value={form.data_inicio} onChange={(e) => update("data_inicio", e.target.value)} /></div>
-                  <div className="space-y-1"><Label>Data fim</Label><Input type="date" value={form.data_fim} onChange={(e) => update("data_fim", e.target.value)} /></div>
+                  <div className="space-y-1"><Label>Data início *</Label><Input required type="date" value={form.data_inicio} onChange={(e) => update("data_inicio", e.target.value)} /></div>
+                  <div className="space-y-1"><Label>Data fim *</Label><Input required type="date" value={form.data_fim} onChange={(e) => update("data_fim", e.target.value)} /></div>
                 </div>
                 <div className="space-y-1"><Label>URL da imagem</Label><Input value={form.img_url} onChange={(e) => update("img_url", e.target.value)} /></div>
                 <Button onClick={handleSave} className="w-full">{editing ? "Salvar" : "Criar Projeto"}</Button>
@@ -96,7 +98,7 @@ export default function OngProjetos() {
             <TableBody>
               {projetos.map((p) => (
                 <TableRow key={p.id}>
-                  <TableCell className="font-medium">{p.nome_projeto}</TableCell>
+                  <TableCell className="font-medium max-w-64 break-words">{p.nome_projeto}</TableCell>
                   <TableCell className="text-muted-foreground">{p.data_inicio ? new Date(p.data_inicio).toLocaleDateString("pt-BR") : "—"}</TableCell>
                   <TableCell className="text-muted-foreground">{p.data_fim ? new Date(p.data_fim).toLocaleDateString("pt-BR") : "—"}</TableCell>
                   <TableCell><Switch checked={p.status} onCheckedChange={() => toggleStatus(p.id, p.status)} /></TableCell>
