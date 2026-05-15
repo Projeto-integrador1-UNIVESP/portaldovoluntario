@@ -34,49 +34,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<any>(null);
   const [ongId, setOngId] = useState<string | null>(null);
 
+  const resetUserData = () => {
+    setRole(null);
+    setProfile(null);
+    setOngId(null);
+  };
+
   const fetchUserData = async (userId: string) => {
     const [rolesRes, profileRes, ongRes] = await Promise.all([
       supabase.from("user_roles").select("role").eq("user_id", userId),
-      supabase.from("profiles").select("*").eq("user_id", userId).single(),
+      supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
       supabase.from("usuarios_ong").select("id_ong").eq("id_usuario", userId).eq("status", true).limit(1),
     ]);
 
-    if (rolesRes.data && rolesRes.data.length > 0) {
-      const roles = rolesRes.data.map((r) => r.role);
-      if (roles.includes("admin")) setRole("admin");
-      else if (roles.includes("ong")) setRole("ong");
-      else setRole("user");
+    const roles = rolesRes.data?.map((r) => r.role) || [];
+    if (roles.includes("admin")) setRole("admin");
+    else if (roles.includes("ong")) setRole("ong");
+    else setRole("user");
+
+    setProfile(profileRes.data ?? null);
+    setOngId(ongRes.data?.[0]?.id_ong ?? null);
+  };
+
+  const applySession = async (nextSession: Session | null) => {
+    setLoading(true);
+    setSession(nextSession);
+    setUser(nextSession?.user ?? null);
+
+    if (nextSession?.user) {
+      await fetchUserData(nextSession.user.id);
     } else {
-      setRole("user");
+      resetUserData();
     }
 
-    if (profileRes.data) setProfile(profileRes.data);
-    if (ongRes.data && ongRes.data.length > 0) setOngId(ongRes.data[0].id_ong);
+    setLoading(false);
   };
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          setTimeout(() => fetchUserData(session.user.id), 0);
-        } else {
-          setRole(null);
-          setProfile(null);
-          setOngId(null);
-        }
-        setLoading(false);
-      }
-    );
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      applySession(nextSession);
+    });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchUserData(session.user.id);
-      }
-      setLoading(false);
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      applySession(currentSession);
     });
 
     return () => subscription.unsubscribe();
@@ -86,9 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
-    setRole(null);
-    setProfile(null);
-    setOngId(null);
+    resetUserData();
   };
 
   return (
