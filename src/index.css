@@ -51,4 +51,9 @@
     @apply bg-background text-foreground font-sans;
     font-family: 'Inter', sans-serif;
   }
+  /* Prevent long words/numbers from breaking out of table cells */
+  td, th {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
 }
