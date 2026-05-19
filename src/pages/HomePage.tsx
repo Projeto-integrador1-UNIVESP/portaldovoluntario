@@ -10,6 +10,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import boxesImg from "@/assets/news-donation-boxes.jpg";
 import heartImg from "@/assets/news-giving-heart.jpg";
 import suppliesImg from "@/assets/news-supplies.jpg";
+import volunteersImg from "@/assets/news-volunteers-sorting.jpg";
+import handsPlantImg from "@/assets/news-hands-plant.jpg";
+import childrenBooksImg from "@/assets/news-children-books.jpg";
+import communityMealImg from "@/assets/news-community-meal.jpg";
 
 const newsSlides = [
   {
@@ -31,6 +35,33 @@ const newsSlides = [
     text: "Cada caixa preparada representa esperança e dignidade para quem enfrenta momentos difíceis.",
   },
 ];
+const extraSlides = [
+  {
+    img: volunteersImg,
+    tag: "Voluntariado",
+    title: "Mãos que organizam esperança",
+    text: "Voluntários classificam roupas e alimentos para que cada doação chegue ao destino certo, com cuidado e dignidade.",
+  },
+  {
+    img: handsPlantImg,
+    tag: "Comunidade",
+    title: "Juntos cultivamos o futuro",
+    text: "Cada mão somada à causa faz crescer projetos que transformam comunidades inteiras.",
+  },
+  {
+    img: childrenBooksImg,
+    tag: "Educação",
+    title: "Educação que liberta",
+    text: "Livros e materiais escolares doados abrem portas para o futuro de milhares de crianças.",
+  },
+  {
+    img: communityMealImg,
+    tag: "Alimentação",
+    title: "Uma refeição, muita dignidade",
+    text: "Cozinhas solidárias servem refeições quentes todos os dias para quem mais precisa.",
+  },
+];
+newsSlides.push(...extraSlides);
 
 export default function HomePage() {
   const { user } = useAuth();
@@ -85,7 +116,7 @@ export default function HomePage() {
             <Heart className="h-3 w-3 mr-1" /> Plataforma de Solidariedade
           </Badge>
           <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4 leading-tight">
-            Conectando quem quer ajudar<br />com quem precisa
+            Portal do Voluntário
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
             Doe, seja voluntário e transforme vidas. Encontre projetos sociais e ONGs comprometidas com a mudança.
