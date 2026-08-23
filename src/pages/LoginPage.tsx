@@ -130,7 +130,7 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
-            <Button type="submit" className="w-full" disabled={loading} size="lg">
+            <Button type="submit" variant="destructive" className="w-full" disabled={loading} size="lg">
               {loading ? "Entrando..." : "Entrar"}
             </Button>
             <div className="pt-3 space-y-3">
