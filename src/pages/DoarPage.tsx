@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Heart, Building2 } from "lucide-react";
+import { EmptyState } from "@/components/common/EmptyState";
+import { Seo } from "@/components/common/Seo";
 import { toast } from "sonner";
 
 export default function DoarPage() {
@@ -20,6 +22,7 @@ export default function DoarPage() {
   const [tipo, setTipo] = useState("pix");
   const [loading, setLoading] = useState(false);
   const [minhasDoacoes, setMinhasDoacoes] = useState<any[]>([]);
+  const [carregandoOng, setCarregandoOng] = useState(true);
 
   const fetchMinhasDoacoes = async () => {
     if (!ongId || !user) { setMinhasDoacoes([]); return; }
@@ -36,6 +39,8 @@ export default function DoarPage() {
     if (!ongId) return;
     supabase.from("ongs").select("*").eq("id", ongId).single().then(({ data }) => {
       if (data) setOng(data);
+      // Sem isto, um id de ONG inexistente deixava a tela girando para sempre.
+      setCarregandoOng(false);
     });
   }, [ongId]);
 
@@ -68,10 +73,25 @@ export default function DoarPage() {
     }
   };
 
+  if (carregandoOng) return (
+    <PublicShell>
+      <div className="flex items-center justify-center py-20" role="status" aria-live="polite">
+        <span className="sr-only">Carregando…</span>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    </PublicShell>
+  );
+
   if (!ong) return (
     <PublicShell>
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      <Seo title="ONG não encontrada" noIndex />
+      <div className="container py-16">
+        <EmptyState
+          icon={Building2}
+          title="ONG não encontrada"
+          description="Ela pode ter saído da plataforma ou o link está incorreto."
+          action={{ label: "Ver ONGs parceiras", to: "/ongs" }}
+        />
       </div>
     </PublicShell>
   );
@@ -82,7 +102,7 @@ export default function DoarPage() {
         {!user && (
           <Card className="mb-4 border-primary/40 bg-primary/5">
             <CardContent className="p-4 text-sm">
-              Para concluir uma doação você precisa <a href={`/login?redirect=/doar/${ongId}`} className="font-semibold text-primary hover:underline">entrar na plataforma</a>.
+              Para concluir uma doação você precisa <a href={`/login?redirect=/doar/${ongId}`} className="font-semibold text-primary underline underline-offset-2">entrar na plataforma</a>.
             </CardContent>
           </Card>
         )}

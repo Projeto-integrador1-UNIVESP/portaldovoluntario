@@ -7,47 +7,89 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5"
-  }
   public: {
     Tables: {
       doacoes: {
         Row: {
+          anonima: boolean
+          comprovante_url: string | null
+          confirmada_em: string | null
+          confirmada_por: string | null
           created_at: string
           data_doacao: string
+          doador_email: string | null
+          doador_nome: string | null
+          forma_entrega: string | null
           id: string
+          id_necessidade: string | null
           id_ong: string
+          id_projeto: string | null
           id_usuario: string | null
+          quantidade: number | null
+          status: string
           tipo_doacao: string | null
           valor: number
         }
         Insert: {
+          anonima?: boolean
+          comprovante_url?: string | null
+          confirmada_em?: string | null
+          confirmada_por?: string | null
           created_at?: string
           data_doacao?: string
+          doador_email?: string | null
+          doador_nome?: string | null
+          forma_entrega?: string | null
           id?: string
+          id_necessidade?: string | null
           id_ong: string
+          id_projeto?: string | null
           id_usuario?: string | null
+          quantidade?: number | null
+          status?: string
           tipo_doacao?: string | null
           valor: number
         }
         Update: {
+          anonima?: boolean
+          comprovante_url?: string | null
+          confirmada_em?: string | null
+          confirmada_por?: string | null
           created_at?: string
           data_doacao?: string
+          doador_email?: string | null
+          doador_nome?: string | null
+          forma_entrega?: string | null
           id?: string
+          id_necessidade?: string | null
           id_ong?: string
+          id_projeto?: string | null
           id_usuario?: string | null
+          quantidade?: number | null
+          status?: string
           tipo_doacao?: string | null
           valor?: number
         }
         Relationships: [
           {
+            foreignKeyName: "doacoes_id_necessidade_fkey"
+            columns: ["id_necessidade"]
+            isOneToOne: false
+            referencedRelation: "necessidades"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "doacoes_id_ong_fkey"
             columns: ["id_ong"]
             isOneToOne: false
             referencedRelation: "ongs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "doacoes_id_projeto_fkey"
+            columns: ["id_projeto"]
+            isOneToOne: false
+            referencedRelation: "projetos"
             referencedColumns: ["id"]
           },
         ]
@@ -94,6 +136,62 @@ export type Database = {
         }
         Relationships: []
       }
+      necessidades: {
+        Row: {
+          arrecadado: number
+          categoria: string | null
+          created_at: string
+          id: string
+          id_projeto: string
+          meta: number
+          nome: string
+          prazo: string | null
+          status: boolean
+          tipo: string
+          unidade: string | null
+          updated_at: string
+          urgencia: number
+        }
+        Insert: {
+          arrecadado?: number
+          categoria?: string | null
+          created_at?: string
+          id?: string
+          id_projeto: string
+          meta: number
+          nome: string
+          prazo?: string | null
+          status?: boolean
+          tipo: string
+          unidade?: string | null
+          updated_at?: string
+          urgencia?: number
+        }
+        Update: {
+          arrecadado?: number
+          categoria?: string | null
+          created_at?: string
+          id?: string
+          id_projeto?: string
+          meta?: number
+          nome?: string
+          prazo?: string | null
+          status?: boolean
+          tipo?: string
+          unidade?: string | null
+          updated_at?: string
+          urgencia?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "necessidades_id_projeto_fkey"
+            columns: ["id_projeto"]
+            isOneToOne: false
+            referencedRelation: "projetos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ong_access_codes: {
         Row: {
           code: string
@@ -138,6 +236,8 @@ export type Database = {
           agencia: number | null
           area_atuacao: string | null
           banco: string | null
+          capa_url: string | null
+          causas: string[] | null
           cep: string | null
           cidade: string | null
           cnpj: string | null
@@ -145,24 +245,33 @@ export type Database = {
           created_at: string
           data_cadastro: string
           descricao: string | null
+          endereco_entrega: string | null
           estado: string | null
+          fundada_em: string | null
+          horarios_recebimento: string | null
           id: string
           img_capa: string | null
           img_url: string | null
           instagram: string | null
+          logo_url: string | null
           logradouro: string | null
           missao: string | null
           nome: string
           pix: string | null
+          pix_nome_recebedor: string | null
           site: string | null
+          slug: string | null
           status: boolean | null
           telefone: string | null
           updated_at: string
+          verificada_em: string | null
         }
         Insert: {
           agencia?: number | null
           area_atuacao?: string | null
           banco?: string | null
+          capa_url?: string | null
+          causas?: string[] | null
           cep?: string | null
           cidade?: string | null
           cnpj?: string | null
@@ -170,24 +279,33 @@ export type Database = {
           created_at?: string
           data_cadastro?: string
           descricao?: string | null
+          endereco_entrega?: string | null
           estado?: string | null
+          fundada_em?: string | null
+          horarios_recebimento?: string | null
           id?: string
           img_capa?: string | null
           img_url?: string | null
           instagram?: string | null
+          logo_url?: string | null
           logradouro?: string | null
           missao?: string | null
           nome: string
           pix?: string | null
+          pix_nome_recebedor?: string | null
           site?: string | null
+          slug?: string | null
           status?: boolean | null
           telefone?: string | null
           updated_at?: string
+          verificada_em?: string | null
         }
         Update: {
           agencia?: number | null
           area_atuacao?: string | null
           banco?: string | null
+          capa_url?: string | null
+          causas?: string[] | null
           cep?: string | null
           cidade?: string | null
           cnpj?: string | null
@@ -195,19 +313,26 @@ export type Database = {
           created_at?: string
           data_cadastro?: string
           descricao?: string | null
+          endereco_entrega?: string | null
           estado?: string | null
+          fundada_em?: string | null
+          horarios_recebimento?: string | null
           id?: string
           img_capa?: string | null
           img_url?: string | null
           instagram?: string | null
+          logo_url?: string | null
           logradouro?: string | null
           missao?: string | null
           nome?: string
           pix?: string | null
+          pix_nome_recebedor?: string | null
           site?: string | null
+          slug?: string | null
           status?: boolean | null
           telefone?: string | null
           updated_at?: string
+          verificada_em?: string | null
         }
         Relationships: []
       }
@@ -270,6 +395,9 @@ export type Database = {
       }
       projetos: {
         Row: {
+          capa_url: string | null
+          causa: string | null
+          cidade: string | null
           created_at: string
           data_fim: string | null
           data_inicio: string | null
@@ -278,10 +406,14 @@ export type Database = {
           id_ong: string
           img_url: string | null
           nome_projeto: string
+          slug: string | null
           status: boolean | null
           updated_at: string
         }
         Insert: {
+          capa_url?: string | null
+          causa?: string | null
+          cidade?: string | null
           created_at?: string
           data_fim?: string | null
           data_inicio?: string | null
@@ -290,10 +422,14 @@ export type Database = {
           id_ong: string
           img_url?: string | null
           nome_projeto: string
+          slug?: string | null
           status?: boolean | null
           updated_at?: string
         }
         Update: {
+          capa_url?: string | null
+          causa?: string | null
+          cidade?: string | null
           created_at?: string
           data_fim?: string | null
           data_inicio?: string | null
@@ -302,6 +438,7 @@ export type Database = {
           id_ong?: string
           img_url?: string | null
           nome_projeto?: string
+          slug?: string | null
           status?: boolean | null
           updated_at?: string
         }
@@ -408,15 +545,56 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      buscar_projetos: {
+        Args: {
+          _causa?: string
+          _cidade?: string
+          _limit?: number
+          _offset?: number
+          _q?: string
+        }
+        Returns: {
+          capa_url: string
+          causa: string
+          cidade: string
+          data_fim: string
+          descricao: string
+          id: string
+          img_url: string
+          nome_projeto: string
+          ong_id: string
+          ong_nome: string
+          ong_slug: string
+          ong_verificada: boolean
+          progresso_medio: number
+          slug: string
+          total_encontrado: number
+          total_necessidades: number
+        }[]
+      }
       count_project_voluntarios: {
         Args: { _project_id: string }
         Returns: number
       }
+      get_impacto_ong: {
+        Args: { _ong_id: string }
+        Returns: {
+          doacoes_confirmadas: number
+          doacoes_pendentes: number
+          doadores_distintos: number
+          projetos_ativos: number
+          total_confirmado: number
+          total_pendente: number
+          voluntarios_aprovados: number
+        }[]
+      }
       get_public_home_stats: {
         Args: never
         Returns: {
+          itens_arrecadados: number
           ongs: number
           projetos: number
+          valor_arrecadado: number
           voluntarios: number
         }[]
       }
@@ -431,6 +609,20 @@ export type Database = {
         Args: { _ong_id: string; _user_id: string }
         Returns: boolean
       }
+      is_ong_member_do_projeto: {
+        Args: { _projeto_id: string; _user_id: string }
+        Returns: boolean
+      }
+      ong_id_do_caminho: { Args: { _name: string }; Returns: string }
+      recalcular_arrecadado: {
+        Args: { _necessidade_id: string }
+        Returns: undefined
+      }
+      slug_unico: {
+        Args: { _base: string; _id_atual: string; _tabela: string }
+        Returns: string
+      }
+      slugify: { Args: { _texto: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "ong" | "user"
@@ -565,3 +757,4 @@ export const Constants = {
     },
   },
 } as const
+

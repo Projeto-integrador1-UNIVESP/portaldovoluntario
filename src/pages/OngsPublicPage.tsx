@@ -5,27 +5,40 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Building2, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Footer } from "@/components/layout/Footer";
+import { Seo } from "@/components/common/Seo";
+import { EmptyState } from "@/components/common/EmptyState";
 
 export default function OngsPublicPage() {
   const [ongs, setOngs] = useState<any[]>([]);
 
   useEffect(() => {
-    supabase.from("ongs").select("*").eq("status", true).then(({ data }) => {
+    supabase
+      .from("ongs")
+      .select("id, slug, nome, descricao, missao, cidade, estado, img_url, logo_url, img_capa, capa_url, verificada_em")
+      .eq("status", true)
+      .then(({ data }) => {
       if (data) setOngs(data);
     });
   }, []);
 
   return (
     <PublicShell>
+      <Seo
+        title="ONGs parceiras"
+        description="Conheça as organizações da plataforma e veja como contribuir com cada uma."
+      />
       <div className="container py-12">
         <h1 className="text-3xl font-bold text-foreground mb-2">ONGs parceiras</h1>
         <p className="text-muted-foreground mb-8">Conheça as organizações e contribua</p>
 
         {ongs.length === 0 ? (
-          <Card className="p-12 text-center">
-            <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">Nenhuma ONG cadastrada ainda.</p>
-          </Card>
+          <EmptyState
+            icon={Building2}
+            title="Nenhuma ONG cadastrada ainda"
+            description="Assim que uma organização entrar na plataforma, ela aparece aqui."
+            action={{ label: "Ver projetos", to: "/projetos" }}
+          />
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {ongs.map((o) => (
@@ -42,9 +55,16 @@ export default function OngsPublicPage() {
                   <p className="text-sm text-muted-foreground line-clamp-3">{o.descricao || "Organização parceira"}</p>
                   {o.cidade && <p className="text-xs text-muted-foreground mt-2">{o.cidade}, {o.estado}</p>}
                 </CardContent>
-                <CardFooter>
-                  <Button size="sm" variant="outline" asChild className="w-full">
-                    <Link to={`/doar/${o.id}`}>Doar <ArrowRight className="h-4 w-4 ml-1" /></Link>
+                <CardFooter className="gap-2">
+                  {/* Achado 6: o card não abria nada. Ver o perfil vem antes de
+                      doar — é lá que estão CNPJ, missão e projetos. */}
+                  <Button size="sm" asChild className="flex-1">
+                    <Link to={`/ongs/${o.slug ?? o.id}`}>
+                      Ver perfil <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" />
+                    </Link>
+                  </Button>
+                  <Button size="sm" variant="outline" asChild>
+                    <Link to={`/doar/${o.id}`}>Doar</Link>
                   </Button>
                 </CardFooter>
               </Card>
@@ -52,6 +72,7 @@ export default function OngsPublicPage() {
           </div>
         )}
       </div>
+      <Footer />
     </PublicShell>
   );
 }

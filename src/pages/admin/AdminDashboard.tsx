@@ -15,7 +15,7 @@ export default function AdminDashboard() {
         supabase.from("ongs").select("id", { count: "exact", head: true }),
         supabase.from("profiles").select("id", { count: "exact", head: true }),
         supabase.from("projetos").select("id", { count: "exact", head: true }),
-        (supabase as any).from("eventos").select("id", { count: "exact", head: true }),
+        supabase.from("eventos").select("id", { count: "exact", head: true }),
         supabase.from("doacoes").select("valor"),
       ]);
       const total = doacoes.data?.reduce((s, d) => s + d.valor, 0) || 0;

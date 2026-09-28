@@ -13,6 +13,18 @@ export default defineConfig(({ mode }) => ({
     },
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+  build: {
+    rollupOptions: {
+      output: {
+        // React e Supabase mudam muito menos que o código da aplicação; em
+        // chunks próprios, um deploy novo não invalida o cache deles.
+        manualChunks: {
+          "react-vendor": ["react", "react-dom", "react-router-dom"],
+          supabase: ["@supabase/supabase-js"],
+        },
+      },
+    },
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

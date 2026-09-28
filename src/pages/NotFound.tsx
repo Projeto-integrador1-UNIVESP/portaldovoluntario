@@ -1,23 +1,44 @@
-import { useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { Compass } from "lucide-react";
+import { PublicShell } from "@/components/layout/PublicShell";
+import { Footer } from "@/components/layout/Footer";
+import { Seo } from "@/components/common/Seo";
+import { Button } from "@/components/ui/button";
+
+const atalhos = [
+  { to: "/projetos", label: "Ver projetos" },
+  { to: "/ongs", label: "Conhecer as ONGs" },
+  { to: "/como-funciona", label: "Como funciona" },
+];
 
 const NotFound = () => {
   const location = useLocation();
 
-  useEffect(() => {
-    console.error("404 Error: User attempted to access non-existent route:", location.pathname);
-  }, [location.pathname]);
-
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">404</h1>
-        <p className="mb-4 text-xl text-muted-foreground">Oops! Page not found</p>
-        <a href="/" className="text-primary underline hover:text-primary/90">
-          Return to Home
-        </a>
+    <PublicShell>
+      <Seo title="Página não encontrada" noIndex />
+      <div className="container flex min-h-[60vh] flex-col items-center justify-center py-16 text-center">
+        <Compass className="h-12 w-12 text-muted-foreground" aria-hidden="true" />
+        <p className="mt-6 text-sm font-medium text-muted-foreground">Erro 404</p>
+        <h1 className="mt-1 text-3xl font-bold">Esta página não existe</h1>
+        <p className="mt-3 max-w-md text-muted-foreground">
+          O endereço <code className="rounded bg-muted px-1.5 py-0.5 text-sm">{location.pathname}</code>{" "}
+          não leva a nada. Ele pode ter mudado ou o link estar incompleto.
+        </p>
+
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          <Button asChild>
+            <Link to="/">Voltar ao início</Link>
+          </Button>
+          {atalhos.map((atalho) => (
+            <Button key={atalho.to} variant="outline" asChild>
+              <Link to={atalho.to}>{atalho.label}</Link>
+            </Button>
+          ))}
+        </div>
       </div>
-    </div>
+      <Footer />
+    </PublicShell>
   );
 };
 

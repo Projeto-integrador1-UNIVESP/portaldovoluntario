@@ -1,79 +1,128 @@
+import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import { PageSkeleton } from "@/components/common/PageSkeleton";
 
+// A home entra no bundle inicial: é a primeira tela de quase todo visitante,
+// e adiar seu chunk só adicionaria um ida-e-volta antes do primeiro conteúdo.
 import HomePage from "./pages/HomePage";
-import LoginPage from "./pages/LoginPage";
-import CadastroPage from "./pages/CadastroPage";
-import OngsPublicPage from "./pages/OngsPublicPage";
-import ProjetoDetalhePage from "./pages/ProjetoDetalhePage";
-import DoarPage from "./pages/DoarPage";
-import NotFound from "./pages/NotFound";
 
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminOngs from "./pages/admin/AdminOngs";
-import AdminUsuarios from "./pages/admin/AdminUsuarios";
-import AdminProjetos from "./pages/admin/AdminProjetos";
-import AdminDoacoes from "./pages/admin/AdminDoacoes";
-import AdminVoluntarios from "./pages/admin/AdminVoluntarios";
-import AdminEventos from "./pages/admin/AdminEventos";
-import AdminAuditoria from "./pages/admin/AdminAuditoria";
-import AdminCodigos from "./pages/admin/AdminCodigos";
+const LoginPage = lazy(() => import("./pages/LoginPage"));
+const CadastroPage = lazy(() => import("./pages/CadastroPage"));
+const OngsPublicPage = lazy(() => import("./pages/OngsPublicPage"));
+const ProjetosPage = lazy(() => import("./pages/ProjetosPage"));
+const ProjetoPage = lazy(() => import("./pages/ProjetoPage"));
+const OngPage = lazy(() => import("./pages/OngPage"));
+const DoarProjetoPage = lazy(() => import("./pages/DoarProjetoPage"));
+const ObrigadoPage = lazy(() => import("./pages/ObrigadoPage"));
+const DoarPage = lazy(() => import("./pages/DoarPage"));
+const EsqueciSenhaPage = lazy(() => import("./pages/EsqueciSenhaPage"));
+const RedefinirSenhaPage = lazy(() => import("./pages/RedefinirSenhaPage"));
+const SobrePage = lazy(() => import("./pages/conteudo/SobrePage"));
+const ComoFuncionaPage = lazy(() => import("./pages/conteudo/ComoFuncionaPage"));
+const PrivacidadePage = lazy(() => import("./pages/conteudo/PrivacidadePage"));
+const TermosPage = lazy(() => import("./pages/conteudo/TermosPage"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
-import OngDashboard from "./pages/ong/OngDashboard";
-import OngProjetos from "./pages/ong/OngProjetos";
-import OngMembros from "./pages/ong/OngMembros";
-import OngDoacoes from "./pages/ong/OngDoacoes";
-import OngVoluntarios from "./pages/ong/OngVoluntarios";
-import OngAuditoria from "./pages/ong/OngAuditoria";
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminOngs = lazy(() => import("./pages/admin/AdminOngs"));
+const AdminUsuarios = lazy(() => import("./pages/admin/AdminUsuarios"));
+const AdminProjetos = lazy(() => import("./pages/admin/AdminProjetos"));
+const AdminDoacoes = lazy(() => import("./pages/admin/AdminDoacoes"));
+const AdminVoluntarios = lazy(() => import("./pages/admin/AdminVoluntarios"));
+const AdminEventos = lazy(() => import("./pages/admin/AdminEventos"));
+const AdminAuditoria = lazy(() => import("./pages/admin/AdminAuditoria"));
+const AdminCodigos = lazy(() => import("./pages/admin/AdminCodigos"));
 
-const queryClient = new QueryClient();
+const OngDashboard = lazy(() => import("./pages/ong/OngDashboard"));
+const OngProjetos = lazy(() => import("./pages/ong/OngProjetos"));
+const OngMembros = lazy(() => import("./pages/ong/OngMembros"));
+const OngDoacoes = lazy(() => import("./pages/ong/OngDoacoes"));
+const OngVoluntarios = lazy(() => import("./pages/ong/OngVoluntarios"));
+const OngAuditoria = lazy(() => import("./pages/ong/OngAuditoria"));
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Dado público desta plataforma muda devagar; 5 min evita refetch a cada
+      // navegação entre home, listagem e detalhe.
+      staleTime: 5 * 60 * 1000,
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            {/* Public */}
-            <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/cadastro" element={<CadastroPage />} />
-            <Route path="/ongs" element={<OngsPublicPage />} />
-            <Route path="/projeto/:id" element={<ProjetoDetalhePage />} />
-            <Route path="/doar/:ongId" element={<DoarPage />} />
+  <HelmetProvider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <AuthProvider>
+            <ErrorBoundary>
+              <Suspense fallback={<PageSkeleton />}>
+                <Routes>
+                  {/* Público */}
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/cadastro" element={<CadastroPage />} />
+                  <Route path="/esqueci-senha" element={<EsqueciSenhaPage />} />
+                  <Route path="/redefinir-senha" element={<RedefinirSenhaPage />} />
+                  <Route path="/ongs" element={<OngsPublicPage />} />
+                  <Route path="/projetos" element={<ProjetosPage />} />
+                  <Route path="/projetos/:slug" element={<ProjetoPage />} />
+                  <Route path="/ongs/:slug" element={<OngPage />} />
+                  <Route path="/doar/projeto/:slug" element={<DoarProjetoPage />} />
+                  <Route path="/obrigado/:id" element={<ObrigadoPage />} />
+                  <Route path="/doar/:ongId" element={<DoarPage />} />
 
-            {/* Admin */}
-            <Route path="/admin" element={<ProtectedRoute allowedRoles={["admin"]}><AdminDashboard /></ProtectedRoute>} />
-            <Route path="/admin/ongs" element={<ProtectedRoute allowedRoles={["admin"]}><AdminOngs /></ProtectedRoute>} />
-            <Route path="/admin/usuarios" element={<ProtectedRoute allowedRoles={["admin"]}><AdminUsuarios /></ProtectedRoute>} />
-            <Route path="/admin/projetos" element={<ProtectedRoute allowedRoles={["admin"]}><AdminProjetos /></ProtectedRoute>} />
-            <Route path="/admin/doacoes" element={<ProtectedRoute allowedRoles={["admin"]}><AdminDoacoes /></ProtectedRoute>} />
-            <Route path="/admin/voluntarios" element={<ProtectedRoute allowedRoles={["admin"]}><AdminVoluntarios /></ProtectedRoute>} />
-            <Route path="/admin/eventos" element={<ProtectedRoute allowedRoles={["admin"]}><AdminEventos /></ProtectedRoute>} />
-            <Route path="/admin/auditoria" element={<ProtectedRoute allowedRoles={["admin"]}><AdminAuditoria /></ProtectedRoute>} />
-            <Route path="/admin/codigos" element={<ProtectedRoute allowedRoles={["admin"]}><AdminCodigos /></ProtectedRoute>} />
+                  {/* Rota antiga, por UUID: links já compartilhados continuam
+                      funcionando e caem na página nova. */}
+                  <Route path="/projeto/:slug" element={<ProjetoPage />} />
 
-            {/* ONG */}
-            <Route path="/ong" element={<ProtectedRoute allowedRoles={["ong"]}><OngDashboard /></ProtectedRoute>} />
-            <Route path="/ong/projetos" element={<ProtectedRoute allowedRoles={["ong"]}><OngProjetos /></ProtectedRoute>} />
-            <Route path="/ong/membros" element={<ProtectedRoute allowedRoles={["ong"]}><OngMembros /></ProtectedRoute>} />
-            <Route path="/ong/doacoes" element={<ProtectedRoute allowedRoles={["ong"]}><OngDoacoes /></ProtectedRoute>} />
-            <Route path="/ong/voluntarios" element={<ProtectedRoute allowedRoles={["ong"]}><OngVoluntarios /></ProtectedRoute>} />
-            <Route path="/ong/auditoria" element={<ProtectedRoute allowedRoles={["ong"]}><OngAuditoria /></ProtectedRoute>} />
+                  {/* Conteúdo institucional */}
+                  <Route path="/sobre" element={<SobrePage />} />
+                  <Route path="/como-funciona" element={<ComoFuncionaPage />} />
+                  <Route path="/privacidade" element={<PrivacidadePage />} />
+                  <Route path="/termos" element={<TermosPage />} />
 
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+                  {/* Admin */}
+                  <Route path="/admin" element={<ProtectedRoute allowedRoles={["admin"]}><AdminDashboard /></ProtectedRoute>} />
+                  <Route path="/admin/ongs" element={<ProtectedRoute allowedRoles={["admin"]}><AdminOngs /></ProtectedRoute>} />
+                  <Route path="/admin/usuarios" element={<ProtectedRoute allowedRoles={["admin"]}><AdminUsuarios /></ProtectedRoute>} />
+                  <Route path="/admin/projetos" element={<ProtectedRoute allowedRoles={["admin"]}><AdminProjetos /></ProtectedRoute>} />
+                  <Route path="/admin/doacoes" element={<ProtectedRoute allowedRoles={["admin"]}><AdminDoacoes /></ProtectedRoute>} />
+                  <Route path="/admin/voluntarios" element={<ProtectedRoute allowedRoles={["admin"]}><AdminVoluntarios /></ProtectedRoute>} />
+                  <Route path="/admin/eventos" element={<ProtectedRoute allowedRoles={["admin"]}><AdminEventos /></ProtectedRoute>} />
+                  <Route path="/admin/auditoria" element={<ProtectedRoute allowedRoles={["admin"]}><AdminAuditoria /></ProtectedRoute>} />
+                  <Route path="/admin/codigos" element={<ProtectedRoute allowedRoles={["admin"]}><AdminCodigos /></ProtectedRoute>} />
+
+                  {/* ONG */}
+                  <Route path="/ong" element={<ProtectedRoute allowedRoles={["ong"]}><OngDashboard /></ProtectedRoute>} />
+                  <Route path="/ong/projetos" element={<ProtectedRoute allowedRoles={["ong"]}><OngProjetos /></ProtectedRoute>} />
+                  <Route path="/ong/membros" element={<ProtectedRoute allowedRoles={["ong"]}><OngMembros /></ProtectedRoute>} />
+                  <Route path="/ong/doacoes" element={<ProtectedRoute allowedRoles={["ong"]}><OngDoacoes /></ProtectedRoute>} />
+                  <Route path="/ong/voluntarios" element={<ProtectedRoute allowedRoles={["ong"]}><OngVoluntarios /></ProtectedRoute>} />
+                  <Route path="/ong/auditoria" element={<ProtectedRoute allowedRoles={["ong"]}><OngAuditoria /></ProtectedRoute>} />
+
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </ErrorBoundary>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </HelmetProvider>
 );
 
 export default App;

@@ -14,7 +14,7 @@ const slides = [
   {
     img: volunteers,
     title: "O poder do voluntariado",
-    text: "Mais de 60% das ONGs brasileiras dependem do trabalho voluntário para manter seus projetos ativos. Sua hora doada transforma vidas.",
+    text: "O trabalho voluntário sustenta boa parte dos projetos sociais no Brasil. Sua hora doada transforma vidas.",
   },
   {
     img: donation,
@@ -90,7 +90,7 @@ export default function LoginPage() {
             />
           ))}
         </div>
-        <Link to="/" className="absolute top-6 left-8 z-20 flex items-center gap-2 text-primary-foreground font-bold">
+        <Link to="/" aria-label="Solidariedade, página inicial" className="absolute top-6 left-8 z-20 flex items-center gap-2 text-primary-foreground font-bold">
           <Heart className="h-6 w-6" /> Solidariedade
         </Link>
       </div>
@@ -98,7 +98,7 @@ export default function LoginPage() {
       {/* Formulário */}
       <div className="flex items-center justify-center p-6 sm:p-12">
         <div className="w-full max-w-sm animate-fade-in">
-          <Link to="/" className="lg:hidden inline-flex items-center gap-2 mb-8 text-primary font-bold">
+          <Link to="/" aria-label="Solidariedade, página inicial" className="lg:hidden inline-flex items-center gap-2 mb-8 text-primary font-bold">
             <Heart className="h-6 w-6" /> Solidariedade
           </Link>
           <h1 className="text-3xl font-bold mb-2">Bem-vindo de volta</h1>
@@ -130,20 +130,25 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
-            <Button type="submit" variant="destructive" className="w-full" disabled={loading} size="lg">
+            <div className="flex justify-end">
+              <Link to="/esqueci-senha" className="text-sm text-primary underline underline-offset-2">
+                Esqueci minha senha
+              </Link>
+            </div>
+            <Button type="submit" className="w-full" disabled={loading} size="lg">
               {loading ? "Entrando..." : "Entrar"}
             </Button>
             <div className="pt-3 space-y-3">
               <p className="text-sm text-muted-foreground text-center">Não tem conta? Escolha como participar:</p>
               <div className="grid grid-cols-2 gap-3">
                 <Button type="button" variant="outline" className="h-auto min-h-24 flex-col gap-2 whitespace-normal text-center" asChild>
-                  <Link to="/cadastro?tipo=doador">
+                  <Link to="/cadastro?tipo=doador" aria-label="Criar conta de doador e acompanhar projetos">
                     <HandHeart className="h-5 w-5" />
                     <span>Doador e projetos</span>
                   </Link>
                 </Button>
                 <Button type="button" variant="outline" className="h-auto min-h-24 flex-col gap-2 whitespace-normal text-center" asChild>
-                  <Link to="/cadastro?tipo=ong">
+                  <Link to="/cadastro?tipo=ong" aria-label="Cadastrar ONG com chave de acesso">
                     <Building2 className="h-5 w-5" />
                     <span>ONG com chave</span>
                   </Link>

@@ -2,3 +2,8 @@ project_id = "btndhagrhykrajpaxmru"
 
 [functions.ong-signup]
 verify_jwt = false
+
+# Doação sem login: o visitante não tem sessão para enviar.
+# A função valida tudo no servidor e força status = pendente.
+[functions.registrar-doacao]
+verify_jwt = false
