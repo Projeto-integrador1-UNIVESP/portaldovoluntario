@@ -74,23 +74,24 @@ export default function RedefinirSenhaPage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Nova senha</FormLabel>
-                        <FormControl>
-                          <div className="relative">
+                        <div className="relative">
+                          <FormControl>
                             <Input
                               type={mostrarSenha ? "text" : "password"}
                               autoComplete="new-password"
+                              className="pr-10"
                               {...field}
                             />
-                            <button
-                              type="button"
-                              onClick={() => setMostrarSenha((v) => !v)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                              aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
-                            >
-                              {mostrarSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                            </button>
-                          </div>
-                        </FormControl>
+                          </FormControl>
+                          <button
+                            type="button"
+                            onClick={() => setMostrarSenha((v) => !v)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                            aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
+                          >
+                            {mostrarSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
