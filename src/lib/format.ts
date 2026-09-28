@@ -6,10 +6,29 @@ export const formatCurrency = (value: number | null | undefined) => {
   return numero.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 };
 
+const SO_DATA = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Converte a entrada em Date.
+ *
+ * Uma string "YYYY-MM-DD" (como as colunas `date` do Postgres devolvem) é lida
+ * como data **local**. O parse nativo do JS a trataria como meia-noite UTC, o
+ * que em qualquer fuso a oeste de Greenwich exibe o dia anterior — era por isso
+ * que um projeto começando em 2026-05-01 aparecia como 30/04.
+ */
+const paraData = (value: string | Date): Date => {
+  if (value instanceof Date) return value;
+  if (SO_DATA.test(value)) {
+    const [ano, mes, dia] = value.split("-").map(Number);
+    return new Date(ano, mes - 1, dia);
+  }
+  return new Date(value);
+};
+
 /** Formata uma data (ISO ou Date) como dd/mm/aaaa. Retorna "" para entrada vazia/inválida. */
 export const formatDate = (value: string | Date | null | undefined) => {
   if (!value) return "";
-  const date = value instanceof Date ? value : new Date(value);
+  const date = paraData(value);
   if (Number.isNaN(date.getTime())) return "";
   return date.toLocaleDateString("pt-BR");
 };
@@ -17,7 +36,7 @@ export const formatDate = (value: string | Date | null | undefined) => {
 /** Formata data e hora como dd/mm/aaaa hh:mm. */
 export const formatDateTime = (value: string | Date | null | undefined) => {
   if (!value) return "";
-  const date = value instanceof Date ? value : new Date(value);
+  const date = paraData(value);
   if (Number.isNaN(date.getTime())) return "";
   return date.toLocaleString("pt-BR", {
     day: "2-digit",

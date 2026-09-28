@@ -18,7 +18,10 @@ const LoginPage = lazy(() => import("./pages/LoginPage"));
 const CadastroPage = lazy(() => import("./pages/CadastroPage"));
 const OngsPublicPage = lazy(() => import("./pages/OngsPublicPage"));
 const ProjetosPage = lazy(() => import("./pages/ProjetosPage"));
-const ProjetoDetalhePage = lazy(() => import("./pages/ProjetoDetalhePage"));
+const ProjetoPage = lazy(() => import("./pages/ProjetoPage"));
+const OngPage = lazy(() => import("./pages/OngPage"));
+const DoarProjetoPage = lazy(() => import("./pages/DoarProjetoPage"));
+const ObrigadoPage = lazy(() => import("./pages/ObrigadoPage"));
 const DoarPage = lazy(() => import("./pages/DoarPage"));
 const EsqueciSenhaPage = lazy(() => import("./pages/EsqueciSenhaPage"));
 const RedefinirSenhaPage = lazy(() => import("./pages/RedefinirSenhaPage"));
@@ -76,8 +79,15 @@ const App = () => (
                   <Route path="/redefinir-senha" element={<RedefinirSenhaPage />} />
                   <Route path="/ongs" element={<OngsPublicPage />} />
                   <Route path="/projetos" element={<ProjetosPage />} />
-                  <Route path="/projeto/:id" element={<ProjetoDetalhePage />} />
+                  <Route path="/projetos/:slug" element={<ProjetoPage />} />
+                  <Route path="/ongs/:slug" element={<OngPage />} />
+                  <Route path="/doar/projeto/:slug" element={<DoarProjetoPage />} />
+                  <Route path="/obrigado/:id" element={<ObrigadoPage />} />
                   <Route path="/doar/:ongId" element={<DoarPage />} />
+
+                  {/* Rota antiga, por UUID: links já compartilhados continuam
+                      funcionando e caem na página nova. */}
+                  <Route path="/projeto/:slug" element={<ProjetoPage />} />
 
                   {/* Conteúdo institucional */}
                   <Route path="/sobre" element={<SobrePage />} />

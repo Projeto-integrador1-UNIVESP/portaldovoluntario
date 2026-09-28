@@ -31,6 +31,14 @@ describe("formatDate", () => {
     expect(formatDate("2026-09-28T12:00:00Z")).toBe("28/09/2026");
   });
 
+  it("lê 'YYYY-MM-DD' como data local, não como meia-noite UTC", () => {
+    // O parse nativo trata a string como UTC; em UTC-3 isso exibia o dia
+    // anterior, e a página do projeto mostrava 30/04 para uma data 2026-05-01.
+    expect(formatDate("2026-05-01")).toBe("01/05/2026");
+    expect(formatDate("2026-10-05")).toBe("05/10/2026");
+    expect(formatDate("2026-01-01")).toBe("01/01/2026");
+  });
+
   it("retorna vazio para entrada ausente ou inválida", () => {
     expect(formatDate(null)).toBe("");
     expect(formatDate("")).toBe("");

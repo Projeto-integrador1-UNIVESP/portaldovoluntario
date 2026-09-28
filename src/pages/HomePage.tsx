@@ -15,6 +15,7 @@ import handsPlantImg from "@/assets/news-hands-plant.jpg";
 import childrenBooksImg from "@/assets/news-children-books.jpg";
 import communityMealImg from "@/assets/news-community-meal.jpg";
 import { Footer } from "@/components/layout/Footer";
+import { ProjectCard } from "@/components/common/ProjectCard";
 import { Seo } from "@/components/common/Seo";
 
 const newsSlides = [
@@ -77,12 +78,11 @@ export default function HomePage() {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  const handleDoarClick = (e: React.MouseEvent, ongId: string) => {
-    if (!user) {
-      e.preventDefault();
-      navigate(`/login?redirect=/doar/${ongId}`);
-    }
-  };
+  // Com base pequena, "1 ONG / 1 projeto" enfraquece a prova social em vez de
+  // reforçar. Abaixo deste mínimo, a faixa de números simplesmente não aparece.
+  const MINIMO_PARA_EXIBIR = 3;
+  const temNumerosQueImpressionam =
+    stats.ongs + stats.projetos + stats.voluntarios >= MINIMO_PARA_EXIBIR;
 
   useEffect(() => {
     const t = setInterval(() => setSlide((s) => (s + 1) % newsSlides.length), 5500);
@@ -135,20 +135,25 @@ export default function HomePage() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-3 gap-8 max-w-lg mx-auto mt-12">
-            <button onClick={() => scrollTo("ongs-section")} className="text-center group cursor-pointer">
-              <p className="text-3xl font-bold text-primary group-hover:scale-110 transition-transform">{stats.ongs}</p>
-              <p className="text-sm text-muted-foreground group-hover:text-primary transition-colors">ONGs ativas</p>
-            </button>
-            <button onClick={() => scrollTo("projetos-section")} className="text-center group cursor-pointer">
-              <p className="text-3xl font-bold text-primary group-hover:scale-110 transition-transform">{stats.projetos}</p>
-              <p className="text-sm text-muted-foreground group-hover:text-primary transition-colors">Projetos</p>
-            </button>
-            <button onClick={() => scrollTo("voluntarios-section")} className="text-center group cursor-pointer">
-              <p className="text-3xl font-bold text-primary group-hover:scale-110 transition-transform">{stats.voluntarios}</p>
-              <p className="text-sm text-muted-foreground group-hover:text-primary transition-colors">Voluntários</p>
-            </button>
-          </div>
+          {temNumerosQueImpressionam && (
+            <div className="mx-auto mt-12 grid max-w-lg grid-cols-3 gap-8">
+              <Contador
+                valor={stats.ongs}
+                rotulo={stats.ongs === 1 ? "ONG ativa" : "ONGs ativas"}
+                aoClicar={() => scrollTo("ongs-section")}
+              />
+              <Contador
+                valor={stats.projetos}
+                rotulo={stats.projetos === 1 ? "Projeto" : "Projetos"}
+                aoClicar={() => scrollTo("projetos-section")}
+              />
+              <Contador
+                valor={stats.voluntarios}
+                rotulo={stats.voluntarios === 1 ? "Voluntário" : "Voluntários"}
+                aoClicar={() => scrollTo("voluntarios-section")}
+              />
+            </div>
+          )}
         </div>
       </section>
 
@@ -206,41 +211,21 @@ export default function HomePage() {
               <p className="text-muted-foreground">Nenhum projeto disponível no momento.</p>
             </Card>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {projetos.map((p) => (
-                <Card key={p.id} className="animate-fade-in hover:shadow-md transition-shadow">
-                  {p.img_url && (
-                    <div className="h-40 bg-muted rounded-t-lg overflow-hidden">
-                      <img src={p.img_url} alt={p.nome_projeto} className="w-full h-full object-cover" />
-                    </div>
-                  )}
-                  <CardHeader>
-                    <CardTitle className="text-lg">{p.nome_projeto}</CardTitle>
-                    <p className="text-sm text-muted-foreground">{(p as any).ongs?.nome}</p>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground line-clamp-2">{p.descricao || "Sem descrição"}</p>
-                    {p.data_inicio && (
-                      <div className="flex items-center gap-1 mt-3 text-xs text-muted-foreground">
-                        <Calendar className="h-3 w-3" />
-                        {new Date(p.data_inicio).toLocaleDateString("pt-BR")}
-                        {p.data_fim && ` - ${new Date(p.data_fim).toLocaleDateString("pt-BR")}`}
-                      </div>
-                    )}
-                  </CardContent>
-                  <CardFooter className="gap-2">
-                    <Button size="sm" asChild className="flex-1">
-                      <Link to={`/projeto/${p.id}`}>
-                        <Users className="h-4 w-4 mr-1" /> Participar
-                      </Link>
-                    </Button>
-                    <Button size="sm" variant="outline" asChild className="flex-1">
-                      <Link to={`/doar/${p.id_ong}`} onClick={(e) => handleDoarClick(e, p.id_ong)}>
-                        <Heart className="h-4 w-4 mr-1" /> Doar
-                      </Link>
-                    </Button>
-                  </CardFooter>
-                </Card>
+                <ProjectCard
+                  key={p.id}
+                  projeto={{
+                    id: p.id,
+                    slug: p.slug,
+                    nome_projeto: p.nome_projeto,
+                    descricao: p.descricao,
+                    img_url: p.capa_url || p.img_url,
+                    data_fim: p.data_fim,
+                    cidade: p.cidade,
+                    ongNome: (p as any).ongs?.nome ?? null,
+                  }}
+                />
               ))}
             </div>
           )}
@@ -295,10 +280,15 @@ export default function HomePage() {
                       </div>
                     )}
                   </CardContent>
-                  <CardFooter>
-                    <Button size="sm" asChild className="w-full">
-                      <Link to={`/doar/${o.id}`} onClick={(e) => handleDoarClick(e, o.id)}>
-                        <Heart className="h-4 w-4 mr-1" /> Doar para esta ONG <ArrowRight className="h-4 w-4 ml-1" />
+                  <CardFooter className="gap-2">
+                    <Button size="sm" asChild className="flex-1">
+                      <Link to={`/ongs/${o.slug ?? o.id}`}>
+                        Ver perfil <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" />
+                      </Link>
+                    </Button>
+                    <Button size="sm" variant="cta" asChild>
+                      <Link to={`/doar/${o.id}`}>
+                        <Heart className="mr-1 h-4 w-4" aria-hidden="true" /> Doar
                       </Link>
                     </Button>
                   </CardFooter>
@@ -330,5 +320,20 @@ export default function HomePage() {
 
       <Footer />
     </PublicShell>
+  );
+}
+
+function Contador({
+  valor, rotulo, aoClicar,
+}: { valor: number; rotulo: string; aoClicar: () => void }) {
+  return (
+    <button onClick={aoClicar} className="group cursor-pointer text-center">
+      <p className="text-3xl font-bold text-primary transition-transform group-hover:scale-110">
+        {valor.toLocaleString("pt-BR")}
+      </p>
+      <p className="text-sm text-muted-foreground transition-colors group-hover:text-primary">
+        {rotulo}
+      </p>
+    </button>
   );
 }

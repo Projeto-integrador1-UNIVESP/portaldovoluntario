@@ -13,7 +13,11 @@ export default function OngsPublicPage() {
   const [ongs, setOngs] = useState<any[]>([]);
 
   useEffect(() => {
-    supabase.from("ongs").select("*").eq("status", true).then(({ data }) => {
+    supabase
+      .from("ongs")
+      .select("id, slug, nome, descricao, missao, cidade, estado, img_url, logo_url, img_capa, capa_url, verificada_em")
+      .eq("status", true)
+      .then(({ data }) => {
       if (data) setOngs(data);
     });
   }, []);
@@ -51,9 +55,16 @@ export default function OngsPublicPage() {
                   <p className="text-sm text-muted-foreground line-clamp-3">{o.descricao || "Organização parceira"}</p>
                   {o.cidade && <p className="text-xs text-muted-foreground mt-2">{o.cidade}, {o.estado}</p>}
                 </CardContent>
-                <CardFooter>
-                  <Button size="sm" variant="outline" asChild className="w-full">
-                    <Link to={`/doar/${o.id}`}>Doar <ArrowRight className="h-4 w-4 ml-1" /></Link>
+                <CardFooter className="gap-2">
+                  {/* Achado 6: o card não abria nada. Ver o perfil vem antes de
+                      doar — é lá que estão CNPJ, missão e projetos. */}
+                  <Button size="sm" asChild className="flex-1">
+                    <Link to={`/ongs/${o.slug ?? o.id}`}>
+                      Ver perfil <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" />
+                    </Link>
+                  </Button>
+                  <Button size="sm" variant="outline" asChild>
+                    <Link to={`/doar/${o.id}`}>Doar</Link>
                   </Button>
                 </CardFooter>
               </Card>

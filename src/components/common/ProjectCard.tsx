@@ -7,6 +7,7 @@ import { formatPrazo } from "@/lib/format";
 
 export type ProjetoCardData = {
   id: string;
+  slug?: string | null;
   nome_projeto: string;
   descricao: string | null;
   img_url: string | null;
@@ -64,7 +65,7 @@ export function ProjectCard({ projeto }: { projeto: ProjetoCardData }) {
 
       <CardFooter>
         <Button asChild className="w-full">
-          <Link to={`/projeto/${projeto.id}`}>Ver projeto</Link>
+          <Link to={`/projetos/${projeto.slug ?? projeto.id}`}>Ver projeto</Link>
         </Button>
       </CardFooter>
     </Card>

@@ -16,7 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 const POR_PAGINA = 12;
 
 /** Colunas explícitas em vez de `select("*")`: menos bytes por card (P3). */
-const COLUNAS = "id, nome_projeto, descricao, img_url, data_fim, id_ong";
+const COLUNAS = "id, slug, nome_projeto, descricao, img_url, capa_url, cidade, data_fim, id_ong";
 
 async function buscarProjetos(termo: string, pagina: number) {
   const de = pagina * POR_PAGINA;
@@ -48,9 +48,11 @@ async function buscarProjetos(termo: string, pagina: number) {
     total: count ?? 0,
     projetos: projetos.map<ProjetoCardData>((p) => ({
       id: p.id,
+      slug: p.slug,
+      cidade: p.cidade,
       nome_projeto: p.nome_projeto,
       descricao: p.descricao,
-      img_url: p.img_url,
+      img_url: p.capa_url || p.img_url,
       data_fim: p.data_fim,
       ongNome: nomePorOng.get(p.id_ong) ?? null,
     })),
