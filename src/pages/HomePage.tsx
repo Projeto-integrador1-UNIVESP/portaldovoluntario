@@ -14,6 +14,8 @@ import volunteersImg from "@/assets/news-volunteers-sorting.jpg";
 import handsPlantImg from "@/assets/news-hands-plant.jpg";
 import childrenBooksImg from "@/assets/news-children-books.jpg";
 import communityMealImg from "@/assets/news-community-meal.jpg";
+import { Footer } from "@/components/layout/Footer";
+import { Seo } from "@/components/common/Seo";
 
 const newsSlides = [
   {
@@ -109,6 +111,7 @@ export default function HomePage() {
 
   return (
     <PublicShell>
+      <Seo description="Veja do que as ONGs perto de você precisam hoje e ajude com doações ou voluntariado." />
       {/* Hero */}
       <section className="relative py-20 md:py-28 bg-gradient-to-br from-primary/10 via-background to-accent">
         <div className="container text-center">
@@ -316,7 +319,7 @@ export default function HomePage() {
             <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">Seja voluntário</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto mb-6">
               Já são <span className="font-semibold text-primary">{stats.voluntarios}</span> pessoas dedicando tempo às causas sociais.
-              Escolha um projeto abaixo e some-se a essa rede de transformação.
+              Escolha um projeto e some-se a essa rede de transformação.
             </p>
             <Button size="lg" onClick={() => scrollTo("projetos-section")}>
               <HandHeart className="h-4 w-4 mr-2" /> Ver projetos para voluntariar
@@ -325,14 +328,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-8 border-t">
-        <div className="container text-center">
-          <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Portal de Voluntariado e Doações Solidárias
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </PublicShell>
   );
 }

@@ -5,6 +5,9 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Building2, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Footer } from "@/components/layout/Footer";
+import { Seo } from "@/components/common/Seo";
+import { EmptyState } from "@/components/common/EmptyState";
 
 export default function OngsPublicPage() {
   const [ongs, setOngs] = useState<any[]>([]);
@@ -17,15 +20,21 @@ export default function OngsPublicPage() {
 
   return (
     <PublicShell>
+      <Seo
+        title="ONGs parceiras"
+        description="Conheça as organizações da plataforma e veja como contribuir com cada uma."
+      />
       <div className="container py-12">
         <h1 className="text-3xl font-bold text-foreground mb-2">ONGs parceiras</h1>
         <p className="text-muted-foreground mb-8">Conheça as organizações e contribua</p>
 
         {ongs.length === 0 ? (
-          <Card className="p-12 text-center">
-            <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">Nenhuma ONG cadastrada ainda.</p>
-          </Card>
+          <EmptyState
+            icon={Building2}
+            title="Nenhuma ONG cadastrada ainda"
+            description="Assim que uma organização entrar na plataforma, ela aparece aqui."
+            action={{ label: "Ver projetos", to: "/projetos" }}
+          />
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {ongs.map((o) => (
@@ -52,6 +61,7 @@ export default function OngsPublicPage() {
           </div>
         )}
       </div>
+      <Footer />
     </PublicShell>
   );
 }
