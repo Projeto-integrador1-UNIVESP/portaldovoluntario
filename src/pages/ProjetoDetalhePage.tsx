@@ -32,7 +32,7 @@ export default function ProjetoDetalhePage() {
       // deixava a tela girando para sempre, porque só havia `if (!projeto)`.
       setCarregando(false);
 
-      const { data: countData } = await (supabase as any).rpc("count_project_voluntarios", { _project_id: id });
+      const { data: countData } = await supabase.rpc("count_project_voluntarios", { _project_id: id });
       setVoluntarios(Number(countData || 0));
 
       if (user) {

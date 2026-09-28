@@ -94,7 +94,7 @@ export default function HomePage() {
       const [projRes, ongRes, statsRes] = await Promise.all([
         supabase.from("projetos").select("*").eq("status", true).limit(6),
         supabase.from("ongs").select("*").eq("status", true).limit(4),
-        (supabase as any).rpc("get_public_home_stats"),
+        supabase.rpc("get_public_home_stats"),
       ]);
       const ongMap = new Map((ongRes.data || []).map((o: any) => [o.id, o]));
       if (projRes.data) setProjetos(projRes.data.map((p: any) => ({ ...p, ongs: ongMap.get(p.id_ong) })));

@@ -25,7 +25,7 @@ export default function AdminEventos() {
 
   const fetchAll = async () => {
     const [e, o] = await Promise.all([
-      (supabase as any).from("eventos").select("*").order("data_evento", { ascending: false }),
+      supabase.from("eventos").select("*").order("data_evento", { ascending: false }),
       supabase.from("ongs").select("id, nome").eq("status", true).order("nome"),
     ]);
     const ongMap = new Map((o.data || []).map((ong: any) => [ong.id, ong]));
@@ -49,8 +49,8 @@ export default function AdminEventos() {
       id_ong: form.id_ong || null,
     };
     const { error } = editing
-      ? await (supabase as any).from("eventos").update(payload).eq("id", editing.id)
-      : await (supabase as any).from("eventos").insert(payload);
+      ? await supabase.from("eventos").update(payload).eq("id", editing.id)
+      : await supabase.from("eventos").insert(payload);
     if (error) { toast.error("Erro ao salvar: " + error.message); return; }
     toast.success(editing ? "Evento atualizado" : "Evento criado");
     setOpen(false); setEditing(null); setForm(empty); fetchAll();
@@ -72,13 +72,13 @@ export default function AdminEventos() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Excluir este evento?")) return;
-    const { error } = await (supabase as any).from("eventos").delete().eq("id", id);
+    const { error } = await supabase.from("eventos").delete().eq("id", id);
     if (error) { toast.error("Erro ao excluir"); return; }
     toast.success("Evento excluído"); fetchAll();
   };
 
   const toggleStatus = async (e: any) => {
-    await (supabase as any).from("eventos").update({ status: !e.status }).eq("id", e.id);
+    await supabase.from("eventos").update({ status: !e.status }).eq("id", e.id);
     fetchAll();
   };
 
