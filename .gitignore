@@ -28,3 +28,10 @@ dist-ssr
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# SQL consolidado para colar no editor do Supabase.
+# É gerado a partir de supabase/migrations/ — versionar seria duplicar.
+/migrations-fase2-*.sql
+
+# Artefatos de trabalho do agente: planos, scripts de validação, anotações.
+.claude/
