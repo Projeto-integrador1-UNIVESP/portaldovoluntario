@@ -5,7 +5,7 @@ import { PublicShell } from "@/components/layout/PublicShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Users, Calendar, ArrowRight, Building2, HandHeart, Quote, UserCheck } from "lucide-react";
+import { Heart, Users, Calendar, ArrowRight, Building2, HandHeart, Pause, Play, Quote, UserCheck } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import boxesImg from "@/assets/news-donation-boxes.jpg";
 import heartImg from "@/assets/news-giving-heart.jpg";
@@ -84,10 +84,19 @@ export default function HomePage() {
   const temNumerosQueImpressionam =
     stats.ongs + stats.projetos + stats.voluntarios >= MINIMO_PARA_EXIBIR;
 
+  // Conteúdo que se move sozinho por mais de 5s precisa de um jeito de parar
+  // (WCAG 2.2.2). Pausa no hover, no foco pelo teclado, no botão, e para quem
+  // pediu menos movimento no sistema.
+  const [pausado, setPausado] = useState(false);
+  const prefereMenosMovimento =
+    typeof window !== "undefined" &&
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
   useEffect(() => {
+    if (pausado || prefereMenosMovimento) return;
     const t = setInterval(() => setSlide((s) => (s + 1) % newsSlides.length), 5500);
     return () => clearInterval(t);
-  }, []);
+  }, [pausado, prefereMenosMovimento]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -164,30 +173,54 @@ export default function HomePage() {
             <h2 className="text-2xl font-bold text-foreground">Notícias e inspiração</h2>
             <p className="text-muted-foreground">Histórias sobre doações e o poder do voluntariado</p>
           </div>
-          <div className="relative h-[360px] md:h-[420px] rounded-xl overflow-hidden shadow-md">
+          <div
+            className="relative h-[360px] overflow-hidden rounded-xl shadow-md md:h-[420px]"
+            role="region"
+            aria-roledescription="carrossel"
+            aria-label="Notícias e inspiração"
+            onMouseEnter={() => setPausado(true)}
+            onMouseLeave={() => setPausado(false)}
+            onFocusCapture={() => setPausado(true)}
+            onBlurCapture={() => setPausado(false)}
+          >
             {newsSlides.map((s, i) => (
               <div
                 key={i}
                 className="absolute inset-0 transition-opacity duration-1000"
-                style={{ opacity: i === slide ? 1 : 0, pointerEvents: i === slide ? "auto" : "none" }}
+                style={{
+                  opacity: i === slide ? 1 : 0,
+                  visibility: i === slide ? "visible" : "hidden",
+                  pointerEvents: i === slide ? "auto" : "none",
+                }}
+                aria-hidden={i !== slide}
               >
                 <img src={s.img} alt={s.title} className="absolute inset-0 h-full w-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-foreground/90 via-foreground/50 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-foreground/95 via-foreground/75 to-foreground/30" />
                 <div className="relative z-10 flex h-full flex-col justify-end p-8 md:p-12 text-background max-w-3xl">
                   <Badge variant="secondary" className="w-fit mb-3">{s.tag}</Badge>
-                  <Quote className="h-8 w-8 mb-3 opacity-80" />
+                  <Quote className="mb-3 h-8 w-8" aria-hidden="true" />
                   <h3 className="text-2xl md:text-3xl font-bold mb-3 leading-tight">{s.title}</h3>
-                  <p className="text-base md:text-lg opacity-95">{s.text}</p>
+                  <p className="text-base md:text-lg">{s.text}</p>
                 </div>
               </div>
             ))}
-            <div className="absolute bottom-5 right-6 z-20 flex gap-2">
+            <div className="absolute bottom-5 right-6 z-20 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setPausado((v) => !v)}
+                aria-label={pausado ? "Retomar o carrossel" : "Pausar o carrossel"}
+                className="mr-1 rounded-full bg-background/90 p-1.5 text-foreground"
+              >
+                {pausado ? <Play className="h-3.5 w-3.5" /> : <Pause className="h-3.5 w-3.5" />}
+              </button>
               {newsSlides.map((_, i) => (
                 <button
                   key={i}
+                  type="button"
                   onClick={() => setSlide(i)}
-                  aria-label={`Slide ${i + 1}`}
-                  className={`h-2 rounded-full transition-all ${i === slide ? "w-8 bg-background" : "w-2 bg-background/60"}`}
+                  aria-label={`Ir para o slide ${i + 1} de ${newsSlides.length}`}
+                  aria-current={i === slide}
+                  className={`h-2 rounded-full transition-all ${i === slide ? "w-8 bg-background" : "w-2 bg-background/70"}`}
                 />
               ))}
             </div>

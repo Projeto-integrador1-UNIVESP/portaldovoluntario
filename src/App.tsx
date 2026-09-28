@@ -43,6 +43,7 @@ const AdminCodigos = lazy(() => import("./pages/admin/AdminCodigos"));
 
 const OngDashboard = lazy(() => import("./pages/ong/OngDashboard"));
 const OngProjetos = lazy(() => import("./pages/ong/OngProjetos"));
+const OngNecessidades = lazy(() => import("./pages/ong/OngNecessidades"));
 const OngMembros = lazy(() => import("./pages/ong/OngMembros"));
 const OngDoacoes = lazy(() => import("./pages/ong/OngDoacoes"));
 const OngVoluntarios = lazy(() => import("./pages/ong/OngVoluntarios"));
@@ -109,6 +110,7 @@ const App = () => (
                   {/* ONG */}
                   <Route path="/ong" element={<ProtectedRoute allowedRoles={["ong"]}><OngDashboard /></ProtectedRoute>} />
                   <Route path="/ong/projetos" element={<ProtectedRoute allowedRoles={["ong"]}><OngProjetos /></ProtectedRoute>} />
+                  <Route path="/ong/necessidades" element={<ProtectedRoute allowedRoles={["ong"]}><OngNecessidades /></ProtectedRoute>} />
                   <Route path="/ong/membros" element={<ProtectedRoute allowedRoles={["ong"]}><OngMembros /></ProtectedRoute>} />
                   <Route path="/ong/doacoes" element={<ProtectedRoute allowedRoles={["ong"]}><OngDoacoes /></ProtectedRoute>} />
                   <Route path="/ong/voluntarios" element={<ProtectedRoute allowedRoles={["ong"]}><OngVoluntarios /></ProtectedRoute>} />
