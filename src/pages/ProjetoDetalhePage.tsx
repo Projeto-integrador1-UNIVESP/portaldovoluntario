@@ -6,7 +6,9 @@ import { PublicShell } from "@/components/layout/PublicShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Users, Heart, Building2 } from "lucide-react";
+import { Calendar, Users, Heart, Building2, FolderOpen } from "lucide-react";
+import { EmptyState } from "@/components/common/EmptyState";
+import { Seo } from "@/components/common/Seo";
 import { toast } from "sonner";
 
 export default function ProjetoDetalhePage() {
@@ -16,6 +18,7 @@ export default function ProjetoDetalhePage() {
   const [projeto, setProjeto] = useState<any>(null);
   const [jaInscrito, setJaInscrito] = useState(false);
   const [voluntarios, setVoluntarios] = useState(0);
+  const [carregando, setCarregando] = useState(true);
 
   useEffect(() => {
     if (!id) return;
@@ -25,6 +28,9 @@ export default function ProjetoDetalhePage() {
         const { data: ong } = await supabase.from("ongs").select("nome, id").eq("id", data.id_ong).maybeSingle();
         setProjeto({ ...data, ongs: ong });
       }
+      // Encerrar o carregamento mesmo sem resultado: antes, um id inexistente
+      // deixava a tela girando para sempre, porque só havia `if (!projeto)`.
+      setCarregando(false);
 
       const { data: countData } = await (supabase as any).rpc("count_project_voluntarios", { _project_id: id });
       setVoluntarios(Number(countData || 0));
@@ -49,10 +55,25 @@ export default function ProjetoDetalhePage() {
     }
   };
 
+  if (carregando) return (
+    <PublicShell>
+      <div className="flex items-center justify-center py-20" role="status" aria-live="polite">
+        <span className="sr-only">Carregando projeto…</span>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    </PublicShell>
+  );
+
   if (!projeto) return (
     <PublicShell>
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      <Seo title="Projeto não encontrado" noIndex />
+      <div className="container py-16">
+        <EmptyState
+          icon={FolderOpen}
+          title="Projeto não encontrado"
+          description="Ele pode ter sido removido pela ONG ou o link está incorreto."
+          action={{ label: "Ver todos os projetos", to: "/projetos" }}
+        />
       </div>
     </PublicShell>
   );

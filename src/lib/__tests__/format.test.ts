@@ -14,7 +14,7 @@ import {
 
 describe("formatCurrency", () => {
   it("formata no padrão brasileiro", () => {
-    //   = espaço não separável que o Intl insere depois de "R$"
+    // O Intl separa "R$" do valor com U+00A0 (espaço não separável), não com espaço comum.
     expect(formatCurrency(1234.5)).toBe("R$ 1.234,50");
     expect(formatCurrency(0)).toBe("R$ 0,00");
   });

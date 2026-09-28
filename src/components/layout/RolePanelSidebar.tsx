@@ -1,38 +1,16 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import {
-  LayoutDashboard, Building2, Users, FolderOpen, DollarSign,
-  UserCheck, Calendar, ChevronLeft, ChevronRight, Shield, ShieldCheck,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const adminLinks = [
-  { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { label: "ONGs", href: "/admin/ongs", icon: Building2 },
-  { label: "Usuários", href: "/admin/usuarios", icon: Users },
-  { label: "Projetos", href: "/admin/projetos", icon: FolderOpen },
-  { label: "Eventos", href: "/admin/eventos", icon: Calendar },
-  { label: "Doações", href: "/admin/doacoes", icon: DollarSign },
-  { label: "Voluntários", href: "/admin/voluntarios", icon: UserCheck },
-  { label: "Auditoria", href: "/admin/auditoria", icon: ShieldCheck },
-];
-
-const ongLinks = [
-  { label: "Dashboard", href: "/ong", icon: LayoutDashboard },
-  { label: "Projetos", href: "/ong/projetos", icon: FolderOpen },
-  { label: "Voluntários", href: "/ong/voluntarios", icon: UserCheck },
-  { label: "Membros", href: "/ong/membros", icon: Users },
-  { label: "Doações", href: "/ong/doacoes", icon: DollarSign },
-  { label: "Auditoria", href: "/ong/auditoria", icon: ShieldCheck },
-];
+import { navPorRole } from "@/lib/navigation";
 
 export function RolePanelSidebar() {
   const { role } = useAuth();
   const { pathname } = useLocation();
   const [collapsed, setCollapsed] = useState(false);
 
-  const links = role === "admin" ? adminLinks : role === "ong" ? ongLinks : [];
+  const links = navPorRole(role);
   if (!links.length) return null;
 
   return (
