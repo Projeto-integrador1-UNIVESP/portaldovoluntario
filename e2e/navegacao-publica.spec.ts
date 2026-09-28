@@ -2,11 +2,23 @@ import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
 /**
- * As páginas entram com `animate-fade-in`, que parte de opacity 0. Medir
- * contraste no meio da animação acusa cores translúcidas que ninguém vê no
- * estado final — o que interessa é a interface já estabilizada.
+ * Prepara a página para a varredura de contraste.
+ *
+ * As páginas entram com `animate-fade-in`, que parte de opacity 0. Medir no
+ * meio da animação acusa cores translúcidas que ninguém vê no estado final.
+ *
+ * Esperar `getAnimations()` esvaziar não resolve: a lista também vem vazia
+ * *antes* de a animação começar, então sob carga a checagem passava cedo
+ * demais e o teste falhava de forma intermitente.
+ *
+ * A saída é emular `prefers-reduced-motion`, que o próprio app já trata
+ * zerando as animações. Assim medimos a interface estabilizada, e de quebra
+ * exercitamos o caminho de quem pediu menos movimento no sistema.
  */
-async function aguardarAnimacoes(page: Page) {
+async function prepararParaVarredura(page: Page) {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.waitForLoadState("networkidle");
+  await page.evaluate(() => document.fonts.ready);
   await page.waitForFunction(() =>
     document.getAnimations().every((a) => a.playState === "finished" || a.playState === "idle"),
   );
@@ -69,8 +81,9 @@ test.describe("Mobile", () => {
 test.describe("Acessibilidade", () => {
   for (const { rota, nome } of PAGINAS_PUBLICAS) {
     test(`${nome} sem violações sérias ou críticas`, async ({ page }) => {
+      await page.emulateMedia({ reducedMotion: "reduce" });
       await page.goto(rota);
-      await aguardarAnimacoes(page);
+      await prepararParaVarredura(page);
 
       const resultado = await new AxeBuilder({ page })
         .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
