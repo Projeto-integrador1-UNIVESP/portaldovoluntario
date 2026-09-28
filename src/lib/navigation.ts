@@ -1,5 +1,5 @@
 import {
-  Building2, Calendar, DollarSign, FolderOpen, KeyRound, ShieldCheck,
+  Building2, Calendar, DollarSign, FolderOpen, KeyRound, Package, ShieldCheck,
   LayoutDashboard, UserCheck, Users, type LucideIcon,
 } from "lucide-react";
 
@@ -28,6 +28,7 @@ export const adminNav: NavItem[] = [
 export const ongNav: NavItem[] = [
   { label: "Dashboard", href: "/ong", icon: LayoutDashboard },
   { label: "Projetos", href: "/ong/projetos", icon: FolderOpen },
+  { label: "Necessidades", href: "/ong/necessidades", icon: Package },
   { label: "Voluntários", href: "/ong/voluntarios", icon: UserCheck },
   { label: "Membros", href: "/ong/membros", icon: Users },
   { label: "Doações", href: "/ong/doacoes", icon: DollarSign },
