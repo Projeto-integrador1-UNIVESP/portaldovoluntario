@@ -39,6 +39,7 @@ ALTER TABLE public.necessidades ENABLE ROW LEVEL SECURITY;
 
 -- Necessidade é informação pública: é justamente o que o doador precisa ver
 -- antes de decidir. Só as ativas, de projetos ativos.
+DROP POLICY IF EXISTS "Qualquer um ve necessidades ativas" ON public.necessidades;
 CREATE POLICY "Qualquer um ve necessidades ativas"
   ON public.necessidades FOR SELECT
   USING (
@@ -46,11 +47,13 @@ CREATE POLICY "Qualquer um ve necessidades ativas"
     AND EXISTS (SELECT 1 FROM public.projetos p WHERE p.id = id_projeto AND p.status = true)
   );
 
+DROP POLICY IF EXISTS "ONG gerencia necessidades dos seus projetos" ON public.necessidades;
 CREATE POLICY "ONG gerencia necessidades dos seus projetos"
   ON public.necessidades FOR ALL
   USING (public.is_ong_member_do_projeto(auth.uid(), id_projeto))
   WITH CHECK (public.is_ong_member_do_projeto(auth.uid(), id_projeto));
 
+DROP POLICY IF EXISTS "Admins gerenciam necessidades" ON public.necessidades;
 CREATE POLICY "Admins gerenciam necessidades"
   ON public.necessidades FOR ALL
   USING (public.has_role(auth.uid(), 'admin'))
