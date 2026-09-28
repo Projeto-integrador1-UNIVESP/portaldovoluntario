@@ -102,7 +102,7 @@ export default function DoarPage() {
         {!user && (
           <Card className="mb-4 border-primary/40 bg-primary/5">
             <CardContent className="p-4 text-sm">
-              Para concluir uma doação você precisa <a href={`/login?redirect=/doar/${ongId}`} className="font-semibold text-primary hover:underline">entrar na plataforma</a>.
+              Para concluir uma doação você precisa <a href={`/login?redirect=/doar/${ongId}`} className="font-semibold text-primary underline underline-offset-2">entrar na plataforma</a>.
             </CardContent>
           </Card>
         )}

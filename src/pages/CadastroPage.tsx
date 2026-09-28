@@ -491,7 +491,7 @@ export default function CadastroPage() {
         <CardFooter className="justify-center">
           <p className="text-sm text-muted-foreground">
             Já tem conta?{" "}
-            <Link to="/login" className="text-primary hover:underline">Entrar</Link>
+            <Link to="/login" className="text-primary underline underline-offset-2">Entrar</Link>
           </p>
         </CardFooter>
       </Card>

@@ -131,7 +131,7 @@ export default function LoginPage() {
               </div>
             </div>
             <div className="flex justify-end">
-              <Link to="/esqueci-senha" className="text-sm text-primary hover:underline">
+              <Link to="/esqueci-senha" className="text-sm text-primary underline underline-offset-2">
                 Esqueci minha senha
               </Link>
             </div>
