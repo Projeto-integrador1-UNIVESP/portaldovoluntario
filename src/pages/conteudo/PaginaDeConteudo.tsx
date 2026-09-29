@@ -43,7 +43,8 @@ export function PaginaDeConteudo({ eyebrow, titulo, descricao, foto, tipo = "art
                 alt={foto.alt}
                 width={1280}
                 height={Math.round(1280 / foto.proporcao)}
-                className="aspect-[3/2] w-full object-cover"
+                style={{ aspectRatio: String(foto.proporcao) }}
+                className="h-auto w-full object-cover"
               />
             </div>
             <figcaption className="mt-2 text-right text-xs text-muted-foreground">
