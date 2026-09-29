@@ -5,34 +5,42 @@ import { cn } from "@/lib/utils";
  *
  * Antes toda causa usava o mesmo cinza-azulado: "Educação", "Alimentação" e
  * "Animais" eram visualmente idênticas e a informação não ajudava a escanear
- * a lista. A cor é derivada do próprio texto, então é estável sem precisar de
- * tabela, e fica dentro de uma paleta contida: matizes saturados demais
- * roubariam a atenção do laranja, que é a única cor de ação da interface.
+ * a lista. A tinta de fundo é derivada do próprio texto, então é estável sem
+ * precisar de tabela, e fica dentro das quatro tintas de superfície do
+ * produto. O texto é sempre a tinta principal: texto colorido por cima de
+ * tinta é o que o contrato proíbe, e é assim que o `contraste.test` garante o
+ * AA sem uma paleta paralela.
  */
 
-const PALETA = [
-  { fundo: "var(--tinta-azulpo)", texto: "214 45% 30%" },
-  { fundo: "var(--tinta-creme)", texto: "32 55% 30%" },
-  { fundo: "var(--tinta-salvia)", texto: "152 40% 26%" },
-  { fundo: "var(--tinta-pessego)", texto: "14 60% 34%" },
-] as const;
+const TINTAS = ["bg-tinta-azulpo", "bg-tinta-creme", "bg-tinta-salvia", "bg-tinta-pessego"] as const;
+
+const TAMANHOS = {
+  sm: "px-2.5 py-0.5 text-xs",
+  /** Para chip de filtro e para sobre a foto do card largo. */
+  md: "px-3 py-1 text-sm",
+} as const;
 
 function indice(texto: string): number {
   let h = 0;
   for (let i = 0; i < texto.length; i++) h = (h * 31 + texto.charCodeAt(i)) >>> 0;
-  return h % PALETA.length;
+  return h % TINTAS.length;
 }
 
-export function CauseTag({ causa, className }: { causa: string; className?: string }) {
-  const cor = PALETA[indice(causa)];
+type CauseTagProps = {
+  causa: string;
+  tamanho?: keyof typeof TAMANHOS;
+  className?: string;
+};
 
+export function CauseTag({ causa, tamanho = "sm", className }: CauseTagProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium",
+        "inline-flex items-center whitespace-nowrap rounded-full font-semibold leading-5 text-foreground",
+        TINTAS[indice(causa)],
+        TAMANHOS[tamanho],
         className,
       )}
-      style={{ backgroundColor: `hsl(${cor.fundo})`, color: `hsl(${cor.texto})` }}
     >
       {causa}
     </span>
