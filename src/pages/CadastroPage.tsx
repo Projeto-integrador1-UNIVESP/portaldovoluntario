@@ -67,11 +67,14 @@ function ErroDoFormulario({ mensagem }: { mensagem?: string }) {
 }
 
 /** Campos comuns aos dois tipos de conta. */
+/** Campos presentes nos dois cadastros, doador e ONG. */
+type CamposComuns = { nome?: string; email?: string; senha?: string; aceite?: true };
+
 function CamposDeIdentificacao({
   form, rotuloDoNome, mostrarSenha, alternarSenha,
 }: {
   // Os dois schemas divergem, mas estes três campos são idênticos em ambos.
-  form: UseFormReturn<any>;
+  form: UseFormReturn<CamposComuns>;
   rotuloDoNome: string;
   mostrarSenha: boolean;
   alternarSenha: () => void;
@@ -132,7 +135,7 @@ function CamposDeIdentificacao({
   );
 }
 
-function AceiteDosTermos({ form }: { form: UseFormReturn<any> }) {
+function AceiteDosTermos({ form }: { form: UseFormReturn<CamposComuns> }) {
   return (
     <FormField
       control={form.control}
