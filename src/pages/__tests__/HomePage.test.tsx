@@ -82,6 +82,8 @@ const projeto = {
   slug: "padaria-solidaria",
   nome_projeto: "Padaria solidária",
   id_ong: "o1",
+  // A consulta da última confirmação embute a ONG pela chave estrangeira.
+  ongs: { nome: "Casa de Apoio Esperança", slug: "casa-de-apoio" },
   causa: "Alimentação",
   capa_url: null,
   img_url: null,

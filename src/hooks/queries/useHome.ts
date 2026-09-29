@@ -180,7 +180,8 @@ async function buscarUltimaConfirmacao(): Promise<UltimaConfirmacao | null> {
       Promise.all(
         idsProjetos.map((id) => supabase.rpc("get_confirmacoes_projeto", { _projeto_id: id, _limite: 20 })),
       ),
-      supabase.from("projetos").select("id, slug, nome_projeto, id_ong").in("id", idsProjetos),
+      // A ONG vem embutida pela chave estrangeira: uma ida ao banco a menos.
+      supabase.from("projetos").select("id, slug, nome_projeto, id_ong, ongs(nome, slug)").in("id", idsProjetos),
     ]);
 
     const candidatas = respostas.flatMap((r, i) =>
@@ -195,11 +196,7 @@ async function buscarUltimaConfirmacao(): Promise<UltimaConfirmacao | null> {
     if (!escolhida || !projeto) return null;
     const { d } = escolhida;
 
-    const { data: ong } = await supabase
-      .from("ongs")
-      .select("id, nome, slug")
-      .eq("id", projeto.id_ong)
-      .maybeSingle();
+    const ong = projeto.ongs;
 
     // O pedido desta doação, se estiver na amostra: é dele que sai o
     // "subiu de 24% para 31%".
