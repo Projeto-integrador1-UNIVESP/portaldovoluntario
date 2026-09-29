@@ -5,76 +5,86 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Papel, tinta e barro.
+ *
+ * O produto é um recibo, então a interface parece papel: fundo creme quente,
+ * tinta azul-marinho para tudo que é estrutura (texto, navegação, títulos),
+ * terracota para a única ação da tela. A cor viva vem da fotografia, nunca de
+ * gradiente. Todo par texto/fundo daqui passa no AA (4,5:1), e o
+ * `contraste.test` confere isso sobre o próprio arquivo.
+ */
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 210 30% 12%;
-    --card: 0 0% 100%;
-    --card-foreground: 210 30% 12%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 210 30% 12%;
-    --primary: 200 80% 30%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 200 20% 95%;
-    --secondary-foreground: 200 80% 30%;
-    --muted: 210 15% 95%;
-    --muted-foreground: 210 10% 42%;
-    --accent: 200 20% 92%;
-    --accent-foreground: 200 80% 30%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
+    --background: 40 40% 96%;
+    --foreground: 215 35% 15%;
+    --card: 40 60% 99%;
+    --card-foreground: 215 35% 15%;
+    --popover: 40 60% 99%;
+    --popover-foreground: 215 35% 15%;
 
-    /* Cor quente das chamadas de doação. 4,82:1 com texto branco (WCAG AA).
-       Não reaproveitamos --accent aqui: no shadcn ele é o hover de
-       DropdownMenu, Select, Dialog e das variants ghost/outline do Button. */
-    --cta: 25 95% 38%;
-    --cta-foreground: 0 0% 100%;
+    --primary: 214 52% 23%;
+    --primary-hover: 214 52% 18%;
+    --primary-foreground: 40 60% 99%;
 
-    /* Elevação. Sombras frias e difusas, tintadas com o azul da marca, em vez
-       do cinza neutro do Tailwind — o preto puro sobre fundo claro suja. */
-    --sombra-sutil: 0 1px 2px 0 hsl(210 30% 12% / 0.04);
-    --sombra-baixa: 0 1px 3px 0 hsl(210 30% 12% / 0.06), 0 1px 2px -1px hsl(210 30% 12% / 0.04);
-    --sombra-media: 0 6px 16px -4px hsl(210 30% 12% / 0.1), 0 2px 6px -2px hsl(210 30% 12% / 0.05);
-    --sombra-alta: 0 16px 32px -8px hsl(210 30% 12% / 0.14), 0 4px 10px -4px hsl(210 30% 12% / 0.06);
-    --sombra-cta: 0 4px 14px -2px hsl(var(--cta) / 0.3);
-    /* Brilho interno no topo do botão principal: dá volume tátil sem somar
-       mais uma sombra por cima. */
-    --brilho-interno: inset 0 1px 0 hsl(0 0% 100% / 0.18);
+    --secondary: 214 35% 92%;
+    --secondary-foreground: 214 52% 23%;
 
-    /* Tintas de superfície para blocos que se repetem. Card branco atrás de
-       card branco vira grade monótona; a variação de matiz dá ritmo sem
-       precisar de borda colorida nem de sombra pesada. */
-    --tinta-agua: 190 45% 96%;
-    --tinta-areia: 35 50% 96%;
-    --tinta-musgo: 150 30% 96%;
-    --tinta-lavanda: 255 35% 97%;
-    --border: 210 20% 90%;
-    --input: 210 20% 90%;
-    --ring: 200 80% 30%;
-    /* 0.5rem é o default do shadcn e entrega o template de longe. O par
-       card mais redondo / controle mais contido vira assinatura. */
+    --muted: 40 30% 92%;
+    --muted-foreground: 215 14% 40%;
+
+    /* No shadcn, `accent` é o hover de menu, select e das variantes ghost e
+       outline do botão. Creme, para o hover assentar no papel. */
+    --accent: 38 55% 92%;
+    --accent-foreground: 215 35% 15%;
+
+    --destructive: 0 62% 42%;
+    --destructive-foreground: 40 60% 99%;
+
+    /* A cor da ação. Uma por tela. */
+    --cta: 14 65% 44%;
+    --cta-hover: 14 65% 38%;
+    --cta-foreground: 40 60% 99%;
+
+    --success: 152 40% 28%;
+    --success-foreground: 40 60% 99%;
+    --warning: 35 85% 30%;
+    --warning-foreground: 40 60% 99%;
+
+    --border: 38 25% 84%;
+    --input: 38 25% 78%;
+    --ring: 214 52% 23%;
+
+    /* Escala de cantos: 4 / 12 / 28. Controle mais contido que o card, e o
+       destaque assimétrico é assinatura, não regra. */
     --radius: 0.75rem;
     --raio-controle: 0.625rem;
+    --raio-destaque: 1.75rem;
 
-    /* 28%, e não os 36% de antes: a `axe` reprovou a Home e a listagem de ONGs
-       assim que o banco ganhou dados de verdade e os selos verdes entraram em
-       tela. 36% dá 3.35:1, e texto de 12px precisa de 4.5:1. O token é um só e
-       serve a vinte usos, então a correção é aqui, não em cada tela.
-       28% dá 4.96:1 sobre `--background` e folga ainda maior sobre `--card`,
-       que é branco puro e é onde a maioria dos selos vive. */
-    --success: 142 76% 28%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
+    /* Elevação tintada com a tinta, nunca cinza: cinza neutro suja o papel. */
+    --sombra-sutil: 0 1px 2px 0 hsl(214 52% 23% / 0.05);
+    --sombra-baixa: 0 1px 3px 0 hsl(214 52% 23% / 0.07), 0 1px 2px -1px hsl(214 52% 23% / 0.05);
+    --sombra-media: 0 8px 20px -8px hsl(214 52% 23% / 0.16), 0 2px 6px -2px hsl(214 52% 23% / 0.06);
+    --sombra-alta: 0 24px 48px -16px hsl(214 52% 23% / 0.22), 0 6px 14px -6px hsl(214 52% 23% / 0.08);
+    --sombra-cta: 0 10px 24px -10px hsl(var(--cta) / 0.5);
+    --brilho-interno: inset 0 1px 0 hsl(0 0% 100% / 0.16);
 
-    --sidebar-background: 200 80% 30%;
-    --sidebar-foreground: 200 10% 95%;
-    --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 200 80% 30%;
-    --sidebar-accent: 200 70% 25%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 200 70% 35%;
-    --sidebar-ring: 0 0% 100%;
+    /* Tintas de superfície. Card branco atrás de card branco vira grade
+       monótona; a variação de matiz dá ritmo. Texto sobre tinta é sempre
+       `foreground` ou `muted-foreground`. */
+    --tinta-creme: 38 55% 92%;
+    --tinta-salvia: 150 22% 90%;
+    --tinta-azulpo: 214 35% 92%;
+    --tinta-pessego: 18 70% 92%;
+
+    --sidebar-background: 214 52% 18%;
+    --sidebar-foreground: 40 40% 96%;
+    --sidebar-primary: 40 60% 99%;
+    --sidebar-primary-foreground: 214 52% 18%;
+    --sidebar-accent: 214 45% 26%;
+    --sidebar-accent-foreground: 40 60% 99%;
+    --sidebar-border: 214 40% 30%;
+    --sidebar-ring: 40 60% 99%;
   }
 }
 
@@ -84,14 +94,29 @@
   }
   body {
     @apply bg-background text-foreground font-sans;
+    font-optical-sizing: auto;
   }
   h1, h2, h3 {
     @apply font-display;
+    font-variation-settings: "SOFT" 40, "WONK" 0;
   }
   /* Prevent long words/numbers from breaking out of table cells */
   td, th {
     overflow-wrap: anywhere;
     word-break: break-word;
+  }
+}
+
+@layer utilities {
+  /* Título grande: serifas mais macias e as formas alternativas do Fraunces.
+     Só em display; em tamanho de corpo as formas "tortas" atrapalham. */
+  .texto-display {
+    font-variation-settings: "SOFT" 70, "WONK" 1;
+    font-optical-sizing: auto;
+  }
+  /* Rótulo pequeno em caixa alta, para legenda de número e eyebrow. */
+  .rotulo-caps {
+    @apply text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground;
   }
 }
 

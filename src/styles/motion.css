@@ -2,38 +2,41 @@
  * Sistema de movimento.
  *
  * Quase tudo aqui é CSS puro, de propósito: `transform` e `opacity` rodam no
- * compositor, fora da thread principal, e custam zero byte de JavaScript —
+ * compositor, fora da thread principal, e custam zero byte de JavaScript,
  * o que importa num público majoritariamente mobile em 4G.
  *
- * A biblioteca de animação em JS fica reservada para os dois ou três pontos
- * em que há orquestração de verdade (passos do formulário de doação e o
- * feedback de confirmação), carregada sob demanda.
+ * A biblioteca `motion` (via `LazyMotion` + `m`) fica para os pontos em que
+ * há orquestração de verdade: contador, revelação do título, troca de passo.
+ *
+ * Régua: micro 120–200ms (hover, clique), entrada 300–500ms, expressivo
+ * 600–900ms. Easing padrão é o "expo out": chega rápido e assenta devagar.
+ * Nada de bounce.
  */
 
 @layer base {
   :root {
-    /* Durações. Abaixo de 100ms não se percebe; acima de 500ms parece lento. */
-    --duracao-instantanea: 100ms;  /* hover, clique */
-    --duracao-rapida: 160ms;       /* toggle, troca de estado */
-    --duracao-media: 240ms;        /* dropdown, card */
-    --duracao-lenta: 320ms;        /* modal, troca de passo */
+    --duracao-instantanea: 120ms;
+    --duracao-rapida: 180ms;
+    --duracao-media: 280ms;
+    --duracao-lenta: 420ms;
+    --duracao-expressiva: 800ms;
 
-    /* Entrando: começa rápido e desacelera. Saindo: o contrário. */
-    --easing-entrada: cubic-bezier(0, 0, 0.2, 1);
+    --easing-entrada: cubic-bezier(0.16, 1, 0.3, 1);
     --easing-saida: cubic-bezier(0.4, 0, 1, 1);
     --easing-suave: cubic-bezier(0.4, 0, 0.2, 1);
-    /* Um leve overshoot, só para confirmação de sucesso. */
-    --easing-elastico: cubic-bezier(0.34, 1.56, 0.64, 1);
+    /* Overshoot leve, só para confirmação de sucesso. */
+    --easing-elastico: cubic-bezier(0.34, 1.4, 0.64, 1);
   }
 }
 
 @layer utilities {
   /*
-   * Entrada ao rolar, sem JavaScript e sem IntersectionObserver.
+   * Entrada ao rolar, sem JavaScript.
    *
    * O elemento fica visível por padrão; a animação só é aplicada quando o
    * navegador suporta linha do tempo de rolagem. Assim, onde não há suporte,
-   * o conteúdo simplesmente aparece — nunca some.
+   * o conteúdo simplesmente aparece. Só deslocamento, nunca opacidade: se a
+   * página não rola (monitor alto, impressão), opacidade 0 esconderia tudo.
    */
   @supports (animation-timeline: view()) {
     @media (prefers-reduced-motion: no-preference) {
@@ -48,17 +51,19 @@
         animation-timeline: view();
         animation-range: entry 0% cover 26%;
       }
-    }
-  }
 
-  /* Preenchimento da barra de progresso ao entrar em tela. */
-  @supports (animation-timeline: view()) {
-    @media (prefers-reduced-motion: no-preference) {
+      /* Preenchimento da barra de progresso ao entrar em tela. */
       .barra-anima {
         animation: preencher linear both;
         animation-timeline: view();
         animation-range: entry 10% cover 30%;
         transform-origin: left center;
+      }
+
+      /* Parallax leve: a foto anda um pouco menos que a página. */
+      .parallax-leve {
+        animation: deslizar linear both;
+        animation-timeline: view();
       }
     }
   }
@@ -84,17 +89,157 @@
     transform: translate(-50%, -50%);
   }
 
-  /* Card que se levanta levemente ao passar o mouse. */
+  /* Card que se levanta ao passar o mouse. Hover reforça, nunca apaga. */
   .elevavel {
     transition:
-      transform var(--duracao-media) var(--easing-suave),
-      box-shadow var(--duracao-media) var(--easing-suave);
+      transform var(--duracao-media) var(--easing-entrada),
+      box-shadow var(--duracao-media) var(--easing-entrada),
+      border-color var(--duracao-media) var(--easing-entrada);
   }
   @media (hover: hover) {
     .elevavel:hover {
-      transform: translateY(-2px);
+      transform: translateY(-3px);
       box-shadow: var(--sombra-media);
     }
+  }
+
+  /* Foto que aproxima devagar no hover do card. O contêiner recorta. */
+  .foto-zoom {
+    overflow: hidden;
+  }
+  .foto-zoom img,
+  .foto-zoom > picture > img {
+    transition: transform 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    will-change: transform;
+  }
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .foto-zoom:hover img,
+    .elevavel:hover .foto-zoom img,
+    a:hover .foto-zoom img {
+      transform: scale(1.045);
+    }
+  }
+
+  /*
+   * Entrada de rota. O `App` troca a chave do contêiner a cada navegação,
+   * então o elemento nasce de novo e `@starting-style` aplica o estado
+   * inicial. Opacidade aqui é permitida: é carga, não revelação por rolagem.
+   */
+  .entrada-rota {
+    transition:
+      opacity var(--duracao-media) var(--easing-entrada),
+      translate var(--duracao-lenta) var(--easing-entrada);
+  }
+  @starting-style {
+    .entrada-rota {
+      opacity: 0;
+      translate: 0 10px;
+    }
+  }
+
+  /* Barra que aparece depois de rolar: nasce deslizando de baixo. */
+  .surge-de-baixo {
+    transition:
+      opacity var(--duracao-media) var(--easing-entrada),
+      translate var(--duracao-media) var(--easing-entrada);
+  }
+  @starting-style {
+    .surge-de-baixo {
+      opacity: 0;
+      translate: 0 16px;
+    }
+  }
+
+  /*
+   * Marquee pausável. O clone da faixa é `aria-hidden`, e o botão de pausa
+   * visível é exigência do WCAG 2.2.2 para qualquer movimento acima de 5s.
+   * `overflow-x: clip` em vez de `hidden` para não criar contexto de rolagem.
+   */
+  .marquee {
+    overflow-x: clip;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  }
+  .marquee-faixa {
+    display: flex;
+    width: max-content;
+    gap: var(--marquee-espaco, 2rem);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .marquee-faixa {
+      animation: marquee var(--marquee-duracao, 48s) linear infinite;
+    }
+    .marquee[data-pausado="true"] .marquee-faixa,
+    .marquee:focus-within .marquee-faixa {
+      animation-play-state: paused;
+    }
+    @media (hover: hover) {
+      .marquee:hover .marquee-faixa {
+        animation-play-state: paused;
+      }
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .marquee {
+      overflow-x: auto;
+      -webkit-mask-image: none;
+      mask-image: none;
+    }
+  }
+
+  /* Traço desenhado (sublinhado manual, linha do tempo). Requer pathLength="1". */
+  .desenhar {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .desenhar {
+      animation: desenhar var(--duracao-expressiva) var(--desenhar-atraso, 300ms) var(--easing-entrada) forwards;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .desenhar {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  /* Forma orgânica para foto ou tinta. Duas variantes, para não repetir. */
+  .forma-organica-1 {
+    border-radius: 42% 58% 55% 45% / 48% 40% 60% 52%;
+  }
+  .forma-organica-2 {
+    border-radius: 63% 37% 54% 46% / 55% 48% 52% 45%;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .forma-viva {
+      animation: morfar 14s ease-in-out infinite alternate;
+    }
+  }
+
+  /* Skeleton com brilho cor de papel. Sem loop agressivo. */
+  .brilho-papel {
+    background: linear-gradient(90deg, hsl(var(--muted)) 0%, hsl(var(--card)) 50%, hsl(var(--muted)) 100%);
+    background-size: 200% 100%;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .brilho-papel {
+      animation: brilho-papel 1.6s linear infinite;
+    }
+  }
+
+  /*
+   * Confirmação de recebimento.
+   *
+   * É a única animação do produto que carrega significado em vez de enfeite:
+   * quando a ONG registra que a doação chegou, o selo pulsa na frente de quem
+   * está olhando. O overshoot leve é o que faz parecer que algo aconteceu.
+   */
+  .confirmou {
+    animation: pulsar-sucesso var(--duracao-lenta) var(--easing-elastico) both;
+  }
+
+  .numero-vivo {
+    transition: color var(--duracao-media) var(--easing-suave);
   }
 }
 
@@ -105,62 +250,48 @@
 @media print, (forced-colors: active) {
   .ao-rolar,
   .ao-rolar-escalonado > *,
-  .barra-anima {
+  .barra-anima,
+  .parallax-leve,
+  .marquee-faixa,
+  .desenhar {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
+    stroke-dashoffset: 0 !important;
   }
 }
 
-/*
- * Só deslocamento, sem opacidade.
- *
- * A versão anterior partia de `opacity: 0`, e isso tem um modo de falha real:
- * quando a página não rola — monitor muito alto, zoom bem reduzido, impressão,
- * captura de página inteira — a linha do tempo de rolagem nunca progride e o
- * conteúdo fica permanentemente invisível. Animar só o transform dá o mesmo
- * efeito percebido sem nunca poder esconder informação.
- */
 @keyframes surgir {
-  from {
-    transform: translateY(16px);
-  }
+  from { transform: translateY(18px); }
 }
 
 @keyframes preencher {
-  from {
-    transform: scaleX(0);
-  }
+  from { transform: scaleX(0); }
 }
 
-@layer utilities {
-  /*
-   * Confirmação de recebimento.
-   *
-   * É a única animação do produto que carrega significado em vez de enfeite:
-   * quando a ONG registra que a doação chegou, a barra sobe na frente de quem
-   * está olhando. O overshoot leve do easing elástico é o que faz parecer que
-   * algo aconteceu de verdade, e não que a tela apenas trocou de número.
-   */
-  .confirmou {
-    animation: pulsar-sucesso var(--duracao-lenta) var(--easing-elastico) both;
-  }
+@keyframes deslizar {
+  from { transform: translateY(-6%); }
+  to { transform: translateY(6%); }
+}
 
-  /* O valor só anima quando muda de fato. Contador que sobe a cada
-     carregamento de página é enfeite: adiciona espera e nenhuma informação. */
-  .numero-vivo {
-    transition: color var(--duracao-media) var(--easing-suave);
-  }
+@keyframes marquee {
+  to { transform: translateX(calc(-50% - var(--marquee-espaco, 2rem) / 2)); }
+}
+
+@keyframes desenhar {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes morfar {
+  to { border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; }
+}
+
+@keyframes brilho-papel {
+  to { background-position: -200% 0; }
 }
 
 @keyframes pulsar-sucesso {
   0% { transform: scale(0.8); opacity: 0; }
   60% { transform: scale(1.06); opacity: 1; }
   100% { transform: scale(1); opacity: 1; }
-}
-
-/* Brilho contido do skeleton — sem loop agressivo, que incomoda quem tem
-   sensibilidade vestibular. */
-@keyframes brilho {
-  100% { transform: translateX(100%); }
 }

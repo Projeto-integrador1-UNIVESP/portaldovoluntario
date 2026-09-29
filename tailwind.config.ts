@@ -6,29 +6,25 @@ export default {
   theme: {
     container: {
       center: true,
-      padding: "2rem",
-      screens: { "2xl": "1400px" },
+      padding: { DEFAULT: "1rem", sm: "1.5rem", lg: "2rem" },
+      screens: { "2xl": "1360px" },
     },
     extend: {
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
-        display: ["Nunito", "Inter", "system-ui", "sans-serif"],
+        sans: ["Figtree", "Figtree Fallback", "system-ui", "sans-serif"],
+        display: ["Fraunces", "Fraunces Fallback", "Georgia", "serif"],
       },
       fontSize: {
         xs: ["0.75rem", { lineHeight: "1rem" }],
         sm: ["0.875rem", { lineHeight: "1.25rem" }],
-        base: ["1rem", { lineHeight: "1.5rem" }],
-        lg: ["1.25rem", { lineHeight: "1.75rem", letterSpacing: "-0.01em" }],
-        xl: ["1.5rem", { lineHeight: "2rem", letterSpacing: "-0.012em" }],
-        "2xl": ["2rem", { lineHeight: "2.5rem", letterSpacing: "-0.018em" }],
-        // Quanto maior o texto, mais negativo o tracking: é o que faz um
-        // título parecer desenhado em vez de digitado.
-        //
-        // O display é fluido porque 3rem fixo tomava a tela inteira em 390px:
-        // o herói enchia a primeira dobra e o visitante não via nenhum
-        // conteúdo antes de rolar — o contrário do que a página promete.
-        "3xl": ["clamp(2rem, 1.1rem + 4vw, 3rem)", { lineHeight: "1.08", letterSpacing: "-0.028em" }],
-        "2xl-fluido": ["clamp(1.5rem, 1.1rem + 1.8vw, 2rem)", { lineHeight: "1.15", letterSpacing: "-0.02em" }],
+        base: ["1rem", { lineHeight: "1.6" }],
+        lg: ["1.25rem", { lineHeight: "1.75rem", letterSpacing: "-0.005em" }],
+        xl: ["1.5rem", { lineHeight: "1.3", letterSpacing: "-0.01em" }],
+        "2xl": ["2rem", { lineHeight: "1.15", letterSpacing: "-0.015em" }],
+        // Display fluido: 40px no celular, 72px no desktop. Quanto maior, mais
+        // negativo o tracking: é o que faz um título parecer desenhado.
+        "3xl": ["clamp(2.5rem, 1.4rem + 4.6vw, 4.5rem)", { lineHeight: "1.02", letterSpacing: "-0.022em" }],
+        "2xl-fluido": ["clamp(1.75rem, 1.2rem + 2vw, 2.5rem)", { lineHeight: "1.12", letterSpacing: "-0.018em" }],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -38,6 +34,7 @@ export default {
         foreground: "hsl(var(--foreground))",
         primary: {
           DEFAULT: "hsl(var(--primary))",
+          hover: "hsl(var(--primary-hover))",
           foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {
@@ -74,13 +71,14 @@ export default {
         },
         cta: {
           DEFAULT: "hsl(var(--cta))",
+          hover: "hsl(var(--cta-hover))",
           foreground: "hsl(var(--cta-foreground))",
         },
         tinta: {
-          agua: "hsl(var(--tinta-agua))",
-          areia: "hsl(var(--tinta-areia))",
-          musgo: "hsl(var(--tinta-musgo))",
-          lavanda: "hsl(var(--tinta-lavanda))",
+          creme: "hsl(var(--tinta-creme))",
+          salvia: "hsl(var(--tinta-salvia))",
+          azulpo: "hsl(var(--tinta-azulpo))",
+          pessego: "hsl(var(--tinta-pessego))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
@@ -101,23 +99,52 @@ export default {
         cta: "var(--sombra-cta), var(--brilho-interno)",
       },
       borderRadius: {
+        destaque: "var(--raio-destaque)",
         xl: "calc(var(--radius) + 4px)",
         controle: "var(--raio-controle)",
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      transitionTimingFunction: {
+        suave: "cubic-bezier(0.16, 1, 0.3, 1)",
+      },
       keyframes: {
         "accordion-down": { from: { height: "0" }, to: { height: "var(--radix-accordion-content-height)" } },
         "accordion-up": { from: { height: "var(--radix-accordion-content-height)" }, to: { height: "0" } },
-        "fade-in": { from: { opacity: "0", transform: "translateY(10px)" }, to: { opacity: "1", transform: "translateY(0)" } },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "fade-in": "fade-in 0.15s ease-out",
+      },
+      typography: {
+        DEFAULT: {
+          css: {
+            "--tw-prose-body": "hsl(var(--foreground) / 0.88)",
+            "--tw-prose-headings": "hsl(var(--foreground))",
+            "--tw-prose-lead": "hsl(var(--muted-foreground))",
+            "--tw-prose-links": "hsl(var(--primary))",
+            "--tw-prose-bold": "hsl(var(--foreground))",
+            "--tw-prose-counters": "hsl(var(--muted-foreground))",
+            "--tw-prose-bullets": "hsl(var(--cta))",
+            "--tw-prose-hr": "hsl(var(--border))",
+            "--tw-prose-quotes": "hsl(var(--foreground))",
+            "--tw-prose-quote-borders": "hsl(var(--cta))",
+            "--tw-prose-captions": "hsl(var(--muted-foreground))",
+            "--tw-prose-code": "hsl(var(--foreground))",
+            "--tw-prose-th-borders": "hsl(var(--border))",
+            "--tw-prose-td-borders": "hsl(var(--border))",
+            maxWidth: "none",
+            "h1, h2, h3": {
+              fontFamily: "Fraunces, 'Fraunces Fallback', Georgia, serif",
+              fontWeight: "600",
+              letterSpacing: "-0.015em",
+            },
+            a: { textDecorationColor: "hsl(var(--cta) / 0.5)", textUnderlineOffset: "3px" },
+          },
+        },
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
 } satisfies Config;
