@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
-import { AlertTriangle, Landmark } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Landmark } from "lucide-react";
+import { Callout } from "@/components/common/Callout";
 import { CopyField } from "@/components/common/CopyField";
 import { gerarPayloadPix } from "@/lib/pix";
 import { formatCurrency } from "@/lib/format";
@@ -19,8 +19,10 @@ type PixQrCodeProps = {
 /**
  * QR Code e "copia e cola" do Pix.
  *
- * O nome do recebedor aparece em destaque de propósito: é o que o doador
- * confere no app do banco antes de confirmar a transferência.
+ * O QR ocupa a largura que o celular der (até 288px): é para apontar a câmera
+ * de outro aparelho, e um QR pequeno é o que mais falha na leitura. O nome do
+ * recebedor e o valor ficam grandes embaixo: é o que a pessoa confere no app
+ * do banco antes de confirmar.
  */
 export function PixQrCode({
   chave,
@@ -51,7 +53,8 @@ export function PixQrCode({
       setPayload(codigo);
       setErro(null);
 
-      QRCode.toDataURL(codigo, { width: 320, margin: 1, errorCorrectionLevel: "M" })
+      // Gerado em 512px e exibido menor: fica nítido em tela de alta densidade.
+      QRCode.toDataURL(codigo, { width: 512, margin: 1, errorCorrectionLevel: "M" })
         .then(setImagem)
         .catch(() => setErro("qr"));
     } catch {
@@ -64,53 +67,51 @@ export function PixQrCode({
   if (erro === "sem-chave") {
     const temDados = dadosBancarios?.banco || dadosBancarios?.conta;
     return (
-      <Alert>
-        <Landmark className="h-4 w-4" aria-hidden="true" />
-        <AlertTitle>Esta ONG ainda não cadastrou uma chave Pix</AlertTitle>
-        <AlertDescription>
-          {temDados ? (
-            <>
-              Você pode transferir para: <strong>{dadosBancarios?.banco}</strong>, agência{" "}
-              <strong>{dadosBancarios?.agencia}</strong>, conta{" "}
-              <strong>{dadosBancarios?.conta}</strong>. Confirme o nome{" "}
-              <strong>{nomeRecebedor}</strong> antes de concluir.
-            </>
-          ) : (
-            <>
-              Entre em contato com a organização para combinar a forma de doação. Ainda
-              assim você pode registrar sua intenção de doar abaixo.
-            </>
-          )}
-        </AlertDescription>
-      </Alert>
+      <Callout tom="atencao" icone={Landmark} titulo="Esta ONG ainda não cadastrou uma chave Pix">
+        {temDados ? (
+          <>
+            Você pode transferir para{" "}
+            <strong className="font-medium text-foreground">{dadosBancarios?.banco}</strong>, agência{" "}
+            <strong className="numero font-medium text-foreground">{dadosBancarios?.agencia}</strong>, conta{" "}
+            <strong className="numero font-medium text-foreground">{dadosBancarios?.conta}</strong>. Confira o nome{" "}
+            <strong className="font-medium text-foreground">{nomeRecebedor}</strong> antes de concluir.
+          </>
+        ) : (
+          <>
+            Fale com a organização para combinar a forma de doação. Ainda assim você pode
+            registrar aqui a intenção de doar.
+          </>
+        )}
+      </Callout>
     );
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col items-center gap-3 rounded-lg border bg-card p-5">
+      <div className="flex flex-col items-center gap-4 rounded-xl border bg-card p-4 sm:p-6">
         {imagem ? (
           <img
             src={imagem}
             alt="QR Code do Pix para esta doação"
-            className="h-56 w-56"
-            width={224}
-            height={224}
+            className="aspect-square h-auto w-full max-w-[288px] rounded-lg"
+            width={288}
+            height={288}
           />
         ) : erro === "qr" ? (
-          <div className="flex h-56 w-56 flex-col items-center justify-center gap-2 text-center text-sm text-muted-foreground">
-            <AlertTriangle className="h-6 w-6" aria-hidden="true" />
+          <div className="flex aspect-square w-full max-w-[288px] flex-col items-center justify-center rounded-lg bg-muted p-6 text-center text-sm text-muted-foreground">
             Não foi possível desenhar o QR Code. Use o código abaixo.
           </div>
         ) : (
-          <div className="h-56 w-56 animate-pulse rounded bg-muted" />
+          <div className="brilho-papel aspect-square w-full max-w-[288px] rounded-lg bg-muted" />
         )}
 
         <div className="text-center">
-          <p className="text-sm text-muted-foreground">Confira no app do seu banco:</p>
-          <p className="font-semibold">{nomeRecebedor}</p>
+          <p className="rotulo-caps">Confira no app do seu banco</p>
+          <p className="mt-1 font-semibold">{nomeRecebedor}</p>
           {typeof valor === "number" && valor > 0 && (
-            <p className="mt-1 text-lg font-bold text-primary">{formatCurrency(valor)}</p>
+            <p className="numero mt-1 font-display text-2xl font-semibold text-primary">
+              {formatCurrency(valor)}
+            </p>
           )}
         </div>
       </div>
@@ -118,7 +119,7 @@ export function PixQrCode({
       {payload && (
         <div className="space-y-2">
           <p className="text-sm font-medium">Pix Copia e Cola</p>
-          <CopyField valor={payload} rotulo="Copiar o código Pix" />
+          <CopyField valor={payload} rotulo="Copiar o código Pix" objeto="Código Pix" />
         </div>
       )}
     </div>
