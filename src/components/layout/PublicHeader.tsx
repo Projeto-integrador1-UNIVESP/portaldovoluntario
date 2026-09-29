@@ -17,7 +17,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Heart, LogOut, Menu, User, ChevronDown } from "lucide-react";
+import { LogOut, Menu, User, ChevronDown } from "lucide-react";
+import { Logo } from "@/components/brand/Logo";
 import { menuPublico, navPorRole } from "@/lib/navigation";
 
 export function PublicHeader() {
@@ -30,9 +31,8 @@ export function PublicHeader() {
   return (
     <header className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-sm">
       <div className="container flex h-16 items-center justify-between gap-2">
-        <Link to="/" className="flex items-center gap-2" aria-label="Solidariedade, página inicial">
-          <Heart className="h-6 w-6 text-primary" aria-hidden="true" />
-          <span className="text-lg font-bold text-foreground">Solidariedade</span>
+        <Link to="/" aria-label="Solidariedade, página inicial">
+          <Logo />
         </Link>
 
         <nav className="hidden items-center gap-6 md:flex" aria-label="Navegação principal">
@@ -49,7 +49,7 @@ export function PublicHeader() {
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <Button variant="cta" size="sm" asChild className="hidden sm:inline-flex">
+          <Button variant="cta" size="sm" asChild className="pressionavel shadow-cta">
             <Link to="/projetos">Doar</Link>
           </Button>
 
@@ -105,7 +105,7 @@ export function PublicHeader() {
                 <Link to="/login">Entrar</Link>
               </Button>
               <Button size="sm" variant="outline" asChild>
-                <Link to="/cadastro">Cadastrar</Link>
+                <Link to="/cadastro">Criar conta</Link>
               </Button>
             </div>
           )}

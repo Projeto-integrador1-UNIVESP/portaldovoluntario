@@ -11,7 +11,7 @@ export const CATEGORIAS = [
 export const NIVEIS_DE_URGENCIA = [
   { valor: 1, rotulo: "Baixa" },
   { valor: 2, rotulo: "Média" },
-  { valor: 3, rotulo: "Urgente" },
+  { valor: 3, rotulo: "Alta" },
 ] as const;
 
 export const necessidadeSchema = z
@@ -25,7 +25,7 @@ export const necessidadeSchema = z
     meta: z
       .number({ invalid_type_error: "Informe a meta" })
       .positive("A meta precisa ser maior que zero")
-      .max(1_000_000, "Meta acima do limite"),
+      .max(1_000_000, "A meta máxima é 1.000.000"),
     urgencia: z.number().int().min(1).max(3),
     prazo: z.string().optional(),
     status: z.boolean().default(true),

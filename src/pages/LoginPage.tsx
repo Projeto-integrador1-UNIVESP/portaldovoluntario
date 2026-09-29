@@ -14,7 +14,7 @@ const slides = [
   {
     img: volunteers,
     title: "O poder do voluntariado",
-    text: "O trabalho voluntário sustenta boa parte dos projetos sociais no Brasil. Sua hora doada transforma vidas.",
+    text: "Uma tarde por mês já mantém projetos inteiros funcionando. Escolha um turno que caiba na sua rotina.",
   },
   {
     img: donation,
@@ -49,7 +49,9 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) {
-      toast.error("Erro ao entrar: " + error.message);
+      toast.error(
+        "E-mail ou senha incorretos. Confira os dados ou use \"Esqueci minha senha\".",
+      );
     } else {
       toast.success("Login realizado!");
       if (redirect) { navigate(redirect); return; }

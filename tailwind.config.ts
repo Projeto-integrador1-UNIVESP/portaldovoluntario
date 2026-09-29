@@ -80,7 +80,15 @@ export default {
           ring: "hsl(var(--sidebar-ring))",
         },
       },
+      boxShadow: {
+        sutil: "var(--sombra-sutil)",
+        baixa: "var(--sombra-baixa)",
+        media: "var(--sombra-media)",
+        alta: "var(--sombra-alta)",
+        cta: "var(--sombra-cta)",
+      },
       borderRadius: {
+        xl: "calc(var(--radius) + 4px)",
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",

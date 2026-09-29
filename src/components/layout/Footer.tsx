@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Heart } from "lucide-react";
+import { Logo } from "@/components/brand/Logo";
 
 const colunas = [
   {
@@ -33,12 +33,9 @@ export function Footer() {
       <div className="container py-10">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <div className="flex items-center gap-2">
-              <Heart className="h-5 w-5 text-primary" aria-hidden="true" />
-              <span className="font-bold">Solidariedade</span>
-            </div>
+            <Logo />
             <p className="mt-3 text-sm text-muted-foreground">
-              Conectando quem precisa de ajuda a quem quer ajudar.
+              Necessidades reais de ONGs verificadas, com doação direta e sem taxa.
             </p>
           </div>
 
