@@ -1,6 +1,6 @@
 import {
   Building2, Calendar, DollarSign, FolderOpen, KeyRound, Package, ShieldCheck,
-  LayoutDashboard, UserCheck, Users, type LucideIcon,
+  Home, UserCheck, Users, type LucideIcon,
 } from "lucide-react";
 
 export type NavItem = { label: string; href: string; icon: LucideIcon };
@@ -12,26 +12,29 @@ export type NavItem = { label: string; href: string; icon: LucideIcon };
  * RolePanelSidebar, e as três já estavam dessincronizadas entre si (o header
  * não tinha Auditoria nem Códigos; a sidebar não tinha Códigos). Todas passam
  * a ler daqui.
+ *
+ * O primeiro item de cada lista é a raiz do painel: o layout usa isso para o
+ * rótulo do breadcrumb e para o link de "Início".
  */
 export const adminNav: NavItem[] = [
-  { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
+  { label: "Início", href: "/admin", icon: Home },
   { label: "ONGs", href: "/admin/ongs", icon: Building2 },
-  { label: "Usuários", href: "/admin/usuarios", icon: Users },
-  { label: "Projetos", href: "/admin/projetos", icon: FolderOpen },
-  { label: "Eventos", href: "/admin/eventos", icon: Calendar },
   { label: "Doações", href: "/admin/doacoes", icon: DollarSign },
+  { label: "Projetos", href: "/admin/projetos", icon: FolderOpen },
   { label: "Voluntários", href: "/admin/voluntarios", icon: UserCheck },
+  { label: "Usuários", href: "/admin/usuarios", icon: Users },
+  { label: "Eventos", href: "/admin/eventos", icon: Calendar },
   { label: "Auditoria", href: "/admin/auditoria", icon: ShieldCheck },
-  { label: "Códigos ONG", href: "/admin/codigos", icon: KeyRound },
+  { label: "Chaves de acesso", href: "/admin/codigos", icon: KeyRound },
 ];
 
 export const ongNav: NavItem[] = [
-  { label: "Dashboard", href: "/ong", icon: LayoutDashboard },
-  { label: "Projetos", href: "/ong/projetos", icon: FolderOpen },
+  { label: "Início", href: "/ong", icon: Home },
+  { label: "Doações", href: "/ong/doacoes", icon: DollarSign },
   { label: "Necessidades", href: "/ong/necessidades", icon: Package },
+  { label: "Projetos", href: "/ong/projetos", icon: FolderOpen },
   { label: "Voluntários", href: "/ong/voluntarios", icon: UserCheck },
   { label: "Membros", href: "/ong/membros", icon: Users },
-  { label: "Doações", href: "/ong/doacoes", icon: DollarSign },
   { label: "Auditoria", href: "/ong/auditoria", icon: ShieldCheck },
 ];
 

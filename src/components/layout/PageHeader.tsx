@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 type PageHeaderProps = {
   title: string;
   description?: string;
+  /** Aceito por compatibilidade com as telas que ainda passam. Não é exibido. */
   icon?: ReactNode;
   action?: ReactNode;
 };
@@ -11,21 +12,18 @@ type PageHeaderProps = {
  * Cabeçalho de página do painel.
  *
  * O h1 daqui usa a mesma escala e a mesma fonte do h1 do site público: o painel
- * é metade do produto e antes parecia outro, com Inter em `text-2xl` contra
- * Nunito no site. A ação quebra para baixo do título no celular. Antes ela
- * dividia a linha e o título ficava em duas ou três palavras por linha.
+ * é metade do produto e não pode parecer outro. O ícone ao lado do título saiu:
+ * a seção já tem ícone no menu, e repetir o mesmo desenho em toda página é o
+ * que dá cara de template. A ação quebra para baixo do título no celular.
  */
-export function PageHeader({ title, description, icon, action }: PageHeaderProps) {
+export function PageHeader({ title, description, action }: PageHeaderProps) {
   return (
-    <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-      <div className="min-w-0">
-        <div className="flex items-center gap-3">
-          {icon && <span className="shrink-0 text-primary">{icon}</span>}
-          <h1 className="font-display text-2xl font-bold tracking-[-0.02em]">{title}</h1>
-        </div>
-        {description && <p className="mt-1 text-muted-foreground">{description}</p>}
+    <div className="mb-8 flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
+      <div className="min-w-0 max-w-2xl">
+        <h1 className="font-display text-2xl-fluido font-bold">{title}</h1>
+        {description && <p className="mt-2 text-base text-muted-foreground">{description}</p>}
       </div>
-      {action && <div className="shrink-0">{action}</div>}
+      {action && <div className="flex shrink-0 flex-wrap items-center gap-2">{action}</div>}
     </div>
   );
 }
