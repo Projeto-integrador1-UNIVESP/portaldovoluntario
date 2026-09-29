@@ -129,16 +129,17 @@
    * Entrada de rota. O `App` troca a chave do contêiner a cada navegação,
    * então o elemento nasce de novo e `@starting-style` aplica o estado
    * inicial. Opacidade aqui é permitida: é carga, não revelação por rolagem.
+   *
+   * Só opacidade, sem `translate`: qualquer transform no contêiner vira a
+   * referência dos elementos `fixed` de dentro dele, e as barras fixas de
+   * doar ficavam presas ao meio da página durante a transição.
    */
   .entrada-rota {
-    transition:
-      opacity var(--duracao-media) var(--easing-entrada),
-      translate var(--duracao-lenta) var(--easing-entrada);
+    transition: opacity var(--duracao-media) var(--easing-entrada);
   }
   @starting-style {
     .entrada-rota {
       opacity: 0;
-      translate: 0 10px;
     }
   }
 

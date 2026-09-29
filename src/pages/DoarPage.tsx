@@ -24,7 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { formatCurrency, formatDate, formatPrazo, maskCurrency, parseCurrency } from "@/lib/format";
 import { mensagemAmigavel } from "@/lib/erros";
-import { A_MARCA } from "@/lib/copy";
+import { A_MARCA, CTA } from "@/lib/copy";
 import { cn } from "@/lib/utils";
 import { doacaoAvulsaSchema, VALORES_SUGERIDOS, type DoacaoAvulsaInput } from "@/lib/schemas/doacao";
 
@@ -337,7 +337,8 @@ export default function DoarPage() {
                     )}
                   </AnimatePresence>
 
-                  <m.div layout="position" transition={{ duration: 0.28, ease: SUAVE }}>
+                  {/* Sem animação de layout: o transform dela vira referência para a barra fixa do celular, que pulava para o meio do formulário. */}
+                  <div>
                     <p className="text-sm text-muted-foreground">
                       Depois de registrar, sua doação espera a ONG confirmar que recebeu. Você
                       acompanha esse status aqui mesmo.
@@ -352,7 +353,7 @@ export default function DoarPage() {
                       >
                         {enviando && <Loader2 className="animate-spin" aria-hidden="true" />}
                         {enviando
-                          ? "Registrando…"
+                          ? CTA.registrando
                           : valor > 0
                             ? user
                               ? "Já paguei, registrar minha doação"
@@ -360,7 +361,7 @@ export default function DoarPage() {
                             : "Escolha um valor para continuar"}
                       </Button>
                     </div>
-                  </m.div>
+                  </div>
                 </form>
               </Form>
             )}
