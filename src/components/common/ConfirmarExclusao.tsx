@@ -26,8 +26,11 @@ type ConfirmarExclusaoProps = {
   rotuloCarregando?: string;
   /** Executa a ação. Pode ser assíncrona: o botão mostra carregamento. */
   onConfirmar: () => void | Promise<unknown>;
-  /** `destrutivo` (vermelho) para excluir; `atencao` para reverter, marcar como não recebido. */
-  tom?: "destrutivo" | "atencao";
+  /**
+   * `destrutivo` (vermelho) para excluir; `atencao` para reverter ou marcar
+   * como não recebido; `neutro` (marinho) para confirmar uma ação comum.
+   */
+  tom?: "destrutivo" | "atencao" | "neutro";
   /**
    * Quando a exclusão não é possível, explica por quê e oferece uma saída
    * (por exemplo, desativar em vez de excluir).
@@ -115,9 +118,8 @@ export function ConfirmarExclusao({
                 void executar(onConfirmar);
               }}
               className={cn(
-                tom === "destrutivo"
-                  ? "bg-destructive text-destructive-foreground hover:brightness-90"
-                  : "bg-warning text-warning-foreground hover:brightness-90",
+                tom === "destrutivo" && "bg-destructive text-destructive-foreground hover:brightness-90",
+                tom === "atencao" && "bg-warning text-warning-foreground hover:brightness-90",
               )}
             >
               {carregando && <Loader2 className="animate-spin" aria-hidden="true" />}
