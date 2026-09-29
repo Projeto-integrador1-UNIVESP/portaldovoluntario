@@ -1,12 +1,5 @@
-import {
-  cloneElement, isValidElement, useState, type MouseEvent, type ReactElement, type ReactNode,
-} from "react";
-import { ChevronLeft, ChevronRight, Loader2, Trash2 } from "lucide-react";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { cloneElement, isValidElement, type ReactElement, type ReactNode } from "react";
+import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -17,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { ConfirmarExclusao } from "@/components/common/ConfirmarExclusao";
 import { ErrorState } from "@/components/common/ErrorState";
-import { CTA, VAZIO } from "@/lib/copy";
+import { VAZIO } from "@/lib/copy";
 import { cn } from "@/lib/utils";
 import { POR_PAGINA } from "./_shared-lib";
 
@@ -154,11 +147,14 @@ export function ExcluirLinha({
   desabilitado?: boolean;
   tom?: "destrutivo" | "atencao";
 }) {
+  // "Remover voluntário" mostra "Removendo…", não "Excluindo…".
+  const rotuloCarregando = rotuloConfirmar.startsWith("Remover") ? "Removendo…" : undefined;
   return (
     <ConfirmarExclusao
       titulo={titulo}
       descricao={descricao}
       rotuloConfirmar={rotuloConfirmar}
+      rotuloCarregando={rotuloCarregando}
       tom={tom}
       onConfirmar={aoConfirmar}
     >
@@ -172,60 +168,6 @@ export function ExcluirLinha({
         <Trash2 aria-hidden="true" />
       </Button>
     </ConfirmarExclusao>
-  );
-}
-
-/**
- * Confirmação de uma ação que não é exclusão (aplicar ou tirar o selo), com
- * gatilho próprio. Espera a ação terminar antes de fechar.
- */
-export function ConfirmarAcao({
-  titulo, descricao, rotuloConfirmar, aoConfirmar, destrutivo, children,
-}: {
-  titulo: string;
-  descricao: ReactNode;
-  rotuloConfirmar: string;
-  aoConfirmar: () => void | Promise<unknown>;
-  destrutivo?: boolean;
-  children: ReactNode;
-}) {
-  const [aberto, setAberto] = useState(false);
-  const [carregando, setCarregando] = useState(false);
-
-  const confirmar = async (e: MouseEvent) => {
-    e.preventDefault();
-    setCarregando(true);
-    try {
-      await aoConfirmar();
-      setAberto(false);
-    } catch {
-      /* o onError da mutation já avisou */
-    } finally {
-      setCarregando(false);
-    }
-  };
-
-  return (
-    <AlertDialog open={aberto} onOpenChange={(v) => !carregando && setAberto(v)}>
-      <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
-      <AlertDialogContent className="rolagem-contida">
-        <AlertDialogHeader>
-          <AlertDialogTitle className="font-display text-xl font-semibold">{titulo}</AlertDialogTitle>
-          <AlertDialogDescription>{descricao}</AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={carregando}>{CTA.cancelar}</AlertDialogCancel>
-          <AlertDialogAction
-            disabled={carregando}
-            onClick={confirmar}
-            className={destrutivo ? "bg-warning text-warning-foreground hover:brightness-90" : undefined}
-          >
-            {carregando && <Loader2 className="animate-spin" aria-hidden="true" />}
-            {rotuloConfirmar}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
   );
 }
 

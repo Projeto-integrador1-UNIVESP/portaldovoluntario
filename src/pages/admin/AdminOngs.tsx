@@ -31,7 +31,7 @@ import {
 import { normalizeUrl, onlyDigits } from "@/lib/validators";
 import { buscarCep } from "@/lib/viacep";
 import {
-  AlternarStatus, Campo, ConfirmarAcao, SeloVerificada, TabelaAdmin, Vazio,
+  AlternarStatus, Campo, SeloVerificada, TabelaAdmin, Vazio,
 } from "./_shared";
 import { contarLinhas, mensagemDeErro, useValidacao } from "./_shared-lib";
 
@@ -409,30 +409,33 @@ export default function AdminOngs() {
               <div className="flex flex-col items-start gap-1.5">
                 <SeloVerificada verificadaEm={o.verificada_em} variante="completo" mostrarPendente />
                 {o.verificada_em ? (
-                  <ConfirmarAcao
+                  <ConfirmarExclusao
                     titulo={`Remover o selo de verificada de ${o.nome}?`}
                     descricao="A ONG deixa de aparecer como verificada no site. Faça isso se o CNPJ não confere mais ou se a organização foi suspensa."
                     rotuloConfirmar={CTA.remover("selo de verificada")}
-                    destrutivo
-                    aoConfirmar={() => alternarSelo.mutateAsync({ id: o.id, verificar: false })}
+                    rotuloCarregando="Removendo…"
+                    tom="atencao"
+                    onConfirmar={() => alternarSelo.mutateAsync({ id: o.id, verificar: false })}
                   >
                     <Button size="sm" variant="ghost" className="h-auto px-1 py-0.5 text-xs">
                       <ShieldOff aria-hidden="true" />
                       Remover selo
                     </Button>
-                  </ConfirmarAcao>
+                  </ConfirmarExclusao>
                 ) : (
-                  <ConfirmarAcao
+                  <ConfirmarExclusao
+                    tom="neutro"
+                    rotuloCarregando="Aplicando…"
                     titulo={`Aplicar o selo de verificada a ${o.nome}?`}
                     descricao={`Confirme só depois de checar o CNPJ ${o.cnpj ? formatCnpj(o.cnpj) : "da organização"} na Receita Federal. O selo aparece para quem está decidindo se confia nessa ONG.`}
                     rotuloConfirmar="Aplicar selo de verificada"
-                    aoConfirmar={() => alternarSelo.mutateAsync({ id: o.id, verificar: true })}
+                    onConfirmar={() => alternarSelo.mutateAsync({ id: o.id, verificar: true })}
                   >
                     <Button size="sm" variant="outline" className="h-8 text-xs">
                       <ShieldCheck aria-hidden="true" />
                       Aplicar selo
                     </Button>
-                  </ConfirmarAcao>
+                  </ConfirmarExclusao>
                 )}
               </div>
             </TableCell>
