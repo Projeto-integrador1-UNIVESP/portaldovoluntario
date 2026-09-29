@@ -83,7 +83,7 @@ describe("usuários", () => {
     const r = novoUsuarioSchema.safeParse({ nome: "Ana", email: "", senha: "Senha1234", papel: "user" });
     expect(errosPorCampo(r.error!).email).toBe("Informe o e-mail");
     const r2 = novoUsuarioSchema.safeParse({ nome: "Ana", email: "ana@", senha: "Senha1234", papel: "user" });
-    expect(errosPorCampo(r2.error!).email).toBe("E-mail inválido");
+    expect(errosPorCampo(r2.error!).email).toBe("Informe um e-mail válido");
   });
 
   it("a senha segue as mesmas regras do cadastro público", () => {
@@ -123,7 +123,7 @@ describe("doacaoAdminSchema", () => {
 
   it("e-mail do doador é opcional, mas se vier precisa ser válido", () => {
     const r = doacaoAdminSchema.safeParse({ id_ong: "o1", valor: "R$ 1,00", tipo_doacao: "pix", doador_nome: "", doador_email: "x" });
-    expect(errosPorCampo(r.error!).doador_email).toBe("E-mail inválido");
+    expect(errosPorCampo(r.error!).doador_email).toBe("Informe um e-mail válido");
   });
 });
 
