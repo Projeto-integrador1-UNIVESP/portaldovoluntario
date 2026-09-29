@@ -13,6 +13,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const escritas: { tabela: string; operacao: string; valores: unknown }[] = [];
 let doacoesDaOng = 0;
+/** Quando definida, a contagem de doações só responde depois que ela resolve. */
+let segurarContagem: Promise<void> | null = null;
 
 const ong = {
   id: "ong-1",
@@ -73,7 +75,12 @@ vi.mock("@/integrations/supabase/client", () => {
         return construtor;
       },
       then: (ok: (v: unknown) => unknown, falha?: (e: unknown) => unknown) =>
-        Promise.resolve(resolver()).then(ok, falha),
+        (tabela === "doacoes" && estado.operacao === "select" && segurarContagem
+          ? segurarContagem
+          : Promise.resolve()
+        )
+          .then(resolver)
+          .then(ok, falha),
     };
     for (const metodo of encadeavel) construtor[metodo] = () => construtor;
     return construtor;
@@ -117,8 +124,26 @@ describe("AdminOngs", () => {
   beforeEach(() => {
     escritas.length = 0;
     doacoesDaOng = 0;
+    segurarContagem = null;
     vi.clearAllMocks();
   });
+
+  it("não oferece excluir enquanto ainda conta o que está ligado à ONG", async () => {
+    let liberar: () => void = () => {};
+    segurarContagem = new Promise<void>((r) => {
+      liberar = r;
+    });
+    await renderizar();
+
+    await userEvent.click(await screen.findByRole("button", { name: /Excluir Casa do Caminho/i }));
+
+    expect(await screen.findByRole("alertdialog")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Excluir ONG$/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Fechar$/ })).toBeInTheDocument();
+
+    liberar();
+    expect(await screen.findByRole("button", { name: /^Excluir ONG$/ })).toBeInTheDocument();
+  }, 20_000);
 
   it("não deixa excluir uma ONG que tem doações registradas", async () => {
     doacoesDaOng = 3;
@@ -127,7 +152,7 @@ describe("AdminOngs", () => {
     await userEvent.click(await screen.findByRole("button", { name: /Excluir Casa do Caminho/i }));
 
     expect(await screen.findByText(/3 doações/)).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /^Excluir$/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Excluir ONG$/ })).not.toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: /Desativar a ONG/i }));
 
@@ -145,7 +170,7 @@ describe("AdminOngs", () => {
     await renderizar();
 
     await userEvent.click(await screen.findByRole("button", { name: /Excluir Casa do Caminho/i }));
-    await userEvent.click(await screen.findByRole("button", { name: /^Excluir$/ }));
+    await userEvent.click(await screen.findByRole("button", { name: /^Excluir ONG$/ }));
 
     await waitFor(() =>
       expect(escritas).toEqual(
@@ -157,9 +182,9 @@ describe("AdminOngs", () => {
   it("aplica o selo de verificada gravando a data em verificada_em", async () => {
     await renderizar();
 
-    await userEvent.click(await screen.findByRole("button", { name: /Verificar/i }));
+    await userEvent.click(await screen.findByRole("button", { name: /^Aplicar selo$/i }));
     await userEvent.click(
-      await screen.findByRole("button", { name: /Conferi o CNPJ, aplicar o selo/i }),
+      await screen.findByRole("button", { name: /Aplicar selo de verificada/i }),
     );
 
     await waitFor(() => expect(escritas.length).toBeGreaterThan(0));
