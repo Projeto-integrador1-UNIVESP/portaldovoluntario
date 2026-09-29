@@ -30,11 +30,11 @@ export const cadastroDoadorSchema = z.object({
 
 const telefoneSchema = z
   .string()
-  .refine((v) => [10, 11].includes(onlyDigits(v).length), "Telefone deve ter DDD e 8 ou 9 dígitos");
+  .refine((v) => [10, 11].includes(onlyDigits(v).length), "Informe o telefone com DDD (8 ou 9 dígitos)");
 
 const cepSchema = z
   .string()
-  .refine((v) => onlyDigits(v).length === 8, "CEP deve ter 8 dígitos");
+  .refine((v) => onlyDigits(v).length === 8, "Informe um CEP com 8 dígitos");
 
 /**
  * Cadastro de ONG. Mantém os campos de endereço porque a Edge Function

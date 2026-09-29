@@ -265,7 +265,14 @@ function FormularioOng({ aoTrocarTipo }: { aoTrocarTipo: () => void }) {
 
     const mensagemDeErro = (data as { error?: string } | null)?.error || error?.message;
     if (mensagemDeErro) {
-      toast.error(`Erro no cadastro: ${mensagemDeErro}`);
+      // A Edge Function devolve mensagens técnicas; só as conhecidas viram
+      // orientação útil, o resto cai num texto que não assusta.
+      const ehChave = /chave|code|invalid|used/i.test(mensagemDeErro);
+      toast.error(
+        ehChave
+          ? "Chave de acesso inválida ou já utilizada. Confira com quem forneceu a chave."
+          : "Não foi possível concluir o cadastro agora. Tente novamente em instantes.",
+      );
       return;
     }
 

@@ -1,3 +1,5 @@
+@import "./styles/motion.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -26,6 +28,14 @@
        DropdownMenu, Select, Dialog e das variants ghost/outline do Button. */
     --cta: 25 95% 38%;
     --cta-foreground: 0 0% 100%;
+
+    /* Elevação. Sombras frias e difusas, tintadas com o azul da marca, em vez
+       do cinza neutro do Tailwind — o preto puro sobre fundo claro suja. */
+    --sombra-sutil: 0 1px 2px 0 hsl(210 30% 12% / 0.04);
+    --sombra-baixa: 0 1px 3px 0 hsl(210 30% 12% / 0.06), 0 1px 2px -1px hsl(210 30% 12% / 0.04);
+    --sombra-media: 0 6px 16px -4px hsl(210 30% 12% / 0.1), 0 2px 6px -2px hsl(210 30% 12% / 0.05);
+    --sombra-alta: 0 16px 32px -8px hsl(210 30% 12% / 0.14), 0 4px 10px -4px hsl(210 30% 12% / 0.06);
+    --sombra-cta: 0 4px 14px -2px hsl(var(--cta) / 0.3);
     --border: 210 20% 90%;
     --input: 210 20% 90%;
     --ring: 200 80% 30%;

@@ -34,7 +34,13 @@ export function CopyField({ valor, rotulo, className }: CopyFieldProps) {
       <code className="min-w-0 flex-1 truncate rounded-md border bg-muted px-3 py-2 text-sm">
         {valor}
       </code>
-      <Button type="button" variant={copiado ? "secondary" : "default"} onClick={copiar}>
+      <Button
+        type="button"
+        variant={copiado ? "secondary" : "default"}
+        onClick={copiar}
+        className="pressionavel shrink-0"
+        aria-label={copiado ? "Código copiado" : rotulo}
+      >
         {copiado ? (
           <>
             <Check className="mr-2 h-4 w-4" aria-hidden="true" />
@@ -46,7 +52,6 @@ export function CopyField({ valor, rotulo, className }: CopyFieldProps) {
             Copiar
           </>
         )}
-        <span className="sr-only">{rotulo}</span>
       </Button>
       <span aria-live="polite" className="sr-only">
         {copiado ? "Copiado para a área de transferência" : ""}

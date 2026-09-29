@@ -21,14 +21,14 @@ export const doacaoDinheiroSchema = identificacaoDoadorSchema.extend({
   valor: z
     .number({ invalid_type_error: "Informe um valor" })
     .positive("O valor precisa ser maior que zero")
-    .max(1_000_000, "Valor acima do limite"),
+    .max(1_000_000, "O valor máximo por doação é R$ 1.000.000,00"),
 });
 
 export const doacaoItemSchema = identificacaoDoadorSchema.extend({
   quantidade: z
     .number({ invalid_type_error: "Informe a quantidade" })
     .positive("A quantidade precisa ser maior que zero")
-    .max(100_000, "Quantidade acima do limite"),
+    .max(100_000, "A quantidade máxima por doação é 100.000"),
   forma_entrega: z.enum(["levar", "coleta"], {
     errorMap: () => ({ message: "Escolha como a doação vai chegar até a ONG" }),
   }),

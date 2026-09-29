@@ -1,0 +1,133 @@
+/*
+ * Sistema de movimento.
+ *
+ * Quase tudo aqui é CSS puro, de propósito: `transform` e `opacity` rodam no
+ * compositor, fora da thread principal, e custam zero byte de JavaScript —
+ * o que importa num público majoritariamente mobile em 4G.
+ *
+ * A biblioteca de animação em JS fica reservada para os dois ou três pontos
+ * em que há orquestração de verdade (passos do formulário de doação e o
+ * feedback de confirmação), carregada sob demanda.
+ */
+
+@layer base {
+  :root {
+    /* Durações. Abaixo de 100ms não se percebe; acima de 500ms parece lento. */
+    --duracao-instantanea: 100ms;  /* hover, clique */
+    --duracao-rapida: 160ms;       /* toggle, troca de estado */
+    --duracao-media: 240ms;        /* dropdown, card */
+    --duracao-lenta: 320ms;        /* modal, troca de passo */
+
+    /* Entrando: começa rápido e desacelera. Saindo: o contrário. */
+    --easing-entrada: cubic-bezier(0, 0, 0.2, 1);
+    --easing-saida: cubic-bezier(0.4, 0, 1, 1);
+    --easing-suave: cubic-bezier(0.4, 0, 0.2, 1);
+    /* Um leve overshoot, só para confirmação de sucesso. */
+    --easing-elastico: cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+}
+
+@layer utilities {
+  /*
+   * Entrada ao rolar, sem JavaScript e sem IntersectionObserver.
+   *
+   * O elemento fica visível por padrão; a animação só é aplicada quando o
+   * navegador suporta linha do tempo de rolagem. Assim, onde não há suporte,
+   * o conteúdo simplesmente aparece — nunca some.
+   */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .ao-rolar {
+        animation: surgir linear both;
+        animation-timeline: view();
+        animation-range: entry 0% cover 22%;
+      }
+
+      .ao-rolar-escalonado > * {
+        animation: surgir linear both;
+        animation-timeline: view();
+        animation-range: entry 0% cover 26%;
+      }
+    }
+  }
+
+  /* Preenchimento da barra de progresso ao entrar em tela. */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .barra-anima {
+        animation: preencher linear both;
+        animation-timeline: view();
+        animation-range: entry 10% cover 30%;
+        transform-origin: left center;
+      }
+    }
+  }
+
+  /* Resposta tátil ao toque. Sem isto, o botão parece não responder no celular. */
+  .pressionavel {
+    transition: transform var(--duracao-instantanea) var(--easing-saida);
+  }
+  .pressionavel:active {
+    transform: scale(0.97);
+  }
+
+  /* Card que se levanta levemente ao passar o mouse. */
+  .elevavel {
+    transition:
+      transform var(--duracao-media) var(--easing-suave),
+      box-shadow var(--duracao-media) var(--easing-suave);
+  }
+  @media (hover: hover) {
+    .elevavel:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--sombra-media);
+    }
+  }
+}
+
+/*
+ * Impressão e modo de alto contraste não rolam a página: sem isto, tudo que
+ * ainda não entrou na viewport sairia em branco no papel.
+ */
+@media print, (forced-colors: active) {
+  .ao-rolar,
+  .ao-rolar-escalonado > *,
+  .barra-anima {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/*
+ * Só deslocamento, sem opacidade.
+ *
+ * A versão anterior partia de `opacity: 0`, e isso tem um modo de falha real:
+ * quando a página não rola — monitor muito alto, zoom bem reduzido, impressão,
+ * captura de página inteira — a linha do tempo de rolagem nunca progride e o
+ * conteúdo fica permanentemente invisível. Animar só o transform dá o mesmo
+ * efeito percebido sem nunca poder esconder informação.
+ */
+@keyframes surgir {
+  from {
+    transform: translateY(16px);
+  }
+}
+
+@keyframes preencher {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes pulsar-sucesso {
+  0% { transform: scale(0.8); opacity: 0; }
+  60% { transform: scale(1.06); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Brilho contido do skeleton — sem loop agressivo, que incomoda quem tem
+   sensibilidade vestibular. */
+@keyframes brilho {
+  100% { transform: translateX(100%); }
+}
