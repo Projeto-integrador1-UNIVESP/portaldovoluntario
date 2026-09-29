@@ -151,7 +151,9 @@ export default function ProjetoPage() {
            * na terceira linha e acompanha a rolagem.
            */}
           <div className="grid gap-x-12 gap-y-8 lg:grid-cols-[minmax(0,1fr)_26rem] lg:grid-rows-[auto_auto_1fr]">
-            <div className="lg:col-start-2 lg:row-start-1 lg:row-end-3">
+            {/* `min-w-0` em todo item da grade: sem isso, qualquer texto sem
+                quebra dentro dele alarga a coluna e a página no celular. */}
+            <div className="min-w-0 lg:col-start-2 lg:row-start-1 lg:row-end-3">
               <Capa
                 src={capa}
                 alt=""
@@ -224,7 +226,7 @@ export default function ProjetoPage() {
               <ShareButton titulo={projeto.nome_projeto} className="mt-6" />
             </header>
 
-            <div className="lg:col-start-2 lg:row-start-3">
+            <div className="min-w-0 lg:col-start-2 lg:row-start-3">
               <PainelDoQueFalta
                 necessidades={necessidades}
                 abertas={abertas}
@@ -260,13 +262,12 @@ export default function ProjetoPage() {
                       destaque
                       className="sm:col-span-2"
                     />
-                    {demais.map((n) => (
+                    {demais.map((n, i) => (
                       <NeedItem
                         key={n.id}
                         necessidade={n}
                         linkDoar={`${linkDoar}?necessidade=${n.id}`}
-                        // Um item sozinho na segunda linha deixaria meia grade vazia.
-                        className={demais.length === 1 ? "sm:col-span-2" : undefined}
+                        className={larguraNaGrade(i, demais.length)}
                       />
                     ))}
                   </ul>
@@ -352,6 +353,13 @@ export default function ProjetoPage() {
   );
 }
 
+/**
+ * Na grade de dois, o último item de uma contagem ímpar ocuparia meia linha
+ * com um buraco ao lado. Ele passa a fechar a linha inteira.
+ */
+const larguraNaGrade = (indice: number, total: number) =>
+  total % 2 === 1 && indice === total - 1 ? "sm:col-span-2" : undefined;
+
 type PainelProps = {
   necessidades: Necessidade[];
   abertas: Necessidade[];
@@ -424,9 +432,9 @@ function PainelDoQueFalta({ necessidades, abertas, taxa, linkDoar }: PainelProps
           </p>
           <ul className="mt-3 space-y-1 text-sm">
             {resumo.map((n) => (
-              <li key={n.id} className="flex gap-2">
-                <span className="numero shrink-0 font-semibold">{quantoFalta(n)}</span>
-                <span className="min-w-0 truncate text-muted-foreground">de {n.nome}</span>
+              <li key={n.id}>
+                <span className="numero font-semibold">{quantoFalta(n)}</span>
+                <span className="text-muted-foreground"> de {n.nome}</span>
               </li>
             ))}
             {restantes > 0 && (
