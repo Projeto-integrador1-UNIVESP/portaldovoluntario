@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { hojeLocal } from "@/lib/format";
 import "@/lib/zodPtBr";
 import { emailSchema, senhaSchema } from "@/lib/schemas/auth";
 import { SIGLAS_UF } from "@/lib/constants/ufs";
@@ -53,7 +54,7 @@ export const cadastroOngSchema = z.object({
   data_nascimento: z
     .string()
     .min(1, MENSAGENS.obrigatorio("a data de nascimento"))
-    .refine((v) => v <= new Date().toISOString().slice(0, 10), MENSAGENS.dataNoFuturo),
+    .refine((v) => v <= hojeLocal(), MENSAGENS.dataNoFuturo),
   cep: cepSchema,
   logradouro: z.string().trim().min(3, MENSAGENS.obrigatorio("o logradouro")).max(120, MENSAGENS.maximo(120)),
   cidade: z.string().trim().min(2, MENSAGENS.obrigatorio("a cidade")).max(80, MENSAGENS.maximo(80)),

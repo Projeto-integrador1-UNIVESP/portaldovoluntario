@@ -164,3 +164,14 @@ export const quantoFalta = (n: {
   const falta = Math.max(0, n.meta - n.arrecadado);
   return n.tipo === "dinheiro" ? formatCurrency(falta) : formatQuantidade(falta, n.unidade);
 };
+
+/**
+ * Hoje no fuso de quem usa, como "AAAA-MM-DD". `toISOString()` dá a data em
+ * UTC: depois das 21h no Brasil já é amanhã, e o `min` de um campo de data
+ * discordava da validação.
+ */
+export const hojeLocal = () => {
+  const agora = new Date();
+  const dois = (n: number) => String(n).padStart(2, "0");
+  return `${agora.getFullYear()}-${dois(agora.getMonth() + 1)}-${dois(agora.getDate())}`;
+};
