@@ -1,0 +1,14 @@
+{
+  "name": "Voluntá",
+  "short_name": "Voluntá",
+  "description": "Veja o que está faltando nas ONGs da sua região e ajude com doações de itens, dinheiro ou trabalho voluntário.",
+  "lang": "pt-BR",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#1C3759",
+  "background_color": "#F9F6F1",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
