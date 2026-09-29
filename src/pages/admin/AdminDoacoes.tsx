@@ -57,7 +57,7 @@ const nomeDoDoador = (d: DoacaoDetalhada) =>
  *
  * A versão anterior baixava a tabela inteira a cada abertura e dizia "Nenhuma
  * doação registrada" enquanto ainda estava carregando. Agora a consulta é
- * paginada no servidor e o filtro por situação também — é o que permite chegar
+ * paginada no servidor e o filtro por situação também, o que permite chegar
  * aqui pelo painel direto nas doações que a ONG não confirmou.
  *
  * O administrador não confirma recebimento: quem atesta que o item chegou é a
@@ -199,7 +199,7 @@ export default function AdminDoacoes() {
       const total = data?.total ?? completas.length;
       toast.success(
         completas.length < total
-          ? `${completas.length.toLocaleString("pt-BR")} de ${total.toLocaleString("pt-BR")} doações exportadas — o arquivo traz as mais recentes.`
+          ? `${completas.length.toLocaleString("pt-BR")} de ${total.toLocaleString("pt-BR")} doações exportadas. O arquivo traz as mais recentes.`
           : `${completas.length.toLocaleString("pt-BR")} ${completas.length === 1 ? "doação exportada" : "doações exportadas"}.`,
       );
     } catch (erro) {
@@ -251,8 +251,8 @@ export default function AdminDoacoes() {
       {filtro === "pendente" && linhas.length > 0 && (
         <Callout tom="atencao" className="mb-4">
           Enquanto a ONG não confirma o recebimento, a barra de progresso do
-          projeto não sobe — e quem doou não vê o próprio efeito. A confirmação é
-          da organização, não da administração: o que dá para fazer aqui é cobrar.
+          projeto não sobe, e quem doou não vê o próprio efeito. Quem confirma é a
+          organização: daqui o que dá para fazer é cobrar.
         </Callout>
       )}
 
@@ -295,7 +295,7 @@ export default function AdminDoacoes() {
           <TableRow key={d.id}>
             <TableCell className="font-medium">{nomeDoDoador(d)}</TableCell>
 
-            <TableCell className="text-muted-foreground">{d.ong?.nome ?? "—"}</TableCell>
+            <TableCell className="text-muted-foreground">{d.ong?.nome ?? "Sem ONG"}</TableCell>
 
             <TableCell>
               {d.necessidade ? (
@@ -443,19 +443,19 @@ export default function AdminDoacoes() {
                 <Linha rotulo="Doador" valor={nomeDoDoador(detalhe)} />
                 {!detalhe.anonima && (
                   <>
-                    <Linha rotulo="E-mail" valor={detalhe.doador?.email || detalhe.doador_email || "—"} />
-                    <Linha rotulo="Telefone" valor={detalhe.doador?.telefone || "—"} />
+                    <Linha rotulo="E-mail" valor={detalhe.doador?.email || detalhe.doador_email || "Não informado"} />
+                    <Linha rotulo="Telefone" valor={detalhe.doador?.telefone || "Não informado"} />
                     <Linha
                       rotulo="Cidade"
                       valor={
                         detalhe.doador?.cidade
                           ? `${detalhe.doador.cidade}${detalhe.doador.estado ? `, ${detalhe.doador.estado}` : ""}`
-                          : "—"
+                          : "Não informada"
                       }
                     />
                   </>
                 )}
-                <Linha rotulo="ONG" valor={detalhe.ong?.nome ?? "—"} />
+                <Linha rotulo="ONG" valor={detalhe.ong?.nome ?? "Sem ONG"} />
                 <Linha
                   rotulo="O que"
                   valor={
@@ -464,7 +464,7 @@ export default function AdminDoacoes() {
                       : formatCurrency(detalhe.valor)
                   }
                 />
-                <Linha rotulo="Forma" valor={detalhe.tipo_doacao ?? "—"} />
+                <Linha rotulo="Forma" valor={detalhe.tipo_doacao ?? "Não informada"} />
                 {detalhe.forma_entrega && (
                   <Linha
                     rotulo="Entrega"

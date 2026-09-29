@@ -1,11 +1,11 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Marca do Solidariedade.
+ * Marca do Voluntá.
  *
  * O símbolo é um anel com uma lacuna e um check preenchendo-a: a lacuna é o
  * que ainda falta para a meta, o check é a ONG confirmando que recebeu. É a
- * tese do produto em uma forma — a barra de progresso aqui é recibo, não
+ * tese do produto em uma forma: a barra de progresso aqui é recibo, não
  * promessa.
  *
  * O azul carrega a instituição e o laranja carrega a ação, os mesmos papéis
@@ -61,7 +61,7 @@ export function Logo({ className, soSimbolo, monocromatico }: LogoProps) {
       />
       {!soSimbolo && (
         <span className="font-display text-lg font-extrabold tracking-[-0.02em] text-foreground">
-          Solidariedade
+          Voluntá
         </span>
       )}
     </span>

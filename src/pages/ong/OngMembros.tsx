@@ -76,8 +76,8 @@ export default function OngMembros() {
         <EmptyState
           icon={Users}
           title="Nenhum membro vinculado"
-          description="Quem for administrar a ONG junto com você precisa se cadastrar usando o código de acesso da organização."
-          action={{ label: "Como o cadastro de ONG funciona", to: "/como-funciona" }}
+          description="Quem for administrar a ONG com você precisa se cadastrar com o código de acesso da organização."
+          action={{ label: "Ver como o cadastro de ONG funciona", to: "/como-funciona" }}
         />
       ) : (
         <Card className="overflow-hidden">
@@ -99,10 +99,10 @@ export default function OngMembros() {
                       {m.pessoa?.nome || "Cadastro incompleto"}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {m.pessoa?.email || "—"}
+                      {m.pessoa?.email || "Não informado"}
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-muted-foreground">
-                      {m.pessoa?.telefone ? formatPhone(m.pessoa.telefone) : "—"}
+                      {m.pessoa?.telefone ? formatPhone(m.pessoa.telefone) : "Não informado"}
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-muted-foreground">
                       {formatDate(m.data_inicio)}

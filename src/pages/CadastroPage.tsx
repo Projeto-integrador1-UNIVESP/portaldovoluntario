@@ -189,7 +189,7 @@ function FormularioDoador({ aoTrocarTipo }: { aoTrocarTipo: () => void }) {
       return;
     }
 
-    toast.success("Cadastro realizado! Bem-vindo.");
+    toast.success("Conta criada. Bem-vindo.");
     navigate("/");
   };
 
@@ -205,8 +205,8 @@ function FormularioDoador({ aoTrocarTipo }: { aoTrocarTipo: () => void }) {
         <AceiteDosTermos form={form} />
 
         <Callout tom="info">
-          Só isso. Telefone e endereço a gente pede depois, e apenas quando fizerem
-          diferença — por exemplo, para agendar a coleta de uma doação.
+          Só isso. Telefone e endereço a gente pede depois, quando fizerem diferença:
+          para agendar a coleta de uma doação, por exemplo.
         </Callout>
 
         <Button type="submit" className="pressionavel w-full" size="lg" disabled={form.formState.isSubmitting}>
@@ -215,7 +215,7 @@ function FormularioDoador({ aoTrocarTipo }: { aoTrocarTipo: () => void }) {
         </Button>
         <Button type="button" variant="ghost" className="w-full" onClick={aoTrocarTipo}>
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          Trocar tipo de conta
+          Escolher outro tipo de conta
         </Button>
       </form>
     </Form>
@@ -283,7 +283,7 @@ function FormularioOng({ aoTrocarTipo }: { aoTrocarTipo: () => void }) {
       return;
     }
 
-    toast.success("ONG cadastrada! Faça login para continuar.");
+    toast.success("ONG cadastrada. Agora entre com o e-mail e a senha que você criou.");
     navigate("/login");
   };
 
@@ -409,7 +409,7 @@ function FormularioOng({ aoTrocarTipo }: { aoTrocarTipo: () => void }) {
                   <SelectContent>
                     {UFS.map((uf) => (
                       <SelectItem key={uf.sigla} value={uf.sigla}>
-                        {uf.sigla} — {uf.nome}
+                        {uf.sigla} ({uf.nome})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -452,11 +452,11 @@ function FormularioOng({ aoTrocarTipo }: { aoTrocarTipo: () => void }) {
 
         <Button type="submit" className="pressionavel w-full" size="lg" disabled={form.formState.isSubmitting}>
           {form.formState.isSubmitting && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
-          Cadastrar ONG
+          Criar a conta da ONG
         </Button>
         <Button type="button" variant="ghost" className="w-full" onClick={aoTrocarTipo}>
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          Trocar tipo de conta
+          Escolher outro tipo de conta
         </Button>
       </form>
     </Form>
@@ -467,14 +467,14 @@ const opcoesDeConta = [
   {
     chave: "doador" as const,
     icone: HandHeart,
-    titulo: "Doador e acompanhante de projetos",
-    descricao: "Quero doar, acompanhar projetos sociais e participar como voluntário.",
+    titulo: "Quero doar ou ser voluntário",
+    descricao: "Doar dinheiro ou itens, acompanhar o que a ONG confirmou e se inscrever nos projetos.",
   },
   {
     chave: "ong" as const,
     icone: Building2,
     titulo: "Sou uma ONG",
-    descricao: "Cadastro institucional com chave de acesso fornecida pelo administrador.",
+    descricao: "Precisa da chave de acesso que a administração envia depois de conferir a organização.",
   },
 ];
 
@@ -511,7 +511,7 @@ export default function CadastroPage() {
   if (!tipoDeConta) {
     return moldura(
       "Como você quer participar?",
-      "Escolha seu tipo de conta para continuar.",
+      "Escolha o tipo de conta para seguir.",
       <div className="grid gap-3 md:grid-cols-2">
         {opcoesDeConta.map((opcao) => (
           <button

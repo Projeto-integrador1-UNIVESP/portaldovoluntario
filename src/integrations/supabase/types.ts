@@ -264,7 +264,9 @@ export type Database = {
           status: boolean | null
           telefone: string | null
           updated_at: string
+          verificacao_observacao: string | null
           verificada_em: string | null
+          verificada_por: string | null
         }
         Insert: {
           agencia?: number | null
@@ -298,7 +300,9 @@ export type Database = {
           status?: boolean | null
           telefone?: string | null
           updated_at?: string
+          verificacao_observacao?: string | null
           verificada_em?: string | null
+          verificada_por?: string | null
         }
         Update: {
           agencia?: number | null
@@ -332,7 +336,9 @@ export type Database = {
           status?: boolean | null
           telefone?: string | null
           updated_at?: string
+          verificacao_observacao?: string | null
           verificada_em?: string | null
+          verificada_por?: string | null
         }
         Relationships: []
       }
@@ -598,6 +604,21 @@ export type Database = {
           ong_slug: string
           projeto_nome: string
           projeto_slug: string
+          quantidade: number
+          status: string
+          valor: number
+        }[]
+      }
+      get_confirmacoes_projeto: {
+        Args: { _limite?: number; _projeto_id: string }
+        Returns: {
+          anonima: boolean
+          confirmada_em: string
+          data_doacao: string
+          doador_nome: string
+          id: string
+          necessidade_nome: string
+          necessidade_unidade: string
           quantidade: number
           status: string
           valor: number

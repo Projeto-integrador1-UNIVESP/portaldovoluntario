@@ -59,7 +59,7 @@ const limparBusca = (termo: string) => termo.replace(/[,()*%\\]/g, " ").trim();
  *
  * Duas travas que faltavam: a tela buscava a tabela inteira de perfis (agora é
  * paginada e com busca no servidor) e deixava o administrador rebaixar ou
- * excluir a própria conta — o que tranca o acesso a `/admin` sem caminho de
+ * excluir a própria conta, o que tranca o acesso a `/admin` sem caminho de
  * volta pela interface, já que a rota exige o papel de admin.
  */
 export default function AdminUsuarios() {
@@ -325,11 +325,11 @@ export default function AdminUsuarios() {
             </TableCell>
 
             <TableCell className="text-muted-foreground">
-              {u.telefone ? formatPhone(u.telefone) : "—"}
+              {u.telefone ? formatPhone(u.telefone) : "Não informado"}
             </TableCell>
 
             <TableCell className="text-muted-foreground">
-              {u.cidade ? `${u.cidade}${u.estado ? `, ${u.estado}` : ""}` : "—"}
+              {u.cidade ? `${u.cidade}${u.estado ? `, ${u.estado}` : ""}` : "Não informada"}
             </TableCell>
 
             <TableCell>
@@ -443,7 +443,7 @@ export default function AdminUsuarios() {
                 <SelectContent>
                   {UFS.map((uf) => (
                     <SelectItem key={uf.sigla} value={uf.sigla}>
-                      {uf.sigla} — {uf.nome}
+                      {uf.sigla} ({uf.nome})
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -56,7 +56,7 @@ const renderizar = async () => {
   );
 };
 
-describe("OngDoacoes — confirmação de recebimento", () => {
+describe("OngDoacoes: confirmação de recebimento", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("mostra a doação de item pendente com quantidade e forma de entrega", async () => {
@@ -73,21 +73,21 @@ describe("OngDoacoes — confirmação de recebimento", () => {
     const usuario = userEvent.setup();
     await renderizar();
 
-    await usuario.click(await screen.findByRole("button", { name: /Recebi/ }));
+    await usuario.click(await screen.findByRole("button", { name: /Confirmar que recebi/ }));
 
     await vi.waitFor(() => expect(toastSuccess).toHaveBeenCalled());
-    expect(toastSuccess.mock.calls[0][0]).toMatch(/progresso do projeto foi atualizado/i);
+    expect(toastSuccess.mock.calls[0][0]).toMatch(/progresso do projeto já subiu/i);
   }, 20_000);
 
   it("NÃO diz que deu certo quando a RLS bloqueia e o update afeta zero linhas", async () => {
     // O PostgREST devolve 200 com lista vazia quando a policy não alcança a
-    // linha. Sem checar isso, a tela diria "confirmado" sem nada ter mudado —
-    // exatamente o que acontecia antes de existir a policy de UPDATE da ONG.
+    // linha. Sem checar isso, a tela diria "confirmado" sem nada ter mudado.
+    // Era o que acontecia antes de existir a policy de UPDATE da ONG.
     update.mockResolvedValue({ data: [], error: null });
     const usuario = userEvent.setup();
     await renderizar();
 
-    await usuario.click(await screen.findByRole("button", { name: /Recebi/ }));
+    await usuario.click(await screen.findByRole("button", { name: /Confirmar que recebi/ }));
 
     await vi.waitFor(() => expect(toastError).toHaveBeenCalled());
     expect(toastError.mock.calls[0][0]).toMatch(/sem permissão/i);

@@ -8,7 +8,7 @@ export type EnderecoViaCep = {
 
 /**
  * Consulta o ViaCEP e devolve o endereço, ou `null` quando o CEP não existe
- * ou o serviço está fora do ar — o formulário segue preenchível à mão nesse caso.
+ * ou o serviço está fora do ar. Nesse caso o formulário segue preenchível à mão.
  */
 export async function buscarCep(cep: string): Promise<EnderecoViaCep | null> {
   const digitos = onlyDigits(cep, 8);

@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
  * Antes toda causa usava o mesmo cinza-azulado: "Educação", "Alimentação" e
  * "Animais" eram visualmente idênticas e a informação não ajudava a escanear
  * a lista. A cor é derivada do próprio texto, então é estável sem precisar de
- * tabela, e fica dentro de uma paleta contida — matizes saturados demais
+ * tabela, e fica dentro de uma paleta contida: matizes saturados demais
  * roubariam a atenção do laranja, que é a única cor de ação da interface.
  */
 

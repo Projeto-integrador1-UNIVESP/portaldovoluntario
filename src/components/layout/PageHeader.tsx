@@ -12,7 +12,7 @@ type PageHeaderProps = {
  *
  * O h1 daqui usa a mesma escala e a mesma fonte do h1 do site público: o painel
  * é metade do produto e antes parecia outro, com Inter em `text-2xl` contra
- * Nunito no site. A ação quebra para baixo do título no celular — antes ela
+ * Nunito no site. A ação quebra para baixo do título no celular. Antes ela
  * dividia a linha e o título ficava em duas ou três palavras por linha.
  */
 export function PageHeader({ title, description, icon, action }: PageHeaderProps) {

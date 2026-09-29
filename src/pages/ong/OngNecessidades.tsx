@@ -46,7 +46,7 @@ const VAZIO: NecessidadeInput = {
 /**
  * Cadastro das necessidades de um projeto (F1).
  *
- * É aqui que a ONG diz o que está faltando — o dado que a plataforma inteira
+ * É aqui que a ONG diz o que está faltando, o dado que a plataforma inteira
  * existe para mostrar e que, até agora, não tinha onde ser informado.
  */
 export default function OngNecessidades() {
@@ -196,8 +196,8 @@ export default function OngNecessidades() {
         <EmptyState
           icon={Package}
           title="Você ainda não tem projetos"
-          description="As necessidades pertencem a um projeto. Crie um primeiro."
-          action={{ label: "Criar projeto", to: "/ong/projetos" }}
+          description="As necessidades vivem dentro de um projeto. Crie um antes."
+          action={{ label: "Criar meu primeiro projeto", to: "/ong/projetos" }}
         />
       ) : (
         <>
@@ -243,8 +243,8 @@ export default function OngNecessidades() {
             <EmptyState
               icon={Package}
               title="Nenhuma necessidade publicada neste projeto"
-              description="Enquanto não houver uma, o doador só consegue contribuir em dinheiro, sem saber o que falta."
-              action={{ label: "Publicar a primeira", onClick: abrirNova }}
+              description="Sem nenhuma, o doador só consegue mandar dinheiro sem saber o que está faltando."
+              action={{ label: "Dizer o que está faltando", onClick: abrirNova }}
             />
           ) : (
             <div className="space-y-3">

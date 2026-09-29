@@ -7,13 +7,13 @@ export default function PrivacidadePage() {
   return (
     <PaginaDeConteudo
       titulo="Política de Privacidade"
-      descricao={`Versão de ${new Date(VERSAO_PRIVACIDADE).toLocaleDateString("pt-BR")} — como tratamos seus dados pessoais.`}
+      descricao={`Como tratamos seus dados pessoais, na versão de ${new Date(VERSAO_PRIVACIDADE).toLocaleDateString("pt-BR")}.`}
     >
       <h2>1. Quais dados coletamos</h2>
       <p>
-        No cadastro pedimos apenas <strong>nome, e-mail e senha</strong>. Outros dados —
-        telefone e endereço — são solicitados somente quando são necessários para uma ação
-        específica, como agendar a coleta de uma doação de itens.
+        No cadastro pedimos apenas <strong>nome, e-mail e senha</strong>. Telefone e endereço
+        a gente pede só quando são necessários para uma ação específica, como agendar a coleta
+        de uma doação de itens.
       </p>
       <p>
         Para ONGs, coletamos também os dados da organização (CNPJ, endereço, contatos e
@@ -33,7 +33,7 @@ export default function PrivacidadePage() {
       <p>
         Uma ONG vê os seus dados de contato apenas se você se inscreveu como voluntário em
         um projeto dela ou fez uma doação para ela. Ao doar, você pode marcar a opção de
-        <strong> doação anônima</strong>: seu nome não aparece em nenhuma exibição pública.
+        <strong> doação anônima</strong>: seu nome não aparece em nenhuma tela pública.
       </p>
 
       <h2>4. Seus direitos (LGPD)</h2>

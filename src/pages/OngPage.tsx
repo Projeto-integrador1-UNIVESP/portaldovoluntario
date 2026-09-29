@@ -58,11 +58,11 @@ async function buscarOng(identificador: string) {
   const projetos = projetosData ?? [];
 
   // As necessidades são o diferencial do perfil, e vivem penduradas no
-  // projeto, não na ONG — por isso a busca passa pelos projetos ativos dela.
+  // projeto, não na ONG. Por isso a busca passa pelos projetos ativos dela.
   let necessidades: NecessidadeUrgente[] = [];
   // `arrecadado` só sobe quando a ONG confirma o recebimento (trigger em
   // `doacoes`). É, portanto, a única prova de confirmação que a RLS expõe ao
-  // visitante anônimo — e soma inclusive as metas já batidas.
+  // visitante anônimo, e soma inclusive as metas já batidas.
   const confirmado = { itens: 0, valor: 0 };
 
   if (projetos.length) {
@@ -104,7 +104,7 @@ async function buscarOng(identificador: string) {
   }
 
   // Agregado por RPC: contar linha a linha voltaria zerado pela RLS para o
-  // visitante anônimo, que é exatamente quem precisa desse dado para confiar.
+  // visitante anônimo, que é quem mais precisa desse dado para confiar.
   const { data: taxa } = await supabase.rpc("get_taxa_confirmacao_ong", { _ong_id: ong.id });
   const linha = taxa?.[0];
   const reputacao = {
@@ -133,7 +133,7 @@ const anosDeAtuacao = (fundadaEm: string | null) => {
  * dinheiro. Por isso a ordem não é institucional: primeiro identidade e ação,
  * depois o que a organização está pedindo agora, e a prova de confiança
  * (CNPJ, tempo de atuação, contato, taxa de confirmação) sempre visível ao
- * lado — não num rodapé que ninguém rola.
+ * lado, em vez de num rodapé que ninguém rola.
  */
 export default function OngPage() {
   const { slug } = useParams();
@@ -153,7 +153,7 @@ export default function OngPage() {
         <div className="container py-14">
           <ErrorState
             title="Não foi possível carregar esta organização"
-            description="Pode ter sido uma falha de conexão. Tente de novo em alguns segundos."
+            description="Pode ter sido a conexão. Tente de novo em alguns segundos."
             onRetry={() => refetch()}
           />
         </div>
@@ -171,7 +171,7 @@ export default function OngPage() {
             icon={Building2}
             title="ONG não encontrada"
             description="Ela pode ter saído da plataforma ou o link está incorreto."
-            action={{ label: "Ver ONGs parceiras", to: "/ongs" }}
+            action={{ label: "Ver as ONGs parceiras", to: "/ongs" }}
           />
         </div>
         <Footer />
@@ -296,7 +296,7 @@ export default function OngPage() {
                   <EmptyState
                     icon={PackageCheck}
                     title="Nenhuma necessidade aberta agora"
-                    description="Esta organização não tem pedidos em aberto no momento. Você ainda pode contribuir com uma doação livre."
+                    description="Esta organização não tem pedidos abertos agora. Dá para ajudar com dinheiro, que ela aplica onde estiver faltando."
                     action={{ label: "Doar para esta ONG", to: linkDoar }}
                   />
                 ) : (
@@ -374,8 +374,8 @@ export default function OngPage() {
               </dl>
 
               {/* O que já chegou de fato. Estes números só existem porque
-                  alguém da ONG confirmou o recebimento — é a tese da
-                  plataforma em forma de dado público. */}
+                  alguém da ONG confirmou o recebimento. É a tese da plataforma
+                  em forma de dado público. */}
               {(confirmado.itens > 0 || confirmado.valor > 0) && (
                 <div className="mt-6 grid gap-3 sm:grid-cols-2">
                   {confirmado.itens > 0 && (
@@ -404,13 +404,12 @@ export default function OngPage() {
               )}
 
               <Callout tom="confianca" className="mt-6">
-                O progresso que você vê nesta página só avança quando alguém desta
-                organização confirma que recebeu. É por isso que o número significa
-                alguma coisa.
+                O progresso desta página só avança quando alguém desta organização
+                confirma que recebeu. Por isso ele mede o que já chegou lá.
               </Callout>
 
               {!ong.cnpj && (
-                // Ausência de CNPJ não é irregularidade — várias iniciativas locais
+                // Ausência de CNPJ não é irregularidade: várias iniciativas locais
                 // funcionam sem. Mas é um dado a menos para checar, e quem vai
                 // transferir dinheiro merece saber disso antes, não depois.
                 <Callout tom="atencao" titulo="CNPJ ainda não informado" className="mt-4">

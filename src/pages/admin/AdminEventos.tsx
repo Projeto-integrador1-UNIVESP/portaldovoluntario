@@ -276,9 +276,9 @@ export default function AdminEventos() {
 
             <TableCell className="text-muted-foreground">{formatDateTime(e.data_evento)}</TableCell>
 
-            <TableCell className="tabular-nums text-muted-foreground">{e.vagas ?? "—"}</TableCell>
+            <TableCell className="tabular-nums text-muted-foreground">{e.vagas ?? "Sem limite"}</TableCell>
 
-            <TableCell className="text-muted-foreground">{e.ong ?? "—"}</TableCell>
+            <TableCell className="text-muted-foreground">{e.ong ?? "Sem ONG"}</TableCell>
 
             <TableCell>
               <AlternarStatus

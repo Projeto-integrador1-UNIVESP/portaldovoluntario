@@ -17,7 +17,7 @@ type CalloutProps = {
 };
 
 /**
- * Destaque para informação que muda a decisão de quem lê — em especial as que
+ * Destaque para informação que muda a decisão de quem lê, em especial as que
  * reduzem insegurança na hora de transferir dinheiro. Antes essas frases eram
  * parágrafo cinza, com o mesmo peso visual de um rodapé legal.
  */

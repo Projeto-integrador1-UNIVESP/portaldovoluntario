@@ -31,7 +31,7 @@ const num = (v: unknown) => Number(v ?? 0);
  *
  * Esta tela é o que faz o progresso do projeto andar: o valor arrecadado de
  * uma necessidade soma apenas doações confirmadas. Enquanto a ONG não
- * registra o recebimento, a barra pública não se mexe — é isso que mantém os
+ * registra o recebimento, a barra pública não se mexe: é isso que mantém os
  * números honestos para quem doou.
  */
 export default function OngDoacoes() {
@@ -108,7 +108,7 @@ export default function OngDoacoes() {
     onSuccess: (_r, { status }) => {
       toast.success(
         status === "confirmada"
-          ? "Recebimento confirmado. O progresso do projeto foi atualizado."
+          ? "Recebimento confirmado. O progresso do projeto já subiu."
           : status === "cancelada"
             ? "Doação marcada como não recebida."
             : "Doação voltou para pendente.",
@@ -195,8 +195,8 @@ export default function OngDoacoes() {
           {aba === "pendente" && qtdPendente > 0 && (
             <Callout tom="confianca" className="mt-4">
               O progresso das necessidades só aumenta depois que você confirma o recebimento.
-              Confirme apenas o que chegou de fato — é essa checagem que faz os números da
-              plataforma valerem alguma coisa.
+              Confirme apenas o que chegou de verdade. É essa checagem que faz os números da
+              plataforma valerem algo.
             </Callout>
           )}
 
@@ -254,7 +254,7 @@ export default function OngDoacoes() {
                             ) : (
                               <>
                                 <div className="font-medium">
-                                  {d.doador?.nome || d.doador_nome || "—"}
+                                  {d.doador?.nome || d.doador_nome || "Não informado"}
                                 </div>
                                 <div className="text-xs text-muted-foreground">
                                   {d.doador?.email || d.doador_email || ""}
@@ -305,7 +305,7 @@ export default function OngDoacoes() {
                                   ) : (
                                     <Check className="mr-1 h-4 w-4" aria-hidden="true" />
                                   )}
-                                  Recebi
+                                  Confirmar que recebi
                                 </Button>
                                 <Button
                                   size="sm"
@@ -349,7 +349,7 @@ export default function OngDoacoes() {
                                   ) : (
                                     <Undo2 className="mr-1 h-4 w-4" aria-hidden="true" />
                                   )}
-                                  Desfazer
+                                  Voltar para pendente
                                 </Button>
                               </div>
                             )}

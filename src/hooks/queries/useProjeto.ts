@@ -37,7 +37,7 @@ export type ProjetoPublico = {
 };
 
 /**
- * Busca um projeto por slug ou por id — as duas formas convivem para que os
+ * Busca um projeto por slug ou por id. As duas formas convivem para que os
  * links antigos, que usavam o UUID, continuem funcionando.
  */
 export async function buscarProjeto(identificador: string): Promise<ProjetoPublico | null> {

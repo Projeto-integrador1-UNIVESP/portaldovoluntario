@@ -9,7 +9,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import OngPage from "@/pages/OngPage";
 
 /**
- * O perfil da ONG existia sem mostrar as necessidades dela — justamente o que
+ * O perfil da ONG existia sem mostrar as necessidades dela, que são o que
  * a plataforma tem de diferente. Estes testes prendem isso e os dois sinais de
  * confiança: CNPJ presente e CNPJ ausente.
  */
@@ -40,7 +40,7 @@ vi.mock("@/integrations/supabase/client", () => {
     supabase: {
       from: (tabela: string) => criar(tabela),
       // A reputação vem de uma RPC agregada: contar doação linha a linha
-      // voltaria zerado pela RLS justamente para o visitante anônimo.
+      // voltaria zerado pela RLS para o visitante anônimo, que é quem lê a página.
       rpc: (nome: string) =>
         Promise.resolve(
           nome === "get_taxa_confirmacao_ong"

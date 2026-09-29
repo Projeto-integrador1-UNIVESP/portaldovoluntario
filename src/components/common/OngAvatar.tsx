@@ -2,7 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
 /**
- * Avatar de uma ONG — o único do produto.
+ * Avatar de uma ONG. É o único do produto.
  *
  * Antes cada tela desenhava o seu: uma com `img` redonda solta, outra com um
  * círculo `bg-primary/10` e o ícone `Building2`, outra sem nada. O ícone

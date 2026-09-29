@@ -19,9 +19,9 @@ type ProgressBarProps = {
  *
  * A faixa sólida é o que a ONG confirmou ter recebido; a faixa listrada é o
  * que foi declarado e ainda aguarda confirmação. Uma barra única somando os
- * dois seria mais bonita e seria mentira por omissão — e é exatamente a
- * mentira que as outras plataformas contam ao subir a barra no instante em
- * que alguém diz que doou.
+ * dois seria mais bonita, e seria mentira por omissão: é a mentira que as
+ * outras plataformas contam ao subir a barra no instante em que alguém diz
+ * que doou.
  */
 export function ProgressBar({
   arrecadado,
@@ -60,7 +60,10 @@ export function ProgressBar({
       >
         <div
           className={cn(
-            "barra-anima h-full transition-[width] duration-500",
+            // A transição de largura é o que faz a barra subir na frente de
+            // quem olha quando a ONG confirma, em vez de simplesmente aparecer
+            // maior no próximo carregamento.
+            "h-full transition-[width] duration-700 ease-out motion-reduce:transition-none",
             atingida ? "bg-success" : "bg-primary",
           )}
           style={{ width: `${confirmado}%` }}

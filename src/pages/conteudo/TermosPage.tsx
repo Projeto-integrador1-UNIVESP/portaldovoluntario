@@ -7,11 +7,11 @@ export default function TermosPage() {
   return (
     <PaginaDeConteudo
       titulo="Termos de Uso"
-      descricao={`Versão de ${new Date(VERSAO_TERMOS).toLocaleDateString("pt-BR")} — regras de uso da plataforma.`}
+      descricao={`Regras de uso da plataforma, na versão de ${new Date(VERSAO_TERMOS).toLocaleDateString("pt-BR")}.`}
     >
       <h2>1. O que a plataforma é</h2>
       <p>
-        A Solidariedade é um espaço que conecta organizações a doadores e voluntários.
+        O Voluntá é um espaço que conecta organizações a doadores e voluntários.
         Nós <strong>não processamos pagamentos</strong>: quando você doa em dinheiro, a
         transferência acontece diretamente entre você e a ONG, por PIX ou transferência
         bancária, usando os dados que a organização cadastrou.
@@ -19,9 +19,9 @@ export default function TermosPage() {
 
       <h2>2. Responsabilidade pelas informações</h2>
       <p>
-        Cada ONG é responsável pelas informações que publica — necessidades, metas, fotos e
-        dados de recebimento — e pela confirmação das doações que recebe. A plataforma
-        verifica o cadastro das organizações, mas não garante o destino dado aos recursos.
+        Cada ONG responde pelas informações que publica (necessidades, metas, fotos e dados
+        de recebimento) e pela confirmação das doações que recebe. A plataforma verifica o
+        cadastro das organizações, mas não garante o destino dado aos recursos.
       </p>
       <p>
         Confira sempre o nome do recebedor no aplicativo do seu banco antes de concluir uma

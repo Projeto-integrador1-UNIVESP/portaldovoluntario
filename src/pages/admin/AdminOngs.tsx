@@ -67,7 +67,7 @@ const COLUNAS = [
  *
  * Duas mudanças de fundo em relação à versão anterior. A primeira é o selo de
  * verificada: a coluna `verificada_em` existe no banco e é exibida no site
- * público, mas não havia tela nenhuma para marcá-la — quem confere o CNPJ é a
+ * público, mas não havia tela nenhuma para marcá-la. Quem confere o CNPJ é a
  * administração, então o controle é daqui. Não é um `Switch`, e sim uma ação com
  * confirmação: o selo dá credibilidade pública à organização e um toggle se
  * aciona por acidente.
@@ -130,9 +130,9 @@ export default function AdminOngs() {
 
   /**
    * `conta` e `agencia` são `INT` no banco, então zero à esquerda não sobrevive
-   * ao salvar: "0001" volta como 1. Em vez de perder o dígito em silêncio — e
-   * mostrar ao doador um dado bancário errado —, o campo já recusa o zero
-   * inicial, e o que está na tela é o que ficou gravado.
+   * ao salvar: "0001" volta como 1. Perder o dígito em silêncio mostraria ao
+   * doador um dado bancário errado, então o campo já recusa o zero inicial: o
+   * que está na tela é o que ficou gravado.
    */
   const atualizarNumeroBancario = (campo: keyof FormOng, valor: string, maximo: number) =>
     atualizar(campo, onlyDigits(valor, maximo).replace(/^0+/, ""));
@@ -155,7 +155,7 @@ export default function AdminOngs() {
     if (!form.conta) return { aba: "pagamentos", mensagem: "Informe a conta, só números e sem o dígito verificador." };
     if (!form.agencia) return { aba: "pagamentos", mensagem: "Informe a agência, só números." };
 
-    if (!form.missao.trim()) return { aba: "apresentacao", mensagem: "Informe a missão — é o texto que aparece no site." };
+    if (!form.missao.trim()) return { aba: "apresentacao", mensagem: "Informe a missão. É o texto que aparece no site." };
     if (!form.descricao.trim()) return { aba: "apresentacao", mensagem: "Informe a descrição da organização." };
     return null;
   };
@@ -408,11 +408,11 @@ export default function AdminOngs() {
             </TableCell>
 
             <TableCell className="tabular-nums text-muted-foreground">
-              {o.cnpj ? formatCnpj(o.cnpj) : "—"}
+              {o.cnpj ? formatCnpj(o.cnpj) : "Não informado"}
             </TableCell>
 
             <TableCell className="text-muted-foreground">
-              {o.telefone ? formatPhone(o.telefone) : "—"}
+              {o.telefone ? formatPhone(o.telefone) : "Não informado"}
             </TableCell>
 
             <TableCell>
@@ -578,7 +578,7 @@ export default function AdminOngs() {
                     <SelectContent>
                       {UFS.map((uf) => (
                         <SelectItem key={uf.sigla} value={uf.sigla}>
-                          {uf.sigla} — {uf.nome}
+                          {uf.sigla} ({uf.nome})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -727,7 +727,7 @@ export default function AdminOngs() {
  * Exclusão de ONG com checagem de vínculos.
  *
  * `doacoes.id_ong` é `ON DELETE CASCADE`: excluir a organização apaga em
- * silêncio todas as doações dela, inclusive as já confirmadas — o histórico que
+ * silêncio todas as doações dela, inclusive as já confirmadas: o histórico que
  * sustenta a barra de progresso do site. O banco não reclama, então a trava tem
  * que estar aqui: havendo doação registrada, a saída é desativar.
  */
@@ -795,8 +795,8 @@ function ExcluirOng({
               ) : isError ? (
                 <p>
                   Não foi possível checar o que está ligado a esta organização. Sem essa
-                  conferência a exclusão pode apagar doações, então ela fica bloqueada —
-                  tente de novo em instantes.
+                  conferência a exclusão pode apagar doações, então ela fica bloqueada.
+                  Tente de novo em instantes.
                 </p>
               ) : temDoacoes ? (
                 <>

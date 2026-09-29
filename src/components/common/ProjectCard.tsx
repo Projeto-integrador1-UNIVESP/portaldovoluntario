@@ -43,7 +43,8 @@ export function ProjectCard({ projeto }: { projeto: ProjetoCardData }) {
     >
       {/* Sem foto, a `Capa` gera um padrão estável a partir do id; o selo com a
           inicial de quem publicou dá identidade ao card sem fingir fotografia. */}
-      <Capa src={projeto.img_url} alt="" id={projeto.id} className="h-40 w-full shrink-0">
+      <Capa src={projeto.img_url} alt="" id={projeto.id} className="h-40 w-full shrink-0"
+        causa={projeto.causa}>
         {!projeto.img_url && (
           <span className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
             <span className="flex h-14 w-14 items-center justify-center rounded-full bg-card font-display text-xl font-extrabold text-primary shadow-sutil">
@@ -117,7 +118,7 @@ export function ProjectCard({ projeto }: { projeto: ProjetoCardData }) {
                 />
                 <p className="mt-1.5 text-xs text-muted-foreground tabular-nums">
                   {progresso}% já confirmado pela ONG
-                  {progresso < 100 && ` — faltam ${100 - progresso}%`}
+                  {progresso < 100 && `, faltam ${100 - progresso}%`}
                 </p>
               </>
             ))}

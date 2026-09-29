@@ -27,8 +27,8 @@ import { VALORES_SUGERIDOS } from "@/lib/schemas/doacao";
 const EH_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
- * Doação para a organização, sem projeto escolhido — o destino de links antigos
- * e do botão "Doar" no perfil da ONG.
+ * Doação para a organização, sem projeto escolhido. É o destino de links
+ * antigos e do botão "Doar" no perfil da ONG.
  *
  * Por que esta tela empurra para um projeto em vez de só receber o valor: uma
  * doação sem projeto não alimenta meta nenhuma, e a barra que só sobe com
@@ -92,13 +92,13 @@ export default function DoarPage() {
       return;
     }
     if (!valor || valor <= 0) {
-      toast.error("Informe quanto você vai doar.");
+      toast.error("Escolha ou digite quanto você vai doar.");
       return;
     }
 
     setEnviando(true);
     // Sem projeto, a função `registrar-doacao` não serve (ela exige projeto),
-    // então o registro é insert direto — o que só a policy de doador logado
+    // então o registro é insert direto, o que só a policy de doador logado
     // permite. O status fica 'pendente' pelo default da coluna: quem confirma
     // continua sendo a ONG.
     const { data: criada, error } = await supabase
@@ -147,7 +147,7 @@ export default function DoarPage() {
             icon={Building2}
             title="ONG não encontrada"
             description="Ela pode ter saído da plataforma ou o link está incorreto."
-            action={{ label: "Ver ONGs parceiras", to: "/ongs" }}
+            action={{ label: "Ver as ONGs parceiras", to: "/ongs" }}
           />
         </div>
       </PublicShell>
@@ -197,9 +197,9 @@ export default function DoarPage() {
         <Callout tom="confianca" titulo="O dinheiro vai direto para a conta da ONG" className="mt-4">
           {ong.pix?.trim() ? "O Pix sai da sua conta direto para " : "A transferência vai direto para "}
           <strong className="font-medium text-foreground">{nomeRecebedor}</strong>. A
-          Solidariedade não processa o pagamento, não retém valor nenhum e não cobra taxa — nem
-          de você, nem da organização. Antes de confirmar, confira se o nome do recebedor no app
-          do seu banco é esse.
+          Voluntá não processa o pagamento, não retém valor nenhum e não cobra taxa de
+          ninguém: nem de você, nem da organização. Antes de confirmar, confira se o nome do
+          recebedor no app do seu banco é esse.
         </Callout>
 
         {projetos.length > 0 ? (
@@ -208,9 +208,8 @@ export default function DoarPage() {
               Escolha onde sua doação entra
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Doando para um projeto, a organização confirma o recebimento e sua doação aparece
-              no progresso da meta. É a diferença entre uma doação registrada e uma doação
-              comprovada.
+              Quando a doação tem projeto, a organização confirma o recebimento e o valor
+              aparece no progresso da meta. Sem projeto, ela fica só registrada.
             </p>
 
             <ul className="mt-6 space-y-3">
@@ -244,7 +243,7 @@ export default function DoarPage() {
           <form onSubmit={registrarDoacaoAvulsa} noValidate>
             {!user && (
               <Callout tom="atencao" titulo="Para registrar esta doação é preciso entrar" className="mt-4">
-                Esta organização ainda não tem projeto aberto, e doação sem projeto só pode ser
+                Esta organização não tem projeto aberto agora, e doação sem projeto só pode ser
                 registrada por quem tem conta.{" "}
                 <Link
                   to={`/login?redirect=/doar/${ongId}`}
@@ -302,8 +301,8 @@ export default function DoarPage() {
                 <CardHeader>
                   <CardTitle className="text-lg">Pague com Pix</CardTitle>
                   <CardDescription>
-                    Faça a transferência no app do seu banco e depois registre a doação aqui,
-                    para a ONG conseguir confirmar o recebimento.
+                    Faça a transferência no app do seu banco. Depois registre aqui, para a ONG
+                    conseguir confirmar que o valor chegou.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -319,8 +318,8 @@ export default function DoarPage() {
             ) : null}
 
             <Callout tom="info" titulo="A confirmação é da organização" className="mt-4">
-              Depois de registrar, sua doação fica aguardando a ONG confirmar que recebeu. Você
-              pode acompanhar esse status aqui mesmo.
+              Depois de registrar, sua doação espera a ONG confirmar que recebeu. Você
+              acompanha esse status aqui mesmo.
             </Callout>
 
             <Button
@@ -347,7 +346,7 @@ export default function DoarPage() {
                 <EmptyState
                   icon={PackageCheck}
                   title="Você ainda não doou para esta organização"
-                  description="Quando doar, o status de cada doação aparece aqui."
+                  description="Depois da primeira doação, o status de cada uma aparece aqui."
                   action={{ label: "Ver projetos abertos", to: "/projetos" }}
                 />
               ) : (

@@ -8,8 +8,8 @@ export type NavItem = { label: string; href: string; icon: LucideIcon };
 /**
  * Fonte única de navegação dos painéis.
  *
- * Antes existiam três listas paralelas — em PublicHeader, DashboardLayout e
- * RolePanelSidebar — e as três já estavam dessincronizadas entre si (o header
+ * Antes existiam três listas paralelas, em PublicHeader, DashboardLayout e
+ * RolePanelSidebar, e as três já estavam dessincronizadas entre si (o header
  * não tinha Auditoria nem Códigos; a sidebar não tinha Códigos). Todas passam
  * a ler daqui.
  */

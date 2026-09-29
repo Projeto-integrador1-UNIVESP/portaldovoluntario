@@ -5,7 +5,7 @@
  * É um QR **estático**: aponta para a chave Pix da ONG com valor sugerido. Não
  * há gateway de pagamento no projeto, então a transferência acontece direto
  * entre doador e ONG no app do banco, e é a ONG quem confirma o recebimento
- * depois. Por isso o nome do recebedor é exibido junto do código — é o que o
+ * depois. Por isso o nome do recebedor é exibido junto do código: é o que o
  * doador confere antes de pagar.
  */
 
@@ -24,7 +24,7 @@ const campo = (id: string, valor: string) =>
   `${id}${String(valor.length).padStart(2, "0")}${valor}`;
 
 /**
- * CRC16/CCITT-FALSE, polinômio 0x1021, valor inicial 0xFFFF — é o que o
+ * CRC16/CCITT-FALSE, polinômio 0x1021, valor inicial 0xFFFF, que é o que o
  * padrão do BR Code exige no campo 63.
  */
 export function crc16(payload: string): string {

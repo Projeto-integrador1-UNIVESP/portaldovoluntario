@@ -43,7 +43,7 @@ export function CardNecessidadeUrgente({ necessidade: n }: { necessidade: Necess
         Faltam {quantoFalta}
       </p>
       <p className="mt-1 text-sm text-muted-foreground">
-        de {n.nome} — {n.projeto?.nome_projeto}
+        de {n.nome}, no projeto {n.projeto?.nome_projeto}
       </p>
 
       <div className="mt-auto pt-4">
@@ -54,7 +54,7 @@ export function CardNecessidadeUrgente({ necessidade: n }: { necessidade: Necess
           unidade={n.unidade}
         />
         <span className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-cta">
-          Quero ajudar
+          Doar para este pedido
           <ArrowRight
             className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
             aria-hidden="true"

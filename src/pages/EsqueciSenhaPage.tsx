@@ -47,8 +47,8 @@ export default function EsqueciSenhaPage() {
                 <MailCheck className="h-10 w-10 text-success" aria-hidden="true" />
                 <h1 className="mt-2 font-display text-2xl font-bold">Verifique seu e-mail</h1>
                 <CardDescription>
-                  Se houver uma conta com esse endereço, enviamos um link para criar uma
-                  nova senha. O link vale por uma hora.
+                  Se existir uma conta com esse endereço, o link para criar a nova senha já
+                  saiu. Ele vale por uma hora.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -62,7 +62,7 @@ export default function EsqueciSenhaPage() {
               <CardHeader>
                 <h1 className="font-display text-2xl font-bold">Esqueci minha senha</h1>
                 <CardDescription>
-                  Informe o e-mail da sua conta e enviaremos um link para criar uma nova senha.
+                  Informe o e-mail da sua conta. Enviamos um link para você criar uma nova senha.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -95,7 +95,7 @@ export default function EsqueciSenhaPage() {
                       {form.formState.isSubmitting && (
                         <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                       )}
-                      {form.formState.isSubmitting ? "Enviando…" : "Enviar link de recuperação"}
+                      {form.formState.isSubmitting ? "Enviando…" : "Enviar o link por e-mail"}
                     </Button>
                     <Button variant="ghost" asChild className="w-full">
                       <Link to="/login">Voltar para o login</Link>

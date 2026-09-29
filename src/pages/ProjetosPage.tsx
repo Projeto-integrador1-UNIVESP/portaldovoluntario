@@ -38,8 +38,8 @@ const POR_PAGINA = 12;
  *
  * A RPC ordena por data de publicação e não recebe parâmetro de ordem. Ordenar
  * apenas a página visível produziria uma lista errada em relação ao total, então
- * a tela busca uma janela única e faz ordenação e paginação sobre ela — a ordem
- * passa a valer para tudo que a tela mostra. Acima da janela, o texto de
+ * a tela busca uma janela única e faz ordenação e paginação sobre ela, e assim
+ * a ordem vale para tudo que a tela mostra. Acima da janela, o texto de
  * resultados pede para usar os filtros.
  */
 const JANELA = 48;
@@ -97,7 +97,7 @@ async function buscarProjetos({ termo, cidade, causa }: Filtros) {
   };
 }
 
-/** Opções dos filtros a partir do que existe publicado — sem lista fixa no código. */
+/** Opções dos filtros a partir do que existe publicado, sem lista fixa no código. */
 async function buscarOpcoesDeFiltro() {
   const { data, error } = await supabase
     .from("projetos")
@@ -382,13 +382,13 @@ export default function ProjetosPage() {
               }
               description={
                 filtrosAtivos > 0
-                  ? "Tente outra cidade ou causa, ou veja tudo que está aberto."
+                  ? "Tente outra cidade ou outra causa, ou veja tudo que está aberto."
                   : "Assim que uma ONG publicar um projeto, ele aparece aqui."
               }
               action={
                 filtrosAtivos > 0
                   ? { label: "Limpar filtros", onClick: limparFiltros }
-                  : { label: "Ver ONGs parceiras", to: "/ongs" }
+                  : { label: "Ver as ONGs parceiras", to: "/ongs" }
               }
             />
           ) : (

@@ -11,7 +11,7 @@ type CopyFieldProps = {
 };
 
 /**
- * Campo de texto longo com botão de copiar — usado no "Pix Copia e Cola",
+ * Campo de texto longo com botão de copiar, usado no "Pix Copia e Cola",
  * que ninguém digita à mão.
  */
 export function CopyField({ valor, rotulo, className }: CopyFieldProps) {

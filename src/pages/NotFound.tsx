@@ -6,7 +6,7 @@ import { Seo } from "@/components/common/Seo";
 import { Button } from "@/components/ui/button";
 
 const atalhos = [
-  { to: "/projetos", label: "Ver projetos" },
+  { to: "/projetos", label: "Ver projetos abertos" },
   { to: "/ongs", label: "Conhecer as ONGs" },
   { to: "/como-funciona", label: "Como funciona" },
 ];
@@ -23,7 +23,7 @@ const NotFound = () => {
         <h1 className="mt-1 font-display text-2xl font-bold">Esta página não existe</h1>
         <p className="mt-3 max-w-md text-muted-foreground">
           O endereço <code className="rounded bg-muted px-1.5 py-0.5 text-sm">{location.pathname}</code>{" "}
-          não leva a nada. Ele pode ter mudado ou o link estar incompleto.
+          não leva a nada. O endereço pode ter mudado, ou o link chegou incompleto.
         </p>
 
         <div className="mt-8 flex flex-wrap justify-center gap-3">

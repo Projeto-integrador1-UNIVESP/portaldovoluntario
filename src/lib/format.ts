@@ -13,7 +13,7 @@ const SO_DATA = /^\d{4}-\d{2}-\d{2}$/;
  *
  * Uma string "YYYY-MM-DD" (como as colunas `date` do Postgres devolvem) é lida
  * como data **local**. O parse nativo do JS a trataria como meia-noite UTC, o
- * que em qualquer fuso a oeste de Greenwich exibe o dia anterior — era por isso
+ * que em qualquer fuso a oeste de Greenwich exibe o dia anterior. Era por isso
  * que um projeto começando em 2026-05-01 aparecia como 30/04.
  */
 const paraData = (value: string | Date): Date => {

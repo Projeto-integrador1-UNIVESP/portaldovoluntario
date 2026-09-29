@@ -144,7 +144,7 @@ describe("ProjetoPage", () => {
 
     await renderizar("campanha-do-agasalho");
 
-    const botao = await screen.findByRole("link", { name: "Quero doar" });
+    const botao = await screen.findByRole("link", { name: "Doar este item" });
     expect(botao).toHaveAttribute(
       "href",
       "/doar/projeto/campanha-do-agasalho?necessidade=n1",

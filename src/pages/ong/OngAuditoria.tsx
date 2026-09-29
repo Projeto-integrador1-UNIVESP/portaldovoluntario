@@ -26,8 +26,8 @@ const num = (v: unknown) => Number(v ?? 0);
  * Histórico auditável das doações da ONG.
  *
  * Dois consertos de fundo aqui. O nome do doador vinha de um embed
- * `profiles:id_usuario(...)` que o PostgREST não resolve — `doacoes.id_usuario`
- * referencia `auth.users`, não `profiles` — e o erro era engolido, deixando a
+ * `profiles:id_usuario(...)` que o PostgREST não resolve: `doacoes.id_usuario`
+ * referencia `auth.users`, não `profiles`. E o erro era engolido, deixando a
  * tela inteira vazia. E o "total arrecadado" somava tudo, inclusive o que a ONG
  * nunca confirmou: o oposto da regra que a plataforma vende. Agora confirmado e
  * aguardando aparecem separados.
@@ -164,7 +164,7 @@ export default function OngAuditoria() {
         <EmptyState
           icon={ShieldCheck}
           title="Nenhuma doação registrada ainda"
-          description="Quando alguém doar para a sua ONG, a doação entra aqui — antes e depois de você confirmar o recebimento."
+          description="Quando alguém doar para a sua ONG, a doação entra aqui, antes e depois de você confirmar o recebimento."
           action={{ label: "Publicar o que está faltando", to: "/ong/necessidades" }}
         />
       ) : (
@@ -216,8 +216,8 @@ export default function OngAuditoria() {
                   <EmptyState
                     icon={Clock}
                     title="Nenhum recebimento confirmado ainda"
-                    description="O ranking usa só as doações que você confirmou — é o mesmo número que o doador vê no site."
-                    action={{ label: "Ir para a fila de confirmação", to: "/ong/doacoes" }}
+                    description="O ranking usa só as doações que você confirmou. É o mesmo número que o doador vê no site."
+                    action={{ label: "Ver a fila de confirmação", to: "/ong/doacoes" }}
                   />
                 </div>
               ) : (

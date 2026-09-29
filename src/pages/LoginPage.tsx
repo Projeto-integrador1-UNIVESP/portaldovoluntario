@@ -25,8 +25,8 @@ import { loginSchema, type LoginInput } from "@/lib/schemas/auth";
  * A coluna ao lado do formulário já foi um carrossel de fotos com frases
  * genéricas. Saiu: era conteúdo de preenchimento que se movia sozinho, o que
  * ainda obrigava a oferecer pausa e respeitar `prefers-reduced-motion` (WCAG
- * 2.2.2) para não informar nada. No lugar ficam as três garantias da
- * plataforma — é o argumento que faz alguém criar conta aqui.
+ * 2.2.2) para não informar nada. No lugar ficam as garantias da plataforma,
+ * que são o argumento para alguém criar conta aqui.
  */
 
 /**
@@ -35,7 +35,7 @@ import { loginSchema, type LoginInput } from "@/lib/schemas/auth";
  * Quem resolve isso é o parser de URL, não comparação de prefixo: o react-router
  * cai em `window.location.assign` quando o `pushState` estoura por ser
  * cross-origin, então um destino externo sai do site de verdade. E a lista de
- * grafias que viram `//evil.com` é maior do que parece — `/\evil.com` (o parser
+ * grafias que viram `//evil.com` é maior do que parece: `/\evil.com` (o parser
  * trata `\` como `/`) e `/%09/evil.com` (o tab é descartado) passariam por um
  * teste de prefixo.
  */
@@ -54,11 +54,11 @@ function caminhoInterno(valor: string | null) {
 function motivoDoRedirect(destino: string | null) {
   if (!destino) return null;
   if (destino.startsWith("/doar/")) {
-    return "Sua conta é o que permite a ONG confirmar, no seu nome, que a doação chegou — e é essa confirmação que faz a barra de progresso andar.";
+    return "A ONG confirma, no seu nome, que a doação chegou. É sua conta que liga uma coisa à outra, e é essa confirmação que faz a barra de progresso andar.";
   }
   // Só a página de um projeto pede inscrição; a listagem `/projetos` não.
   if (destino.startsWith("/projetos/")) {
-    return "Para se inscrever como voluntário a organização precisa saber quem vai aparecer e como falar com você.";
+    return "Para aceitar você como voluntário, a organização precisa saber quem vai aparecer e como falar com você.";
   }
   return "Entre para continuar de onde você parou.";
 }
@@ -87,7 +87,7 @@ export default function LoginPage() {
       return;
     }
 
-    toast.success("Tudo certo. Bom te ver de volta.");
+    toast.success("Tudo certo, bom te ver de volta.");
 
     if (destino) {
       navigate(destino);
@@ -205,7 +205,7 @@ export default function LoginPage() {
 
             <div className="mt-6 border-t pt-6">
               <p className="text-sm text-muted-foreground">
-                Ainda não tem conta? Escolha como participar:
+                Ainda não tem conta? Escolha por onde você entra:
               </p>
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
                 <Button
@@ -244,12 +244,12 @@ export default function LoginPage() {
             <Garantia
               icone={BadgeCheck}
               titulo="A barra de progresso é um recibo, não uma promessa"
-              texto="Ela só sobe quando alguém da organização confirma que o item ou o valor chegou. Por isso ela demora mais para andar — e por isso ela significa alguma coisa."
+              texto="Ela só sobe quando alguém da organização confirma que o item ou o valor chegou. Anda mais devagar por isso, e é por isso que ela vale como informação."
             />
             <Garantia
               icone={Landmark}
               titulo="O Pix cai direto na conta da ONG"
-              texto="A plataforma não retém o dinheiro em nenhum momento e não cobra taxa — nem de você, nem da organização."
+              texto="A plataforma não retém o dinheiro em nenhum momento e não cobra taxa de ninguém: nem de você, nem da organização."
             />
             <Garantia
               icone={ShieldCheck}

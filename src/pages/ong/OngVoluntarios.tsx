@@ -36,7 +36,7 @@ const ROTULOS: Record<StatusInscricao, string> = {
 /**
  * Inscrições de voluntariado nos projetos da ONG.
  *
- * A lista antes puxava a tabela `profiles` inteira e cruzava no cliente — ou
+ * A lista antes puxava a tabela `profiles` inteira e cruzava no cliente, ou
  * seja, baixava o cadastro de todo mundo da plataforma para exibir os nomes de
  * meia dúzia de inscritos. Agora o filtro vai no banco.
  */
@@ -183,7 +183,7 @@ export default function OngVoluntarios() {
         <EmptyState
           icon={UserCheck}
           title="Nenhuma inscrição de voluntário ainda"
-          description="As inscrições chegam pela página pública do projeto. Um projeto no ar, com necessidades publicadas, é o que traz voluntário."
+          description="As inscrições chegam pela página pública do projeto. Projeto no ar, com necessidades publicadas, é o que traz voluntário."
           action={{ label: "Ver meus projetos", to: "/ong/projetos" }}
         />
       ) : (
@@ -261,11 +261,11 @@ export default function OngVoluntarios() {
                           <TableCell>
                             <div className="font-medium">{nome}</div>
                             <div className="text-xs text-muted-foreground">
-                              {v.pessoa?.email || "—"}
+                              {v.pessoa?.email || "Não informado"}
                             </div>
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">
-                            {v.projeto?.nome_projeto ?? "—"}
+                            {v.projeto?.nome_projeto ?? "Sem projeto"}
                           </TableCell>
                           <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
                             {formatDate(v.data_inscricao)}
