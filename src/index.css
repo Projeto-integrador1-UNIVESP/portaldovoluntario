@@ -37,6 +37,17 @@
     --sombra-media: 0 6px 16px -4px hsl(210 30% 12% / 0.1), 0 2px 6px -2px hsl(210 30% 12% / 0.05);
     --sombra-alta: 0 16px 32px -8px hsl(210 30% 12% / 0.14), 0 4px 10px -4px hsl(210 30% 12% / 0.06);
     --sombra-cta: 0 4px 14px -2px hsl(var(--cta) / 0.3);
+    /* Brilho interno no topo do botão principal: dá volume tátil sem somar
+       mais uma sombra por cima. */
+    --brilho-interno: inset 0 1px 0 hsl(0 0% 100% / 0.18);
+
+    /* Tintas de superfície para blocos que se repetem. Card branco atrás de
+       card branco vira grade monótona; a variação de matiz dá ritmo sem
+       precisar de borda colorida nem de sombra pesada. */
+    --tinta-agua: 190 45% 96%;
+    --tinta-areia: 35 50% 96%;
+    --tinta-musgo: 150 30% 96%;
+    --tinta-lavanda: 255 35% 97%;
     --border: 210 20% 90%;
     --input: 210 20% 90%;
     --ring: 200 80% 30%;

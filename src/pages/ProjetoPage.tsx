@@ -9,6 +9,7 @@ import { PublicShell } from "@/components/layout/PublicShell";
 import { Footer } from "@/components/layout/Footer";
 import { LogoSimbolo } from "@/components/brand/Logo";
 import { Seo } from "@/components/common/Seo";
+import { CauseTag } from "@/components/common/CauseTag";
 import { Callout } from "@/components/common/Callout";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ErrorState } from "@/components/common/ErrorState";
@@ -179,7 +180,7 @@ export default function ProjetoPage() {
         <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              {projeto.causa && <Badge variant="secondary">{projeto.causa}</Badge>}
+              {projeto.causa && <CauseTag causa={projeto.causa} />}
               {prazo && <Badge variant="outline">{prazo}</Badge>}
             </div>
 
