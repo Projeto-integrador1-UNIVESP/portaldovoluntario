@@ -1,4 +1,16 @@
-export function exportToCsv(filename: string, rows: Record<string, any>[]) {
+import { toast } from "sonner";
+import { SUCESSO } from "@/lib/copy";
+
+/**
+ * Baixa um CSV e avisa que baixou. O aviso mora aqui porque três telas
+ * exportavam em silêncio e outras três avisavam por conta própria: agora é
+ * uma vez, sempre, e a tela que chama não precisa de toast nenhum.
+ */
+export function exportToCsv(
+  filename: string,
+  rows: Record<string, any>[],
+  opcoes: { silencioso?: boolean } = {},
+) {
   const headers = rows.length ? Object.keys(rows[0]) : ["sem_dados"];
   const escape = (v: any) => {
     if (v === null || v === undefined) return "";
@@ -19,4 +31,6 @@ export function exportToCsv(filename: string, rows: Record<string, any>[]) {
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
+
+  if (!opcoes.silencioso) toast.success(SUCESSO.csv(filename));
 }

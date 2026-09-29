@@ -137,21 +137,21 @@ export default function HomePage() {
           <div className="ao-rolar-escalonado mx-auto mt-8 grid max-w-4xl gap-5 md:grid-cols-3">
             <Passo
               numero="1"
-              tinta="bg-tinta-agua"
+              tinta="bg-tinta-azulpo"
               icone={Search}
               titulo="A ONG diz o que falta"
               texto="No lugar de “aceitamos doações”, o pedido vem com número e data: “100 cobertores até 2 de outubro”."
             />
             <Passo
               numero="2"
-              tinta="bg-tinta-areia"
+              tinta="bg-tinta-creme"
               icone={HandHeart}
               titulo="Você doa direto"
               texto="O Pix cai na conta da própria organização. A plataforma não retém nada e não cobra taxa de ninguém."
             />
             <Passo
               numero="3"
-              tinta="bg-tinta-musgo"
+              tinta="bg-tinta-salvia"
               icone={BadgeCheck}
               titulo="A ONG confirma o recebimento"
               texto="Só então a barra de progresso sobe. O número que você lê nesta página é o que já chegou lá."

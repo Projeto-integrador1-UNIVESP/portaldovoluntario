@@ -27,3 +27,18 @@ export const normalizeUrl = (value: string) => {
   if (!trimmed) return "";
   return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
 };
+
+/**
+ * CNPJ com dígito verificador. Só tamanho deixava passar "11.111.111/1111-11".
+ */
+export const isValidCnpj = (value: string) => {
+  const d = onlyDigits(value);
+  if (d.length !== 14 || /^(\d)\1{13}$/.test(d)) return false;
+  const calc = (tamanho: number) => {
+    const pesos = tamanho === 12 ? [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2] : [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+    const soma = pesos.reduce((acc, peso, i) => acc + Number(d[i]) * peso, 0);
+    const resto = soma % 11;
+    return resto < 2 ? 0 : 11 - resto;
+  };
+  return calc(12) === Number(d[12]) && calc(13) === Number(d[13]);
+};

@@ -1,4 +1,4 @@
-import { BadgeCheck, Clock } from "lucide-react";
+import { BadgeCheck, Clock, PackageX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/format";
 
@@ -13,6 +13,10 @@ import { formatDate } from "@/lib/format";
 
 type SeloConfirmacaoProps = {
   confirmadaEm?: string | null;
+  /** A ONG marcou que a doação não chegou. */
+  cancelada?: boolean;
+  /** Pulsa ao aparecer: use no instante em que a confirmação acabou de acontecer. */
+  animar?: boolean;
   className?: string;
   /** `compacto` cabe dentro de um card; `completo` explica a regra. */
   variante?: "compacto" | "completo";
@@ -20,31 +24,42 @@ type SeloConfirmacaoProps = {
 
 export function SeloConfirmacao({
   confirmadaEm,
+  cancelada = false,
+  animar = false,
   className,
   variante = "compacto",
 }: SeloConfirmacaoProps) {
-  const confirmada = Boolean(confirmadaEm);
+  const confirmada = Boolean(confirmadaEm) && !cancelada;
+  const estado = cancelada ? "cancelada" : confirmada ? "confirmada" : "pendente";
 
   if (variante === "compacto") {
     return (
       <span
         className={cn(
-          "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
-          confirmada
-            ? "bg-success/10 text-success"
-            : "bg-muted text-muted-foreground",
+          "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold",
+          estado === "confirmada" && "bg-success/12 text-success",
+          estado === "pendente" && "bg-muted text-muted-foreground",
+          estado === "cancelada" && "bg-destructive/10 text-destructive",
+          animar && "confirmou",
           className,
         )}
       >
-        {confirmada ? (
+        {estado === "confirmada" && (
           <>
             <BadgeCheck className="h-3.5 w-3.5" aria-hidden="true" />
             Recebimento confirmado
           </>
-        ) : (
+        )}
+        {estado === "pendente" && (
           <>
             <Clock className="h-3.5 w-3.5" aria-hidden="true" />
             Aguardando a ONG confirmar
+          </>
+        )}
+        {estado === "cancelada" && (
+          <>
+            <PackageX className="h-3.5 w-3.5" aria-hidden="true" />
+            Marcada como não recebida
           </>
         )}
       </span>
@@ -54,27 +69,36 @@ export function SeloConfirmacao({
   return (
     <div
       className={cn(
-        "rounded-lg border p-4",
-        confirmada ? "border-success/30 bg-success/5" : "border-border bg-muted/40",
+        "rounded-xl border p-4 sm:p-5",
+        estado === "confirmada" && "border-success/20 bg-tinta-salvia",
+        estado === "pendente" && "border-border bg-muted/50",
+        estado === "cancelada" && "border-destructive/20 bg-destructive/5",
+        animar && "confirmou",
         className,
       )}
     >
       <div className="flex items-start gap-3">
-        {confirmada ? (
+        {estado === "confirmada" && (
           <BadgeCheck className="mt-0.5 h-5 w-5 shrink-0 text-success" aria-hidden="true" />
-        ) : (
+        )}
+        {estado === "pendente" && (
           <Clock className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
         )}
+        {estado === "cancelada" && (
+          <PackageX className="mt-0.5 h-5 w-5 shrink-0 text-destructive" aria-hidden="true" />
+        )}
         <div className="min-w-0 text-sm">
-          <p className="font-medium">
-            {confirmada
-              ? `A ONG confirmou o recebimento em ${formatDate(confirmadaEm)}`
-              : "Aguardando a ONG confirmar o recebimento"}
+          <p className="font-semibold">
+            {estado === "confirmada" && `A ONG confirmou o recebimento em ${formatDate(confirmadaEm)}`}
+            {estado === "pendente" && "Aguardando a ONG confirmar o recebimento"}
+            {estado === "cancelada" && "A ONG marcou esta doação como não recebida"}
           </p>
           <p className="mt-1 text-muted-foreground">
-            {confirmada
-              ? "Por isso esta doação conta no progresso do projeto."
-              : "O progresso do projeto só avança depois dessa confirmação. É o que mantém os números da plataforma honestos."}
+            {estado === "confirmada" && "Por isso esta doação conta no progresso do projeto."}
+            {estado === "pendente" &&
+              "O progresso do projeto só avança depois dessa confirmação. É o que mantém os números da plataforma honestos."}
+            {estado === "cancelada" &&
+              "Ela não conta no progresso. Se você entregou, fale com a organização pelos contatos do perfil dela."}
           </p>
         </div>
       </div>
@@ -104,7 +128,12 @@ export function TaxaDeConfirmacao({
 
   return (
     <div className={cn("flex items-baseline gap-2", className)}>
-      <span className={cn("font-display text-2xl font-bold", boa ? "text-success" : "text-foreground")}>
+      <span
+        className={cn(
+          "numero font-display text-2xl font-semibold tracking-[-0.02em]",
+          boa ? "text-success" : "text-foreground",
+        )}
+      >
         {percentual}%
       </span>
       <span className="text-sm text-muted-foreground">

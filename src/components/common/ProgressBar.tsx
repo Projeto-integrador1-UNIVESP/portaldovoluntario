@@ -11,6 +11,8 @@ type ProgressBarProps = {
   unidade?: string | null;
   /** Destaca o que falta em vez do que já chegou. */
   destacarFalta?: boolean;
+  /** Barra mais grossa, para hero e destaque. */
+  tamanho?: "md" | "lg";
   className?: string;
 };
 
@@ -19,9 +21,10 @@ type ProgressBarProps = {
  *
  * A faixa sólida é o que a ONG confirmou ter recebido; a faixa listrada é o
  * que foi declarado e ainda aguarda confirmação. Uma barra única somando os
- * dois seria mais bonita, e seria mentira por omissão: é a mentira que as
- * outras plataformas contam ao subir a barra no instante em que alguém diz
- * que doou.
+ * dois seria mais bonita, e seria mentira por omissão.
+ *
+ * A faixa preenche ao entrar em tela (`.barra-anima`, só CSS) e transita de
+ * largura quando o valor muda na frente de quem olha.
  */
 export function ProgressBar({
   arrecadado,
@@ -30,6 +33,7 @@ export function ProgressBar({
   tipo,
   unidade,
   destacarFalta,
+  tamanho = "md",
   className,
 }: ProgressBarProps) {
   const confirmado = progressoPercent(arrecadado, meta);
@@ -41,7 +45,7 @@ export function ProgressBar({
   const formatar = (valor: number) =>
     tipo === "dinheiro"
       ? formatCurrency(valor)
-      : `${valor.toLocaleString("pt-BR")}${unidade ? ` ${unidade}` : ""}`;
+      : `${valor.toLocaleString("pt-BR")}${unidade ? ` ${unidade}` : ""}`;
 
   const descricao = atingida
     ? `Meta atingida: ${formatar(arrecadado)} confirmados`
@@ -51,7 +55,10 @@ export function ProgressBar({
   return (
     <div className={cn("space-y-1.5", className)}>
       <div
-        className="relative flex h-2 overflow-hidden rounded-full bg-muted"
+        className={cn(
+          "relative flex overflow-hidden rounded-full bg-primary/10",
+          tamanho === "lg" ? "h-3" : "h-2",
+        )}
         role="progressbar"
         aria-valuenow={confirmado}
         aria-valuemin={0}
@@ -60,10 +67,7 @@ export function ProgressBar({
       >
         <div
           className={cn(
-            // A transição de largura é o que faz a barra subir na frente de
-            // quem olha quando a ONG confirma, em vez de simplesmente aparecer
-            // maior no próximo carregamento.
-            "h-full transition-[width] duration-700 ease-out motion-reduce:transition-none",
+            "barra-anima h-full rounded-full transition-[width] duration-700 ease-suave motion-reduce:transition-none",
             atingida ? "bg-success" : "bg-primary",
           )}
           style={{ width: `${confirmado}%` }}
@@ -90,7 +94,10 @@ export function ProgressBar({
           </span>
         )}
         <span
-          className={cn("numero shrink-0 font-semibold", atingida ? "text-success" : "text-primary")}
+          className={cn(
+            "numero shrink-0 font-display text-base font-semibold",
+            atingida ? "text-success" : "text-primary",
+          )}
         >
           {confirmado}%
         </span>

@@ -19,14 +19,17 @@ export const identificacaoDoadorSchema = z.object({
 
 export const doacaoDinheiroSchema = identificacaoDoadorSchema.extend({
   valor: z
-    .number({ invalid_type_error: "Escolha ou digite quanto você quer doar" })
+    .number({
+      required_error: "Escolha ou digite quanto você quer doar",
+      invalid_type_error: "Escolha ou digite quanto você quer doar",
+    })
     .positive("O valor precisa ser maior que zero")
     .max(1_000_000, "O valor máximo por doação é R$ 1.000.000,00"),
 });
 
 export const doacaoItemSchema = identificacaoDoadorSchema.extend({
   quantidade: z
-    .number({ invalid_type_error: "Diga quantos você vai doar" })
+    .number({ required_error: "Diga quantos você vai doar", invalid_type_error: "Diga quantos você vai doar" })
     .positive("A quantidade precisa ser maior que zero")
     .max(100_000, "A quantidade máxima por doação é 100.000"),
   forma_entrega: z.enum(["levar", "coleta"], {
