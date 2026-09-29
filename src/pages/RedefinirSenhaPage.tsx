@@ -86,7 +86,7 @@ export default function RedefinirSenhaPage() {
         descricao="Cada link vale por uma hora e serve uma vez só. Peça outro para seguir."
       >
         <div className="space-y-3">
-          <Button asChild size="lg" className="pressionavel w-full">
+          <Button asChild size="lg" className="w-full">
             <Link to="/esqueci-senha">Pedir um link novo</Link>
           </Button>
           <Button asChild variant="ghost" className="w-full">
@@ -156,7 +156,7 @@ export default function RedefinirSenhaPage() {
             />
 
             <div className="space-y-3">
-              <Button type="submit" size="lg" className="pressionavel w-full" disabled={enviando}>
+              <Button type="submit" size="lg" className="w-full" disabled={enviando}>
                 {enviando && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
                 {enviando ? CTA.salvando : "Salvar nova senha"}
               </Button>

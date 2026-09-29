@@ -333,8 +333,6 @@ export default function ProjetoPage() {
         </div>
 
         <Footer />
-        {/* Espaço com a cor do rodapé para a barra fixa do celular não cobrir a última linha dele. */}
-        <div className="h-24 bg-card md:hidden" aria-hidden="true" />
       </div>
 
       {/* No celular a ação principal fica alcançável sem rolar. */}

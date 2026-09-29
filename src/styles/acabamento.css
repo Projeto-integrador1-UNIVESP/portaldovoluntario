@@ -106,18 +106,6 @@
     padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
   }
 
-  /* Faixa que sangra até as bordas mesmo dentro de um container. */
-  .sangria {
-    width: 100%;
-    margin-inline: 0;
-  }
-  @supports (width: 100dvw) {
-    .sangria {
-      width: 100dvw;
-      margin-inline: calc(50% - 50dvw);
-    }
-  }
-
   /* Sublinhado fino com a cor da ação, para link de texto. */
   .link-vivo {
     text-decoration: underline;

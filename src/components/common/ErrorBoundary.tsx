@@ -45,10 +45,10 @@ export class ErrorBoundary extends Component<Props, State> {
             : "Tivemos um problema ao exibir esta tela. Recarregar costuma resolver; se não resolver, volte ao início."}
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Button className="pressionavel" onClick={() => window.location.reload()}>
+          <Button onClick={() => window.location.reload()}>
             Recarregar a página
           </Button>
-          <Button variant="outline" asChild className="pressionavel">
+          <Button variant="outline" asChild>
             <a href="/">Voltar ao início</a>
           </Button>
         </div>

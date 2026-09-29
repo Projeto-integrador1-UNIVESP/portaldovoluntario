@@ -57,7 +57,7 @@ export default function EsqueciSenhaPage() {
             Não chegou? Olhe a pasta de spam. Se ainda assim não aparecer, confira se digitou o
             e-mail certo e peça de novo.
           </Callout>
-          <Button variant="outline" className="pressionavel w-full" onClick={() => setEnviadoPara(null)}>
+          <Button variant="outline" className="w-full" onClick={() => setEnviadoPara(null)}>
             Pedir de novo com outro e-mail
           </Button>
           <Button variant="ghost" asChild className="w-full">
@@ -107,7 +107,7 @@ export default function EsqueciSenhaPage() {
             )}
           />
           <div className="space-y-3">
-            <Button type="submit" size="lg" className="pressionavel w-full" disabled={enviando}>
+            <Button type="submit" size="lg" className="w-full" disabled={enviando}>
               {enviando && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
               {enviando ? CTA.enviando : "Enviar o link por e-mail"}
             </Button>

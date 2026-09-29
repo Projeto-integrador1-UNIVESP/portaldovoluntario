@@ -30,11 +30,11 @@ const NotFound = () => {
         </p>
 
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Button asChild className="pressionavel">
+          <Button asChild>
             <Link to="/">Voltar ao início</Link>
           </Button>
           {atalhos.map((atalho) => (
-            <Button key={atalho.to} variant="outline" asChild className="pressionavel">
+            <Button key={atalho.to} variant="outline" asChild>
               <Link to={atalho.to}>{atalho.label}</Link>
             </Button>
           ))}
