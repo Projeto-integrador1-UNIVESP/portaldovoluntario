@@ -1,36 +1,39 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import {
-  BadgeCheck, Building2, Calendar, DollarSign, FolderOpen, LayoutDashboard,
-  UserCheck, Users,
+  BadgeCheck, Building2, Calendar, DollarSign, FolderOpen, LayoutDashboard, UserCheck, Users,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Seo } from "@/components/common/Seo";
 import { Stat } from "@/components/common/Stat";
-import { Callout } from "@/components/common/Callout";
 import { ErrorState } from "@/components/common/ErrorState";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TESE, TERMOS, VAZIO } from "@/lib/copy";
 import { formatCurrency } from "@/lib/format";
-import { contarLinhas as contar } from "./_shared-lib";
+import {
+  COLUNAS_DA_DOACAO, contarLinhas as contar, diasDesde, doacoesComRelacionados, nomeDoDoador,
+} from "./_shared-lib";
 
 /** A partir daqui uma doação parada deixa de ser espera e passa a ser problema. */
 const DIAS_ATE_DOACAO_TRAVAR = 7;
 
+/** Quantas doações paradas a lista curta mostra. */
+const PARADAS_NA_LISTA = 5;
+
 /**
- * Visão geral da plataforma.
+ * Início do painel administrativo.
  *
- * A tela antiga eram sete contadores no mesmo peso visual, incluindo um card
- * "Voluntários: Ver" que não mostrava número nenhum. Contagem não é o que o
- * administrador precisa ver primeiro: o que precisa dele são as ONGs esperando
- * verificação de CNPJ e as doações que a ONG não confirmou há dias. Enquanto
- * ninguém confirma, o progresso público do projeto não anda.
+ * O que o administrador precisa ver primeiro não é contagem: são as ONGs
+ * esperando verificação de CNPJ e as doações que a ONG não confirmou há dias.
+ * Enquanto ninguém confirma, o progresso público do projeto não anda. Por isso
+ * a tela abre com o bloco do que exige ação, e só depois com os números.
  *
  * As contagens usam `head: true`: o servidor devolve só o total, sem trafegar
- * linha. O total em dinheiro vem da RPC que já soma no banco, em vez de baixar
- * a coluna `valor` da tabela inteira como a versão anterior fazia.
+ * linha. O total em dinheiro vem da RPC que já soma no banco.
  */
 export default function AdminDashboard() {
   const { data, isPending, isError, refetch } = useQuery({
@@ -96,122 +99,177 @@ export default function AdminDashboard() {
     staleTime: 60_000,
   });
 
+  // Consulta separada: se ela falhar, o painel continua de pé sem a lista.
+  const paradas = useQuery({
+    queryKey: ["admin-dashboard-paradas"],
+    queryFn: async () => {
+      const { data: linhas, error } = await supabase
+        .from("doacoes")
+        .select(COLUNAS_DA_DOACAO)
+        .eq("status", "pendente")
+        .order("data_doacao", { ascending: true })
+        .order("id")
+        .limit(PARADAS_NA_LISTA);
+      if (error) throw error;
+      return doacoesComRelacionados(linhas ?? []);
+    },
+    staleTime: 60_000,
+  });
+
+  const pendencias = data
+    ? [
+        data.ongsSemSelo > 0 && {
+          chave: "selo",
+          numero: data.ongsSemSelo,
+          texto:
+            data.ongsSemSelo === 1
+              ? `ONG ${TERMOS.aguardandoVerificacao.toLowerCase()}`
+              : `ONGs ${TERMOS.aguardandoVerificacao.toLowerCase()}`,
+          acao: "Ver ONGs sem selo",
+          para: "/admin/ongs?aba=sem-selo",
+        },
+        data.doacoesTravadas > 0 && {
+          chave: "travadas",
+          numero: data.doacoesTravadas,
+          texto: `${data.doacoesTravadas === 1 ? "doação" : "doações"} sem confirmação há mais de ${DIAS_ATE_DOACAO_TRAVAR} dias`,
+          acao: "Ver doações paradas",
+          para: "/admin/doacoes?status=pendente",
+        },
+        data.voluntariosPendentes > 0 && {
+          chave: "voluntarios",
+          numero: data.voluntariosPendentes,
+          texto: `${data.voluntariosPendentes === 1 ? "inscrição" : "inscrições"} de voluntário aguardando resposta`,
+          acao: "Responder inscrições",
+          para: "/admin/voluntarios",
+        },
+      ].filter((p): p is Exclude<typeof p, false> => Boolean(p))
+    : [];
+
   return (
     <DashboardLayout type="admin">
-      <Seo title="Painel administrativo" noIndex />
+      <Seo title="Início" noIndex />
       <PageHeader
-        title="Painel administrativo"
+        title="Início"
         description="O que precisa de você agora e como a plataforma está"
         icon={<LayoutDashboard className="h-6 w-6" aria-hidden="true" />}
       />
 
       {isError ? (
-        <ErrorState
-          title="Não foi possível carregar o painel"
-          onRetry={() => refetch()}
-        />
+        <ErrorState title="Não foi possível carregar o painel" onRetry={() => refetch()} />
       ) : isPending ? (
-        <div className="space-y-8">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-24 w-full rounded-lg" />
-            ))}
-          </div>
-          <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <div className="space-y-10">
+          <Skeleton className="h-52 w-full rounded-[28px_8px]" />
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-24 w-full rounded-lg" />
+              <Skeleton key={i} className="h-28 w-full rounded-xl" />
             ))}
           </div>
         </div>
       ) : (
-        <div className="space-y-8">
-          <section aria-labelledby="titulo-fila">
-            <h2 id="titulo-fila" className="font-display text-lg font-bold">
-              Precisa de você
+        <div className="space-y-10">
+          <section
+            aria-labelledby="titulo-fila"
+            className="grao rounded-[28px_8px] bg-tinta-creme p-6 md:p-8"
+          >
+            <p className="rotulo-caps">Precisa de você</p>
+            <h2 id="titulo-fila" className="mt-1 font-display text-2xl font-semibold">
+              {pendencias.length === 0
+                ? "Nada esperando resposta"
+                : pendencias.length === 1
+                  ? "Uma pendência"
+                  : `${pendencias.length} pendências`}
             </h2>
+            <p className="mt-2 max-w-prose text-sm text-muted-foreground">{TESE}</p>
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <Stat
-                valor={data.ongsSemSelo}
-                rotulo={
-                  data.ongsSemSelo === 1
-                    ? "ONG ativa sem selo de verificada"
-                    : "ONGs ativas sem selo de verificada"
-                }
-                icone={BadgeCheck}
-                para="/admin/ongs?aba=sem-selo"
-              />
-              {/* O número tem que ser o mesmo que a tela de destino mostra:
-                  contar só as travadas e abrir a lista de todas as pendentes
-                  faria o painel e a lista discordarem. O recorte de dias vem
-                  no aviso abaixo. */}
-              <Stat
-                valor={data.doacoesPendentes}
-                rotulo={
-                  data.doacoesPendentes === 1
-                    ? "doação aguardando a ONG confirmar"
-                    : "doações aguardando a ONG confirmar"
-                }
-                icone={DollarSign}
-                para="/admin/doacoes?status=pendente"
-              />
-              <Stat
-                valor={data.voluntariosPendentes}
-                rotulo="inscrições de voluntário aguardando resposta"
-                icone={UserCheck}
-                para="/admin/voluntarios"
-              />
-            </div>
-
-            {data.doacoesTravadas > 0 && (
-              <Callout tom="atencao" titulo="Doações paradas travam o progresso público" className="mt-4">
-                {data.doacoesTravadas === 1
-                  ? "Uma doação está sem confirmação"
-                  : `${data.doacoesTravadas} doações estão sem confirmação`}{" "}
-                há mais de {DIAS_ATE_DOACAO_TRAVAR} dias. A barra de um projeto só sobe
-                quando a ONG confirma que recebeu. Até lá, quem doou não vê o próprio
-                efeito. Vale cobrar a organização.
-                <div className="mt-3">
-                  <Button size="sm" variant="outline" asChild>
-                    <Link to="/admin/doacoes?status=pendente">Ver as doações pendentes</Link>
-                  </Button>
-                </div>
-              </Callout>
-            )}
-
-            {data.ongsSemSelo > 0 && (
-              <Callout tom="info" titulo="Verificação de CNPJ é responsabilidade da administração" className="mt-4">
-                Uma ONG sem selo aparece no site sem sinal de conferência. O selo é
-                marcado na tela de ONGs, depois de checar o CNPJ.
-                <div className="mt-3">
-                  <Button size="sm" variant="outline" asChild>
-                    <Link to="/admin/ongs?aba=sem-selo">Ver ONGs sem selo</Link>
-                  </Button>
-                </div>
-              </Callout>
+            {pendencias.length === 0 ? (
+              <p className="mt-6 max-w-prose text-foreground">
+                Toda ONG visível tem selo, nenhuma doação está parada há mais de{" "}
+                {DIAS_ATE_DOACAO_TRAVAR} dias e não há inscrição sem resposta.
+              </p>
+            ) : (
+              <ul className="mt-6 divide-y divide-primary/10">
+                {pendencias.map((p) => (
+                  <li
+                    key={p.chave}
+                    className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 py-4 first:pt-0 last:pb-0"
+                  >
+                    <p className="flex items-baseline gap-3">
+                      <span className="numero font-display text-2xl font-semibold leading-none">
+                        {p.numero.toLocaleString("pt-BR")}
+                      </span>
+                      <span className="text-foreground">{p.texto}</span>
+                    </p>
+                    <Button variant="default" size="sm" asChild>
+                      <Link to={p.para}>{p.acao}</Link>
+                    </Button>
+                  </li>
+                ))}
+              </ul>
             )}
           </section>
 
           <section aria-labelledby="titulo-plataforma">
-            <h2 id="titulo-plataforma" className="font-display text-lg font-bold">
-              A plataforma hoje
+            <p className="rotulo-caps">A plataforma hoje</p>
+            <h2 id="titulo-plataforma" className="mt-1 font-display text-2xl font-semibold">
+              Os números
             </h2>
 
             <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-              <Stat valor={data.ongs} rotulo={data.ongs === 1 ? "ONG" : "ONGs"} icone={Building2} para="/admin/ongs" />
-              <Stat valor={data.usuarios} rotulo={data.usuarios === 1 ? "usuário" : "usuários"} icone={Users} para="/admin/usuarios" />
-              <Stat valor={data.projetos} rotulo={data.projetos === 1 ? "projeto" : "projetos"} icone={FolderOpen} para="/admin/projetos" />
-              <Stat valor={data.eventos} rotulo={data.eventos === 1 ? "evento" : "eventos"} icone={Calendar} para="/admin/eventos" />
-              <Stat valor={data.doacoes} rotulo={data.doacoes === 1 ? "doação registrada" : "doações registradas"} icone={DollarSign} para="/admin/doacoes" />
               <Stat
+                destaque
                 valor={formatCurrency(data.totalConfirmado)}
                 rotulo="doados e confirmados pelas ONGs"
                 icone={BadgeCheck}
                 para="/admin/auditoria"
                 className="col-span-2"
               />
+              <Stat valor={data.ongs} rotulo={data.ongs === 1 ? "ONG" : "ONGs"} icone={Building2} para="/admin/ongs" />
+              <Stat valor={data.projetos} rotulo={data.projetos === 1 ? "projeto" : "projetos"} icone={FolderOpen} para="/admin/projetos" />
+              <Stat valor={data.doacoes} rotulo={data.doacoes === 1 ? "doação registrada" : "doações registradas"} icone={DollarSign} para="/admin/doacoes" />
+              <Stat valor={data.doacoesPendentes} rotulo="aguardando a ONG confirmar" icone={UserCheck} para="/admin/doacoes?status=pendente" />
+              <Stat valor={data.usuarios} rotulo={data.usuarios === 1 ? "usuário" : "usuários"} icone={Users} para="/admin/usuarios" />
+              <Stat valor={data.eventos} rotulo={data.eventos === 1 ? "evento" : "eventos"} icone={Calendar} para="/admin/eventos" />
             </div>
           </section>
+
+          {paradas.data && paradas.data.length > 0 && (
+            <section aria-labelledby="titulo-paradas">
+              <p className="rotulo-caps">Doações paradas há mais tempo</p>
+              <h2 id="titulo-paradas" className="mt-1 font-display text-2xl font-semibold">
+                Quem ainda não viu o próprio efeito
+              </h2>
+              <Card className="mt-6 divide-y divide-border">
+                {paradas.data.map((d) => {
+                  const dias = diasDesde(d.data_doacao);
+                  return (
+                    <div
+                      key={d.id}
+                      className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 px-5 py-3.5"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">{nomeDoDoador(d)}</p>
+                        <p className="truncate text-sm text-muted-foreground">
+                          {d.ong?.nome ?? VAZIO.semOng}
+                          {" · "}
+                          {d.necessidade
+                            ? `${d.quantidade ?? 0} ${d.necessidade.unidade ?? ""} de ${d.necessidade.nome}`
+                            : formatCurrency(d.valor)}
+                        </p>
+                      </div>
+                      <p className={`numero text-sm ${dias > DIAS_ATE_DOACAO_TRAVAR ? "font-semibold text-destructive" : "text-muted-foreground"}`}>
+                        {dias === 0 ? "hoje" : dias === 1 ? "há 1 dia" : `há ${dias} dias`}
+                      </p>
+                    </div>
+                  );
+                })}
+              </Card>
+              <div className="mt-4">
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/admin/doacoes?status=pendente">Ver todas as doações aguardando confirmação</Link>
+                </Button>
+              </div>
+            </section>
+          )}
         </div>
       )}
     </DashboardLayout>
