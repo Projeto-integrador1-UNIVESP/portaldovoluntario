@@ -76,8 +76,13 @@
     transform: scale(0.97);
   }
 
-  /* Alvo de toque de 44px mesmo quando o visual é menor, sem mexer no layout. */
-  .alvo-confortavel {
+  /*
+   * Alvo de toque de 44px mesmo quando o visual é menor, sem mexer no layout.
+   * Não força `position` no próprio elemento: quem já é `absolute` (botão de
+   * mostrar senha dentro do campo) continua onde está. Só quem é `static`
+   * vira `relative`, para o `::after` ter referência.
+   */
+  .alvo-confortavel:where(:not([class*="absolute"]):not([class*="fixed"])) {
     position: relative;
   }
   .alvo-confortavel::after {
