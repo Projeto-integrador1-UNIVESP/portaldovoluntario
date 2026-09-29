@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Check, Copy } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -7,55 +8,58 @@ type CopyFieldProps = {
   valor: string;
   /** Rótulo lido por leitor de tela ao acionar o botão. */
   rotulo: string;
+  /** Nome do que está sendo copiado, para o toast: "Código Pix copiado". */
+  objeto?: string;
   className?: string;
 };
 
 /**
- * Campo de texto longo com botão de copiar, usado no "Pix Copia e Cola",
- * que ninguém digita à mão.
+ * Campo de texto longo com botão de copiar, usado no "Pix Copia e Cola" e no
+ * código do comprovante, que ninguém digita à mão.
+ *
+ * Copiar falha em navegador sem permissão de área de transferência ou fora de
+ * HTTPS. Antes isso falhava em silêncio e a pessoa colava vazio no banco;
+ * agora o toast diz o que houve e o texto fica selecionável de um clique.
  */
-export function CopyField({ valor, rotulo, className }: CopyFieldProps) {
+export function CopyField({ valor, rotulo, objeto = "Código", className }: CopyFieldProps) {
   const [copiado, setCopiado] = useState(false);
 
   const copiar = async () => {
     try {
       await navigator.clipboard.writeText(valor);
     } catch {
-      // Navegador sem permissão de área de transferência: o texto continua
-      // selecionável na tela, então o usuário copia à mão.
+      toast.error("Não foi possível copiar. Toque no código para selecionar e copie à mão.");
       return;
     }
     setCopiado(true);
+    toast.success(`${objeto} copiado`);
     setTimeout(() => setCopiado(false), 2500);
   };
 
   return (
     <div className={cn("flex items-stretch gap-2", className)}>
-      <code className="min-w-0 flex-1 truncate rounded-md border bg-muted px-3 py-2 text-sm">
+      <code className="numero min-w-0 flex-1 select-all truncate rounded-controle border bg-muted px-3.5 py-2.5 text-sm leading-6">
         {valor}
       </code>
       <Button
         type="button"
         variant={copiado ? "secondary" : "default"}
         onClick={copiar}
-        className="pressionavel shrink-0"
-        aria-label={copiado ? "Código copiado" : rotulo}
+        className="shrink-0"
+        aria-label={rotulo}
       >
         {copiado ? (
           <>
-            <Check className="mr-2 h-4 w-4" aria-hidden="true" />
+            <Check aria-hidden="true" />
             Copiado
           </>
         ) : (
           <>
-            <Copy className="mr-2 h-4 w-4" aria-hidden="true" />
+            <Copy aria-hidden="true" />
             Copiar
           </>
         )}
       </Button>
-      <span aria-live="polite" className="sr-only">
-        {copiado ? "Copiado para a área de transferência" : ""}
-      </span>
     </div>
   );
 }
