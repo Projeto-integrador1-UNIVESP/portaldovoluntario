@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Calendar, Pencil, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
@@ -17,39 +17,37 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { TableCell, TableRow } from "@/components/ui/table";
+import { CTA, SUCESSO, TERMOS, VAZIO } from "@/lib/copy";
 import { formatDateTime } from "@/lib/format";
+import { EVENTO_VAZIO, eventoAdminSchema, type EventoAdminForm } from "@/lib/schemas/admin";
 import { normalizeUrl } from "@/lib/validators";
 import {
-  AlternarStatus, Campo, ExcluirLinha, Paginacao, TabelaAdmin,
+  AlternarStatus, Campo, ExcluirLinha, Paginacao, TabelaAdmin, Vazio,
 } from "./_shared";
 import {
   POR_PAGINA, deCampoDeDataHora, mensagemDeErro, paraCampoDeDataHora,
-  useCorrigirPaginaVazia,
+  useCorrigirPaginaVazia, useValidacao,
 } from "./_shared-lib";
-
-const formVazio = {
-  nome: "", data_evento: "", local: "", vagas: "", id_ong: "", descricao: "", img_url: "",
-};
-
-type FormEvento = typeof formVazio;
 
 const COLUNAS = [
   { rotulo: "Evento" },
   { rotulo: "Quando" },
   { rotulo: "Vagas" },
   { rotulo: "ONG" },
-  { rotulo: "Visível no site" },
+  { rotulo: "No site" },
   { rotulo: "Ações", className: "text-right" },
 ];
+
+const VISIBILIDADE = [TERMOS.visivel, TERMOS.oculto] as const;
 
 const limparBusca = (termo: string) => termo.replace(/[,()*%\\]/g, " ").trim();
 
 /**
  * Eventos das organizações.
  *
- * O bug que esta versão corrige é de fuso: o formulário carregava a data com
- * `toISOString()` num campo `datetime-local`, que espera hora local. Um evento
- * às 9h aparecia como 12h no formulário e voltava deslocado a cada salvamento.
+ * A data vai e volta pelo `paraCampoDeDataHora`/`deCampoDeDataHora`: o campo
+ * `datetime-local` espera hora local, e `toISOString()` entregava UTC, três
+ * horas mais cedo no Brasil.
  */
 export default function AdminEventos() {
   const queryClient = useQueryClient();
@@ -57,7 +55,8 @@ export default function AdminEventos() {
   const [busca, setBusca] = useState("");
   const [dialogoAberto, setDialogoAberto] = useState(false);
   const [editando, setEditando] = useState<{ id: string } | null>(null);
-  const [form, setForm] = useState<FormEvento>(formVazio);
+  const [form, setForm] = useState<EventoAdminForm>(EVENTO_VAZIO);
+  const { erros, validar, erroDoServidor, limpar } = useValidacao(eventoAdminSchema, "evento");
 
   const termo = limparBusca(busca);
 
@@ -119,24 +118,15 @@ export default function AdminEventos() {
   });
 
   const salvar = useMutation({
-    mutationFn: async () => {
-      if (!form.nome.trim()) throw new Error("Informe o nome do evento.");
-      if (!form.data_evento) throw new Error("Informe a data e a hora.");
-      if (!form.local.trim()) throw new Error("Informe o local.");
-      if (!form.id_ong) throw new Error("Escolha a ONG responsável.");
-      const vagas = form.vagas ? Number(form.vagas) : null;
-      if (vagas !== null && (!Number.isInteger(vagas) || vagas < 1)) {
-        throw new Error("As vagas devem ser um número inteiro a partir de 1.");
-      }
-
+    mutationFn: async (dados: EventoAdminForm) => {
       const payload = {
-        nome: form.nome.trim(),
-        data_evento: deCampoDeDataHora(form.data_evento),
-        local: form.local.trim(),
-        vagas,
-        id_ong: form.id_ong,
-        descricao: form.descricao.trim() || null,
-        img_url: normalizeUrl(form.img_url) || null,
+        nome: dados.nome.trim(),
+        data_evento: deCampoDeDataHora(dados.data_evento),
+        local: dados.local.trim(),
+        vagas: dados.vagas ? Number(dados.vagas) : null,
+        id_ong: dados.id_ong,
+        descricao: dados.descricao.trim() || null,
+        img_url: dados.img_url || null,
       };
 
       const { error } = editando
@@ -145,11 +135,11 @@ export default function AdminEventos() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success(editando ? "Evento atualizado." : "Evento criado.");
+      toast.success(editando ? SUCESSO.salvo("Evento") : SUCESSO.criado("Evento"));
       fechar();
       queryClient.invalidateQueries({ queryKey: ["admin-eventos"] });
     },
-    onError: (erro) => toast.error(mensagemDeErro(erro, "Não foi possível salvar o evento.")),
+    onError: (erro) => erroDoServidor(erro, "Não foi possível salvar o evento."),
   });
 
   const alternarStatus = useMutation({
@@ -159,7 +149,7 @@ export default function AdminEventos() {
       return status;
     },
     onSuccess: (status) => {
-      toast.success(status ? "Evento visível no site." : "Evento oculto do site.");
+      toast.success(status ? "Evento visível no site" : "Evento oculto do site");
       queryClient.invalidateQueries({ queryKey: ["admin-eventos"] });
     },
     onError: (erro) => toast.error(mensagemDeErro(erro, "Não foi possível alterar a visibilidade.")),
@@ -171,7 +161,7 @@ export default function AdminEventos() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Evento excluído.");
+      toast.success(SUCESSO.excluido("Evento"));
       if (linhas.length === 1 && pagina > 0) setPagina(pagina - 1);
       queryClient.invalidateQueries({ queryKey: ["admin-eventos"] });
     },
@@ -181,12 +171,14 @@ export default function AdminEventos() {
   const fechar = () => {
     setDialogoAberto(false);
     setEditando(null);
-    setForm(formVazio);
+    setForm(EVENTO_VAZIO);
+    limpar();
   };
 
   const abrirNovo = () => {
     setEditando(null);
-    setForm(formVazio);
+    setForm(EVENTO_VAZIO);
+    limpar();
     setDialogoAberto(true);
   };
 
@@ -201,7 +193,14 @@ export default function AdminEventos() {
       descricao: e.descricao ?? "",
       img_url: e.img_url ?? "",
     });
+    limpar();
     setDialogoAberto(true);
+  };
+
+  const enviar = (evento: FormEvent) => {
+    evento.preventDefault();
+    const dados = validar(form);
+    if (dados) salvar.mutate(dados);
   };
 
   return (
@@ -213,7 +212,7 @@ export default function AdminEventos() {
         icon={<Calendar className="h-6 w-6" aria-hidden="true" />}
         action={
           <Button onClick={abrirNovo}>
-            <Plus className="h-4 w-4" aria-hidden="true" />
+            <Plus aria-hidden="true" />
             Novo evento
           </Button>
         }
@@ -227,6 +226,7 @@ export default function AdminEventos() {
           />
           <Input
             id="busca-eventos"
+            name="busca"
             type="search"
             autoComplete="off"
             className="pl-9"
@@ -251,16 +251,15 @@ export default function AdminEventos() {
         vazio={
           termo ? (
             <EmptyState
-              icon={Search}
+              ilustracao="caixa"
               title="Nenhum evento encontrado"
               description={`Nada corresponde a “${busca}”.`}
               action={{ label: "Limpar a busca", onClick: () => setBusca("") }}
             />
           ) : (
             <EmptyState
-              icon={Calendar}
               title="Nenhum evento cadastrado"
-              description="Cadastre um mutirão, uma entrega ou uma ação de fim de semana."
+              description="Cadastre um mutirão ou uma ação de fim de semana."
               action={{ label: "Criar evento", onClick: abrirNovo }}
             />
           )
@@ -271,19 +270,22 @@ export default function AdminEventos() {
           <TableRow key={e.id}>
             <TableCell className="max-w-64">
               <div className="break-words font-medium">{e.nome}</div>
-              <div className="text-xs text-muted-foreground">{e.local || "Sem local informado"}</div>
+              <div className="text-xs text-muted-foreground">{e.local || <Vazio />}</div>
             </TableCell>
 
-            <TableCell className="text-muted-foreground">{formatDateTime(e.data_evento)}</TableCell>
+            <TableCell className="numero whitespace-nowrap text-muted-foreground">{formatDateTime(e.data_evento)}</TableCell>
 
-            <TableCell className="tabular-nums text-muted-foreground">{e.vagas ?? "Sem limite"}</TableCell>
+            <TableCell className="numero text-muted-foreground">
+              {e.vagas ?? <Vazio texto="Sem limite" />}
+            </TableCell>
 
-            <TableCell className="text-muted-foreground">{e.ong ?? "Sem ONG"}</TableCell>
+            <TableCell className="text-muted-foreground">{e.ong ?? <Vazio texto={VAZIO.semOng} />}</TableCell>
 
             <TableCell>
               <AlternarStatus
                 ativo={Boolean(e.status)}
                 rotulo={`Visibilidade do evento ${e.nome}`}
+                rotulos={VISIBILIDADE}
                 ocupado={alternarStatus.isPending}
                 aoAlternar={() => alternarStatus.mutate({ id: e.id, status: !e.status })}
               />
@@ -297,13 +299,14 @@ export default function AdminEventos() {
                   aria-label={`Editar ${e.nome}`}
                   onClick={() => abrirEdicao(e)}
                 >
-                  <Pencil className="h-4 w-4" aria-hidden="true" />
+                  <Pencil aria-hidden="true" />
                 </Button>
                 <ExcluirLinha
                   rotuloAcessivel={`Excluir ${e.nome}`}
-                  titulo="Excluir este evento?"
-                  descricao="O evento sai do site. Se ele já aconteceu e você quer manter o registro, desative em vez de excluir."
-                  aoConfirmar={() => excluir.mutate(e.id)}
+                  titulo={`Excluir o evento ${e.nome}?`}
+                  descricao="O evento sai do site. Se ele já aconteceu e você quer manter o registro, oculte em vez de excluir."
+                  rotuloConfirmar={CTA.excluir("evento")}
+                  aoConfirmar={() => excluir.mutateAsync(e.id)}
                 />
               </div>
             </TableCell>
@@ -312,18 +315,19 @@ export default function AdminEventos() {
       </TabelaAdmin>
 
       <Dialog open={dialogoAberto} onOpenChange={(aberto) => (aberto ? setDialogoAberto(true) : fechar())}>
-        <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto">
+        <DialogContent className="rolagem-contida max-h-[90vh] max-w-xl overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editando ? "Editar evento" : "Novo evento"}</DialogTitle>
+            <DialogTitle className="font-display text-xl">{editando ? "Editar evento" : "Novo evento"}</DialogTitle>
             <DialogDescription>
               A data e a hora são as do horário local de quem vai participar.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <Campo id="evento-nome" rotulo="Nome do evento" obrigatorio>
+          <form noValidate onSubmit={enviar} className="grid gap-4">
+            <Campo id="evento-nome" rotulo="Nome do evento" obrigatorio erro={erros.nome}>
               <Input
                 id="evento-nome"
+                name="nome"
                 autoComplete="off"
                 maxLength={120}
                 value={form.nome}
@@ -332,20 +336,21 @@ export default function AdminEventos() {
             </Campo>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <Campo id="evento-quando" rotulo="Data e hora" obrigatorio>
+              <Campo id="evento-data_evento" rotulo="Data e hora" obrigatorio erro={erros.data_evento}>
                 <Input
-                  id="evento-quando"
+                  id="evento-data_evento"
+                  name="data_evento"
                   type="datetime-local"
                   autoComplete="off"
                   value={form.data_evento}
                   onChange={(e) => setForm({ ...form, data_evento: e.target.value })}
                 />
               </Campo>
-              <Campo id="evento-vagas" rotulo="Vagas" dica="Em branco, sem limite.">
+              <Campo id="evento-vagas" rotulo="Vagas" dica="Em branco, sem limite." erro={erros.vagas}>
                 <Input
                   id="evento-vagas"
-                  type="number"
-                  min="1"
+                  name="vagas"
+                  inputMode="numeric"
                   autoComplete="off"
                   value={form.vagas}
                   onChange={(e) => setForm({ ...form, vagas: e.target.value })}
@@ -353,9 +358,10 @@ export default function AdminEventos() {
               </Campo>
             </div>
 
-            <Campo id="evento-local" rotulo="Local" obrigatorio>
+            <Campo id="evento-local" rotulo="Local" obrigatorio erro={erros.local}>
               <Input
                 id="evento-local"
+                name="local"
                 autoComplete="off"
                 maxLength={160}
                 placeholder="Endereço ou ponto de encontro"
@@ -364,24 +370,27 @@ export default function AdminEventos() {
               />
             </Campo>
 
-            <Campo id="evento-ong" rotulo="ONG responsável" obrigatorio>
-              <Select value={form.id_ong} onValueChange={(v) => setForm({ ...form, id_ong: v })}>
-                <SelectTrigger id="evento-ong">
-                  <SelectValue placeholder="Escolha a organização" />
-                </SelectTrigger>
-                <SelectContent>
-                  {(ongs ?? []).map((o) => (
-                    <SelectItem key={o.id} value={o.id}>
-                      {o.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <Campo id="evento-id_ong" rotulo="ONG responsável" obrigatorio erro={erros.id_ong}>
+              {(a11y) => (
+                <Select value={form.id_ong} onValueChange={(v) => setForm({ ...form, id_ong: v })} name="id_ong">
+                  <SelectTrigger {...a11y}>
+                    <SelectValue placeholder="Escolha a organização" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(ongs ?? []).map((o) => (
+                      <SelectItem key={o.id} value={o.id}>
+                        {o.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </Campo>
 
-            <Campo id="evento-descricao" rotulo="Descrição">
+            <Campo id="evento-descricao" rotulo="Descrição" erro={erros.descricao}>
               <Textarea
                 id="evento-descricao"
+                name="descricao"
                 rows={3}
                 maxLength={900}
                 placeholder="O que vai acontecer e o que levar."
@@ -390,9 +399,11 @@ export default function AdminEventos() {
               />
             </Campo>
 
-            <Campo id="evento-imagem" rotulo="Imagem (endereço)">
+            <Campo id="evento-img_url" rotulo="Imagem (endereço)" erro={erros.img_url}>
               <Input
-                id="evento-imagem"
+                id="evento-img_url"
+                name="img_url"
+                type="url"
                 autoComplete="off"
                 placeholder="https://…/evento.jpg"
                 value={form.img_url}
@@ -403,19 +414,19 @@ export default function AdminEventos() {
               <img
                 src={normalizeUrl(form.img_url)}
                 alt=""
-                className="h-32 w-full rounded-lg border object-cover"
+                className="h-32 w-full rounded-xl border object-cover"
               />
             )}
-          </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={fechar}>
-              Cancelar
-            </Button>
-            <Button onClick={() => salvar.mutate()} disabled={salvar.isPending}>
-              {salvar.isPending ? "Salvando…" : editando ? "Salvar alterações" : "Criar evento"}
-            </Button>
-          </DialogFooter>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={fechar}>
+                {CTA.cancelar}
+              </Button>
+              <Button type="submit" disabled={salvar.isPending}>
+                {salvar.isPending ? CTA.salvando : editando ? CTA.salvar("evento") : CTA.criar("evento")}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </DashboardLayout>
