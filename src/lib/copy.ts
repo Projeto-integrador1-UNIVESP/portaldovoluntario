@@ -100,3 +100,6 @@ export const SUCESSO = {
  * como "a plataforma". Antes alternava com "o Voluntá".
  */
 export const A_MARCA = `a ${MARCA}`;
+
+/** Mesmo nome no começo de frase: "A Voluntá". */
+export const A_MARCA_INICIAL = `A ${MARCA}`;

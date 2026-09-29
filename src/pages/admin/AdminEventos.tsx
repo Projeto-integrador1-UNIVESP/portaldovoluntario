@@ -24,10 +24,7 @@ import { normalizeUrl } from "@/lib/validators";
 import {
   AlternarStatus, Campo, ExcluirLinha, Paginacao, TabelaAdmin, Vazio,
 } from "./_shared";
-import {
-  POR_PAGINA, deCampoDeDataHora, mensagemDeErro, paraCampoDeDataHora,
-  useCorrigirPaginaVazia, useValidacao,
-} from "./_shared-lib";
+import { POR_PAGINA, deCampoDeDataHora, mensagemDeErro, paraCampoDeDataHora, useCorrigirPaginaVazia, useValidacao, VISIBILIDADE } from "./_shared-lib";
 
 const COLUNAS = [
   { rotulo: "Evento" },
@@ -38,7 +35,6 @@ const COLUNAS = [
   { rotulo: "Ações", className: "text-right" },
 ];
 
-const VISIBILIDADE = [TERMOS.visivel, TERMOS.oculto] as const;
 
 const limparBusca = (termo: string) => termo.replace(/[,()*%\\]/g, " ").trim();
 

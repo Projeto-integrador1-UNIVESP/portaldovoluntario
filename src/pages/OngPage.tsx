@@ -1,4 +1,5 @@
 import { Link, useParams } from "react-router-dom";
+import { capaDoProjeto } from "@/lib/capaDoProjeto";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarDays, Globe, Instagram, MapPin, PackageCheck, Phone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,7 +27,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { formatCnpj, formatCurrency, formatPhone } from "@/lib/format";
 import { normalizeUrl } from "@/lib/validators";
-import { cn } from "@/lib/utils";
+import { cn, larguraNaGrade } from "@/lib/utils";
 
 const ehUuid = (v: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
@@ -396,7 +397,7 @@ export default function OngPage() {
                         key={p.id}
                         projeto={{
                           ...p,
-                          img_url: p.capa_url || p.img_url,
+                          img_url: capaDoProjeto(p),
                           // Dentro do perfil, repetir o nome da ONG em cada card é ruído.
                           ongNome: null,
                         } as ProjetoCardData}
@@ -488,14 +489,6 @@ export default function OngPage() {
     </PublicShell>
   );
 }
-
-/**
- * Na grade de dois, o último item de uma contagem ímpar ocuparia meia linha
- * com um buraco ao lado. Ele passa a fechar a linha inteira: o ritmo vira
- * 1 grande + pares + 1 largo, que é o que a página quer.
- */
-const larguraNaGrade = (indice: number, total: number) =>
-  total % 2 === 1 && indice === total - 1 ? "sm:col-span-2" : undefined;
 
 type PainelProps = {
   ong: {

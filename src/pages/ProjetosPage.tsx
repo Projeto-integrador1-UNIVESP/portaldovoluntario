@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from "react";
+import { capaDoProjeto } from "@/lib/capaDoProjeto";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { ArrowUpDown, Search, SlidersHorizontal } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -123,7 +124,7 @@ const paraCard = (p: LinhaProjeto): ProjetoCardData => ({
   slug: p.slug,
   nome_projeto: p.nome_projeto,
   descricao: p.descricao,
-  img_url: p.capa_url || p.img_url,
+  img_url: capaDoProjeto(p),
   data_fim: p.data_fim,
   cidade: p.cidade,
   causa: p.causa,

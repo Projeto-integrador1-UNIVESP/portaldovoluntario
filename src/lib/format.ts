@@ -153,3 +153,14 @@ export const formatQuantidade = (quantidade: number | string | null | undefined,
   const u = unidadeFlexionada(unidade, n);
   return `${n.toLocaleString("pt-BR")}${u ? ` ${u}` : ""}`;
 };
+
+/** "77 kg" ou "R$ 1.200,00": o que ainda falta para a meta de um pedido. */
+export const quantoFalta = (n: {
+  meta: number;
+  arrecadado: number;
+  tipo: string;
+  unidade?: string | null;
+}) => {
+  const falta = Math.max(0, n.meta - n.arrecadado);
+  return n.tipo === "dinheiro" ? formatCurrency(falta) : formatQuantidade(falta, n.unidade);
+};

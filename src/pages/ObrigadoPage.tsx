@@ -1,4 +1,5 @@
 import { Link, useLocation, useParams } from "react-router-dom";
+import { capaDoProjeto } from "@/lib/capaDoProjeto";
 import { useQuery } from "@tanstack/react-query";
 import { UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -172,7 +173,7 @@ export default function ObrigadoPage() {
         <article className="mt-10 overflow-hidden rounded-xl border bg-card shadow-media" aria-label="Comprovante">
           {projeto && (
             <Capa
-              src={projeto.capa_url ?? projeto.img_url}
+              src={capaDoProjeto(projeto)}
               alt=""
               id={projeto.id}
               nome={projeto.nome_projeto}

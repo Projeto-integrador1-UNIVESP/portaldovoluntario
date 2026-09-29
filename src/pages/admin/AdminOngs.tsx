@@ -33,7 +33,7 @@ import { buscarCep } from "@/lib/viacep";
 import {
   AlternarStatus, Campo, SeloVerificada, TabelaAdmin, Vazio,
 } from "./_shared";
-import { contarLinhas, mensagemDeErro, useValidacao } from "./_shared-lib";
+import { contarLinhas, mensagemDeErro, useValidacao, VISIBILIDADE } from "./_shared-lib";
 
 type Aba = "ativas" | "inativas" | "sem-selo";
 type AbaDoForm = "identidade" | "endereco" | "pagamentos" | "apresentacao";
@@ -59,7 +59,6 @@ const COLUNAS = [
   { rotulo: "Ações", className: "text-right" },
 ];
 
-const VISIBILIDADE = [TERMOS.visivel, TERMOS.oculto] as const;
 
 /**
  * ONGs parceiras.

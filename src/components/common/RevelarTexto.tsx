@@ -1,4 +1,5 @@
 import { Fragment } from "react";
+import { EASE_SUAVE } from "@/lib/movimento";
 import { m } from "motion/react";
 import { SublinhadoManual } from "@/components/common/SublinhadoManual";
 import { cn } from "@/lib/utils";
@@ -40,7 +41,7 @@ export function RevelarTexto({ texto, as: Tag = "h1", className, atraso = 0.05, 
                 className="inline-block"
                 initial={{ y: "0.6em" }}
                 animate={{ y: 0 }}
-                transition={{ duration: 0.7, delay: tempo, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.7, delay: tempo, ease: EASE_SUAVE }}
               >
                 {sublinhar ? (
                   <SublinhadoManual atraso={Math.round((tempo + 0.6) * 1000)}>{palavra}</SublinhadoManual>

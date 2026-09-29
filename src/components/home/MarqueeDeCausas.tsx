@@ -1,9 +1,9 @@
 import { useReducedMotion } from "motion/react";
+import { TINTAS } from "@/components/common/CauseTag";
 import { Marquee } from "@/components/common/Marquee";
 import { CAUSAS, type Causa } from "@/lib/constants/causas";
 import { capaDaCausa } from "@/lib/capasPorCausa";
 
-const TINTAS = ["bg-tinta-azulpo", "bg-tinta-creme", "bg-tinta-salvia", "bg-tinta-pessego"] as const;
 
 /**
  * Faixa com as causas atendidas, cada uma com a miniatura da foto da causa.
