@@ -116,7 +116,10 @@ export function CascaDeAuth({
               alt={FOTOS.auth.alt}
               width={1280}
               height={Math.round(1280 / FOTOS.auth.proporcao)}
-              className="hidden aspect-[4/5] h-auto w-full object-cover lg:block xl:aspect-[5/6]"
+              // A proporção vem da foto: reserva a altura antes de o arquivo
+              // chegar, e a foto final (vertical) entra sem salto de layout.
+              style={{ aspectRatio: String(FOTOS.auth.proporcao) }}
+              className="hidden h-auto w-full object-cover lg:block lg:min-h-[30rem]"
             />
             <div className="rounded-xl border bg-tinta-creme/95 p-5 lg:absolute lg:inset-x-5 lg:bottom-5 lg:border-0 lg:shadow-alta lg:backdrop-blur-sm">
               <p className="rotulo-caps">O que {A_MARCA} garante</p>
