@@ -1,7 +1,9 @@
+import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { CalendarClock, Flame } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { CauseTag } from "@/components/common/CauseTag";
 import { ProgressBar } from "@/components/common/ProgressBar";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatPrazo } from "@/lib/format";
@@ -22,17 +24,24 @@ type NeedItemProps = {
   necessidade: Necessidade;
   /** Link do fluxo de doação. Omitido, o item fica só informativo. */
   linkDoar?: string;
+  /** Primeiro item de uma lista editorial: mais espaço e o número maior. */
+  destaque?: boolean;
+  /** Linha acima do nome, como o projeto a que o pedido pertence. */
+  contexto?: ReactNode;
+  className?: string;
 };
 
 /**
  * Uma necessidade na visão de quem doa.
  *
- * O número que recebe peso visual é **o que falta**, não o que já chegou:
- * "faltam 68 cobertores" é um pedido, "32 de 100" é um relatório. A barra
- * continua na linha de baixo como contexto. Ela é o recibo do que a ONG já
- * confirmou ter recebido, e daí vem a lentidão dela.
+ * O número que recebe peso é **o que falta**: "faltam 68 cobertores" é um
+ * pedido, "32 de 100" é um relatório. A barra fica embaixo como contexto e
+ * só sobe com o que a ONG confirmou ter recebido.
+ *
+ * O botão é marinho: a ação terracota da página é uma só e mora no painel
+ * ao lado, não em cada item da lista.
  */
-export function NeedItem({ necessidade, linkDoar }: NeedItemProps) {
+export function NeedItem({ necessidade, linkDoar, destaque = false, contexto, className }: NeedItemProps) {
   const prazo = formatPrazo(necessidade.prazo);
   const urgente = necessidade.urgencia >= 3;
   const falta = Math.max(0, necessidade.meta - necessidade.arrecadado);
@@ -45,29 +54,43 @@ export function NeedItem({ necessidade, linkDoar }: NeedItemProps) {
       : `${valor.toLocaleString("pt-BR")}${necessidade.unidade ? ` ${necessidade.unidade}` : ""}`;
 
   return (
-    <li className="rounded-xl border bg-card p-5 shadow-sutil">
+    <li
+      className={cn(
+        "flex flex-col rounded-xl border bg-card shadow-sutil",
+        destaque ? "p-6" : "p-5",
+        className,
+      )}
+    >
       <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
-        <h3 className="min-w-0 font-semibold">{necessidade.nome}</h3>
+        <div className="min-w-0">
+          {contexto && <p className="mb-1 text-xs text-muted-foreground">{contexto}</p>}
+          <h3
+            className={cn(
+              "font-display font-semibold leading-snug",
+              destaque ? "text-xl" : "text-lg",
+            )}
+          >
+            {necessidade.nome}
+          </h3>
+        </div>
 
         <div className="flex shrink-0 flex-wrap items-center gap-2">
           {urgente && !completa && (
-            <Badge variant="destructive" className="gap-1">
-              <Flame className="h-3 w-3" aria-hidden="true" />
+            <Badge variant="urgente">
+              <Flame aria-hidden="true" />
               Urgente
             </Badge>
           )}
-          {completa && (
-            <Badge className="bg-success text-success-foreground hover:bg-success">
-              Meta atingida
-            </Badge>
-          )}
+          {completa && <Badge variant="success">Meta atingida</Badge>}
         </div>
       </div>
 
+      {/* Um único nó de texto: é a frase que o teste e o leitor de tela leem inteira. */}
       <p
         className={cn(
-          "mt-1 font-display text-xl font-bold leading-tight tracking-[-0.02em] tabular-nums",
-          completa && "text-success",
+          "numero mt-2 font-display font-semibold leading-tight tracking-[-0.02em]",
+          destaque ? "text-2xl-fluido" : "text-xl",
+          completa ? "text-success" : "text-foreground",
         )}
       >
         {completa
@@ -76,11 +99,11 @@ export function NeedItem({ necessidade, linkDoar }: NeedItemProps) {
       </p>
 
       {(necessidade.categoria || prazo) && (
-        <div className="mt-1.5 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-          {necessidade.categoria && <span>{necessidade.categoria}</span>}
+        <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
+          {necessidade.categoria && <CauseTag causa={necessidade.categoria} />}
           {prazo && (
             <span className="inline-flex items-center gap-1">
-              <CalendarClock className="h-3 w-3" aria-hidden="true" />
+              <CalendarClock className="h-3.5 w-3.5" aria-hidden="true" />
               {prazo}
             </span>
           )}
@@ -96,9 +119,11 @@ export function NeedItem({ necessidade, linkDoar }: NeedItemProps) {
       />
 
       {linkDoar && !completa && (
-        <Button variant="cta" asChild className="pressionavel mt-4 w-full sm:w-auto">
-          <Link to={linkDoar}>{emReais ? "Doar por Pix" : "Doar este item"}</Link>
-        </Button>
+        <div className="mt-auto pt-4">
+          <Button asChild className="w-full sm:w-auto">
+            <Link to={linkDoar}>{emReais ? "Doar por Pix" : "Doar este item"}</Link>
+          </Button>
+        </div>
       )}
     </li>
   );
