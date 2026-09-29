@@ -19,7 +19,7 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { ErrorState } from "@/components/common/ErrorState";
 import { CTA, TERMOS } from "@/lib/copy";
 import { exportToCsv } from "@/lib/exportCsv";
-import { formatCurrency, formatDate, formatDateTime } from "@/lib/format";
+import { formatCurrency, formatDate, formatDateTime, formatQuantidade } from "@/lib/format";
 
 const num = (v: unknown) => Number(v ?? 0);
 
@@ -116,7 +116,7 @@ export default function OngAuditoria() {
 
   const descreveDoacao = (d: NonNullable<typeof data>[number]) =>
     d.necessidade && d.quantidade !== null
-      ? `${d.quantidade} ${d.necessidade.unidade ?? ""} de ${d.necessidade.nome}`.replace(/\s+/g, " ")
+      ? `${formatQuantidade(d.quantidade ?? 0, d.necessidade.unidade)} de ${d.necessidade.nome}`
       : formatCurrency(d.valor);
 
   // Os rótulos das colunas alimentam o cabeçalho do arquivo: não mudar.

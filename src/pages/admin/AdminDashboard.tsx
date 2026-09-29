@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TESE, TERMOS, VAZIO } from "@/lib/copy";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatQuantidade } from "@/lib/format";
 import {
   COLUNAS_DA_DOACAO, contarLinhas as contar, diasDesde, doacoesComRelacionados, nomeDoDoador,
 } from "./_shared-lib";
@@ -252,7 +252,7 @@ export default function AdminDashboard() {
                           {d.ong?.nome ?? VAZIO.semOng}
                           {" · "}
                           {d.necessidade
-                            ? `${d.quantidade ?? 0} ${d.necessidade.unidade ?? ""} de ${d.necessidade.nome}`
+                            ? `${formatQuantidade(d.quantidade ?? 0, d.necessidade.unidade)} de ${d.necessidade.nome}`
                             : formatCurrency(d.valor)}
                         </p>
                       </div>

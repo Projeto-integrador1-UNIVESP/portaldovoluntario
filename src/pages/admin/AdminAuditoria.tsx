@@ -18,7 +18,7 @@ import {
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
 import { CTA, TESE, VAZIO } from "@/lib/copy";
-import { formatCurrency, formatDateTime } from "@/lib/format";
+import { formatCurrency, formatDateTime, formatQuantidade } from "@/lib/format";
 import { Paginacao, TabelaAdmin, Vazio } from "./_shared";
 import {
   COLUNAS_DA_DOACAO, POR_PAGINA, baixarCsv, doacoesComRelacionados, mensagemDeErro,
@@ -292,7 +292,7 @@ export default function AdminAuditoria() {
 
             <TableCell className="text-muted-foreground">
               {d.necessidade
-                ? `${d.quantidade ?? 0} ${d.necessidade.unidade ?? ""} de ${d.necessidade.nome}`
+                ? `${formatQuantidade(d.quantidade ?? 0, d.necessidade.unidade)} de ${d.necessidade.nome}`
                 : rotuloDoTipo(d.tipo_doacao)}
             </TableCell>
 

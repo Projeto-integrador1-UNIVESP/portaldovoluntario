@@ -567,7 +567,7 @@ export default function OngNecessidades() {
         titulo={`Excluir a necessidade ${aExcluir?.nome ?? ""}?`}
         descricao="Ela some do site e do painel. Se a ideia é só parar de receber, oculte em vez de excluir."
         rotuloConfirmar={CTA.excluir("necessidade")}
-        onConfirmar={() => (aExcluir ? excluir.mutateAsync(aExcluir.id).catch(() => {}) : undefined)}
+        onConfirmar={() => (aExcluir ? excluir.mutateAsync(aExcluir.id) : undefined)}
         bloqueio={
           aExcluir && aExcluir.doacoes > 0
             ? {
@@ -577,7 +577,7 @@ export default function OngNecessidades() {
                 alternativa: aExcluir.status
                   ? {
                       rotulo: "Ocultar do site",
-                      onClick: () => ocultar.mutateAsync(aExcluir.id).catch(() => {}),
+                      onClick: () => ocultar.mutateAsync(aExcluir.id),
                     }
                   : undefined,
               }
