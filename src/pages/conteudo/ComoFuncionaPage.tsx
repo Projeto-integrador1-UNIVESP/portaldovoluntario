@@ -30,7 +30,7 @@ export default function ComoFuncionaPage() {
     >
       <ol className="not-prose m-0 list-none divide-y divide-border p-0">
         {momentos.map((momento, i) => (
-          <li key={momento.titulo} className="grid grid-cols-[auto_1fr] gap-x-6 py-8 first:pt-0 sm:gap-x-10">
+          <li key={momento.titulo} className="grid grid-cols-[3rem_1fr] gap-x-4 py-8 first:pt-0 sm:grid-cols-[4.5rem_1fr] sm:gap-x-6">
             <span
               className="numero font-display text-3xl font-semibold leading-none text-primary texto-display"
               aria-hidden="true"

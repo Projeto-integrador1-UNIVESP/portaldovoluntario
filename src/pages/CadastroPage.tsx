@@ -493,10 +493,10 @@ function FormularioOng({ aoTrocarTipo }: { aoTrocarTipo: () => void }) {
             />
           </fieldset>
 
-          <fieldset className="space-y-5 border-t pt-5">
-            <legend className="float-left w-full pt-5 font-display text-lg font-semibold">
-              Quem responde pela ONG
-            </legend>
+          <div className="border-t" role="presentation" />
+
+          <fieldset className="space-y-5">
+            <legend className="font-display text-lg font-semibold">Quem responde pela ONG</legend>
 
             <CamposDeIdentificacao
               form={form}

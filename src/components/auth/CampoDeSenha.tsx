@@ -20,7 +20,7 @@ export function BotaoMostrarSenha({
       onClick={aoAlternar}
       aria-pressed={visivel}
       aria-label="Mostrar senha"
-      className="alvo-confortavel absolute right-3 top-1/2 -translate-y-1/2 rounded-sm text-muted-foreground transition-colors hover:text-foreground"
+      className="absolute right-0 top-0 flex h-11 w-11 items-center justify-center rounded-controle text-muted-foreground transition-colors hover:text-foreground"
     >
       {visivel ? (
         <EyeOff className="h-4 w-4" aria-hidden="true" />
