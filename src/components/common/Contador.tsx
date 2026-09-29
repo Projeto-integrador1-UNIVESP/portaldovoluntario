@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { animate, useInView, useReducedMotion } from "motion/react";
+import { useInView, useReducedMotion } from "motion/react";
 import { cn } from "@/lib/utils";
+
+/** Chega rápido e assenta devagar: o mesmo "expo out" do resto da interface. */
+const easeSaidaExpo = (t: number) => (t >= 1 ? 1 : 1 - Math.pow(2, -10 * t));
 
 type ContadorProps = {
   valor: number;
@@ -36,12 +39,17 @@ export function Contador({
       return;
     }
     if (!emTela) return;
-    const controle = animate(0, valor, {
-      duration: duracao,
-      ease: [0.16, 1, 0.3, 1],
-      onUpdate: (v) => setExibido(v),
-    });
-    return () => controle.stop();
+    // Tween próprio com requestAnimationFrame: o `animate` do motion traria o
+    // motor de animação inteiro para o chunk inicial só para contar um número.
+    let quadro = 0;
+    const inicio = performance.now();
+    const passo = (agora: number) => {
+      const t = Math.min(1, (agora - inicio) / (duracao * 1000));
+      setExibido(valor * easeSaidaExpo(t));
+      if (t < 1) quadro = requestAnimationFrame(passo);
+    };
+    quadro = requestAnimationFrame(passo);
+    return () => cancelAnimationFrame(quadro);
   }, [emTela, valor, duracao, animarPermitido]);
 
   return (
