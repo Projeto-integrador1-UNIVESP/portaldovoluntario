@@ -36,3 +36,4 @@ dist-ssr
 
 # Artefatos de trabalho do agente: planos, scripts de validação, anotações.
 .claude/
+/RODE-ISTO-portal.sql

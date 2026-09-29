@@ -30,6 +30,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { diasRestantes } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 const POR_PAGINA = 12;
 
@@ -357,6 +358,35 @@ export default function ProjetosPage() {
           </div>
 
           {camposDeFiltro("desktop", "hidden max-w-3xl gap-3 md:grid md:grid-cols-3")}
+
+          {/*
+           * Atalho de causa em pílula, acima da grade.
+           * Os selects continuam existindo e são a via acessível completa; estes
+           * botões são o caminho de um toque, que é como as vitrines de campanha
+           * brasileiras resolvem a primeira decisão do visitante. Rolagem
+           * horizontal contida no celular, para não empurrar a página.
+           */}
+          {causas.length > 1 && (
+            <div
+              className="rolagem-contida -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
+              role="group"
+              aria-label="Filtrar por causa"
+            >
+              <ChipDeCausa
+                rotulo="Todas as causas"
+                ativo={!filtros.causa}
+                onClick={() => trocarFiltros({ causa: "" })}
+              />
+              {causas.map((causa) => (
+                <ChipDeCausa
+                  key={causa}
+                  rotulo={causa}
+                  ativo={filtros.causa === causa}
+                  onClick={() => trocarFiltros({ causa: filtros.causa === causa ? "" : causa })}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         <div ref={inicioDosResultados} className="mt-8 scroll-mt-4" aria-busy={isFetching}>
@@ -394,9 +424,15 @@ export default function ProjetosPage() {
           ) : (
             <>
               <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                <p role="status" className="text-sm text-muted-foreground tabular-nums">
-                  {total} {total === 1 ? "projeto encontrado" : "projetos encontrados"}
-                  {ultimaPagina > 0 && ` · página ${paginaAtual + 1} de ${ultimaPagina + 1}`}
+                <p role="status" className="text-sm text-muted-foreground">
+                  <span className="numero font-semibold text-foreground">{total}</span>{" "}
+                  {total === 1 ? "projeto aberto" : "projetos abertos"} de organizações
+                  cadastradas
+                  {ultimaPagina > 0 && (
+                    <span className="numero">
+                      {` · página ${paginaAtual + 1} de ${ultimaPagina + 1}`}
+                    </span>
+                  )}
                 </p>
                 {filtrosAtivos > 0 && (
                   <Button variant="link" className="h-auto p-0" onClick={limparFiltros}>
@@ -458,19 +494,52 @@ export default function ProjetosPage() {
 function CardEsqueleto() {
   return (
     <div className="overflow-hidden rounded-xl border bg-card shadow-sutil">
-      <Skeleton className="h-40 w-full rounded-none" />
+      <Skeleton className="h-44 w-full rounded-none" />
       <div className="p-5">
         <Skeleton className="h-3 w-24" />
-        <Skeleton className="mt-3 h-5 w-3/4" />
+        <Skeleton className="mt-2.5 h-5 w-3/4" />
+        <Skeleton className="mt-2.5 h-3 w-28" />
         <Skeleton className="mt-3 h-4 w-full" />
         <Skeleton className="mt-1.5 h-4 w-5/6" />
-        <div className="mt-4 flex gap-3">
-          <Skeleton className="h-4 w-20" />
-          <Skeleton className="h-4 w-24" />
-        </div>
-        <Skeleton className="mt-5 h-5 w-32" />
-        <Skeleton className="mt-2 h-2 w-full rounded-full" />
+        <Skeleton className="mt-5 h-6 w-40" />
+        <Skeleton className="mt-2 h-1.5 w-full rounded-full" />
+        <Skeleton className="mt-1.5 h-3 w-48" />
+        <Skeleton className="mt-4 h-10 w-full rounded-controle" />
       </div>
     </div>
+  );
+}
+
+/**
+ * Pílula de filtro por causa.
+ *
+ * `aria-pressed` em vez de papel de aba: não há painel por causa, é um botão de
+ * duas posições. Altura de 36px para caber o alvo de toque sem engordar a
+ * faixa, e `whitespace-nowrap` porque "População em situação de rua" quebraria
+ * em três linhas dentro da pílula.
+ */
+function ChipDeCausa({
+  rotulo,
+  ativo,
+  onClick,
+}: {
+  rotulo: string;
+  ativo: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={ativo}
+      className={cn(
+        "pressionavel h-9 shrink-0 whitespace-nowrap rounded-full border px-3.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        ativo
+          ? "border-primary bg-primary text-primary-foreground"
+          : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground",
+      )}
+    >
+      {rotulo}
+    </button>
   );
 }

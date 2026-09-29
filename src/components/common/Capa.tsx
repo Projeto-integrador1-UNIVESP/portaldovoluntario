@@ -20,6 +20,11 @@ import { capaDaCausa, SIZES_PADRAO } from "@/lib/capasPorCausa";
  * confirmação real. A letra carrega identidade. O matiz fica preso numa faixa
  * estreita ao redor do azul da marca, senão cada organização vira uma cor do
  * arco-íris e a identidade some.
+ *
+ * O degradê é escuro de propósito. A versão pálida anterior, numa grade com
+ * doze cards, lia como imagem que falhou ao carregar — o defeito exato que o
+ * substituto existe para evitar. Escuro, com o monograma em branco por cima,
+ * lê como capa de marca: escolha, não falha.
  */
 
 /** Hash estável e barato. Não precisa ser criptográfico, só determinístico. */
@@ -160,15 +165,9 @@ export function Capa({
         />
         <MarcaIlustrativa />
 
-        {letras && (
-          <span
-            className="absolute inset-0 flex items-center justify-center font-display text-4xl font-extrabold tracking-tight text-white/70 drop-shadow-sm"
-            aria-hidden="true"
-          >
-            {letras}
-          </span>
-        )}
-
+        {/* Nada de monograma aqui. A fotografia já carrega a identidade, e a
+            letra por cima competia com a etiqueta e com os selos sobrepostos.
+            O monograma é o recurso do substituto gerado, onde não há foto. */}
         {children}
       </div>
     );
@@ -184,8 +183,8 @@ export function Capa({
       >
         <defs>
           <linearGradient id={`capa-${s}`} gradientTransform={`rotate(${rotacao} 0.5 0.5)`}>
-            <stop offset="0%" stopColor={`hsl(${matiz} 42% 86%)`} />
-            <stop offset="100%" stopColor={`hsl(${matiz - 14} 34% 94%)`} />
+            <stop offset="0%" stopColor={`hsl(${matiz} 48% 40%)`} />
+            <stop offset="100%" stopColor={`hsl(${matiz - 16} 44% 62%)`} />
           </linearGradient>
         </defs>
         <rect width="120" height="80" fill={`url(#capa-${s})`} />
@@ -193,22 +192,21 @@ export function Capa({
           cx={18 + (s % 90)}
           cy={(s >> 3) % 80}
           r={20 + (s % 16)}
-          fill={`hsl(${matiz} 48% 78%)`}
-          opacity="0.5"
+          fill={`hsl(${matiz} 56% 70%)`}
+          opacity="0.30"
         />
         <circle
           cx={(s >> 5) % 120}
           cy={12 + ((s >> 7) % 60)}
           r={12 + (s % 10)}
-          fill={`hsl(${matiz + 16} 52% 74%)`}
-          opacity="0.35"
+          fill={`hsl(${matiz + 18} 60% 76%)`}
+          opacity="0.22"
         />
       </svg>
 
       {letras && (
         <span
-          className="absolute inset-0 flex items-center justify-center font-display text-4xl font-extrabold tracking-tight"
-          style={{ color: `hsl(${matiz} 45% 40% / 0.3)` }}
+          className="absolute inset-0 flex items-center justify-center font-display text-5xl font-extrabold tracking-tight text-white/85"
           aria-hidden="true"
         >
           {letras}

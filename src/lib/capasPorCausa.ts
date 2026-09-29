@@ -117,6 +117,17 @@ const RADICAIS: ReadonlyArray<readonly [string, ChaveDeCapa]> = [
   ["alfabetiza", "escolar"],
   ["brinqued", "brinquedos"],
   ["ludic", "brinquedos"],
+  // "Crianças e adolescentes" e "População em situação de rua" são causas que o
+  // cadastro usa e que caíam no padrão gerado. A foto de blocos serve à
+  // primeira e a de cobertores à segunda sem inventar nada: a etiqueta
+  // "Imagem ilustrativa" continua dizendo que a foto não é daquela ONG.
+  ["crianc", "brinquedos"],
+  ["adolescen", "brinquedos"],
+  ["infan", "brinquedos"],
+  ["situacao de rua", "inverno"],
+  ["morador de rua", "inverno"],
+  ["sem-teto", "inverno"],
+  ["sem teto", "inverno"],
   ["movei", "moveis"],
   ["mobili", "moveis"],
   ["utensili", "moveis"],
