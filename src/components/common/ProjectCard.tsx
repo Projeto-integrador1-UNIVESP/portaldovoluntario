@@ -178,7 +178,9 @@ export function ProjectCard({ projeto, variante = "padrao", className }: Project
                 tipo="item"
                 unidade="%"
                 destacarFalta
-                className="mt-2.5 [&>*:not([role=progressbar])]:hidden"
+                legenda={false}
+                rotulo={`${progresso}% dos pedidos já confirmados pela organização`}
+                className="mt-2.5"
               />
 
               {/* O confirmado continua escrito: é a tese do produto e não

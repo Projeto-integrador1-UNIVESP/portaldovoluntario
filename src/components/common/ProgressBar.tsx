@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { formatCurrency, progressoPercent } from "@/lib/format";
 
@@ -13,6 +14,13 @@ type ProgressBarProps = {
   destacarFalta?: boolean;
   /** Barra mais grossa, para hero e destaque. */
   tamanho?: "md" | "lg";
+  /**
+   * Linha de texto abaixo da barra. `false` esconde (quem chama escreve a
+   * própria legenda); um nó substitui a padrão.
+   */
+  legenda?: false | ReactNode;
+  /** Texto do leitor de tela. Use quando a barra mostra percentual, não quantidade. */
+  rotulo?: string;
   className?: string;
 };
 
@@ -34,6 +42,8 @@ export function ProgressBar({
   unidade,
   destacarFalta,
   tamanho = "md",
+  legenda,
+  rotulo,
   className,
 }: ProgressBarProps) {
   const confirmado = progressoPercent(arrecadado, meta);
@@ -63,7 +73,7 @@ export function ProgressBar({
         aria-valuenow={confirmado}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-label={descricao}
+        aria-label={rotulo ?? descricao}
       >
         <div
           className={cn(
@@ -85,6 +95,8 @@ export function ProgressBar({
         )}
       </div>
 
+      {legenda === false ? null : legenda !== undefined ? legenda : (
+      <>
       <div className="flex items-baseline justify-between gap-3 text-sm">
         {destacarFalta && !atingida ? (
           <span className="numero font-medium">Faltam {formatar(falta)}</span>
@@ -107,6 +119,8 @@ export function ProgressBar({
         <p className="text-xs text-muted-foreground">
           <span className="numero">{formatar(pendente)}</span> aguardando a ONG confirmar
         </p>
+      )}
+      </>
       )}
     </div>
   );
