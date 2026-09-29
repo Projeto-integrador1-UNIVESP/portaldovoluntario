@@ -42,7 +42,9 @@ export type ChaveDeCapa =
   | "moveis"
   | "medicamentos"
   | "outros"
-  | "generica";
+  | "generica"
+  | "animais"
+  | "idosos";
 
 export type CapaDeCausa = {
   /** Largura menor. Vira o `src` para quem ignorar o `srcSet`. */
@@ -63,6 +65,10 @@ const ARQUIVOS: Record<ChaveDeCapa, { p640: string; p1280: string }> = {
   medicamentos: { p640: medicamentos640, p1280: medicamentos1280 },
   outros: { p640: outros640, p1280: outros1280 },
   generica: { p640: generica640, p1280: generica1280 },
+  // TROCAR: animais-640.webp e animais-1280.webp quando a frente 1 entregar.
+  animais: { p640: generica640, p1280: generica1280 },
+  // TROCAR: idosos-640.webp e idosos-1280.webp quando a frente 1 entregar.
+  idosos: { p640: generica640, p1280: generica1280 },
 };
 
 /**
@@ -80,20 +86,24 @@ export const DESCRICOES: Record<ChaveDeCapa, string> = {
   medicamentos: "Estojo de primeiros socorros aberto, com medicamentos organizados",
   outros: "Caixotes de madeira cheios de itens doados",
   generica: "Sacolas de papel preparadas para distribuição",
+  // TROCAR: descrever as fotos novas quando a frente 1 entregar.
+  animais: "Sacolas de papel preparadas para distribuição",
+  idosos: "Sacolas de papel preparadas para distribuição",
 };
 
 /**
  * Sinônimos por radical, não por palavra inteira.
  *
- * `CATEGORIAS` (`schemas/necessidade.ts`) é a lista fechada do formulário de
- * necessidade, mas o que chega numa capa é `projetos.causa` / `ongs.causas`:
- * texto livre digitado no admin, com a dica "Ex.: alimentação, moradia,
- * educação". Casar só com a lista fechada jogaria quase tudo no fallback.
+ * Duas listas chegam aqui: `CATEGORIAS` (`schemas/necessidade.ts`), do
+ * formulário de necessidade, e `CAUSAS` (`constants/causas.ts`), do cadastro
+ * de projeto e de ONG. Antes delas `projetos.causa` era texto livre, e o banco
+ * ainda guarda variações ("alimentação", "doação de alimentos"). Casar só com
+ * as listas fechadas jogaria o legado no padrão gerado.
  *
  * Radical em vez de tabela de sinônimos porque uma entrada resolve a família
  * inteira: "aliment" pega "Alimentos", "alimentação", "doação de alimentos" e
- * "segurança alimentar" de uma vez. A ordem importa — o primeiro radical que
- * aparecer no texto vence.
+ * "segurança alimentar" de uma vez. A ordem importa: vence o primeiro radical
+ * desta lista que aparecer no texto.
  */
 const RADICAIS: ReadonlyArray<readonly [string, ChaveDeCapa]> = [
   ["aliment", "alimentos"],
@@ -137,6 +147,19 @@ const RADICAIS: ReadonlyArray<readonly [string, ChaveDeCapa]> = [
   ["remedi", "medicamentos"],
   ["farmac", "medicamentos"],
   ["saude", "medicamentos"],
+  ["animai", "animais"],
+  ["animal", "animais"],
+  ["idoso", "idosos"],
+  ["idosa", "idosos"],
+  ["terceira idade", "idosos"],
+  // "Cultura" fica com a foto de material escolar: no acervo é a que mais
+  // perto chega de leitura e oficina, e a etiqueta avisa que é ilustrativa.
+  ["cultur", "escolar"],
+  // Causas amplas, sem fotografia honesta no acervo: a genérica (sacolas
+  // fechadas) é neutra de propósito e serve melhor que inventar uma cena.
+  ["assistenc", "generica"],
+  ["ambient", "generica"],
+  ["sustentab", "generica"],
 ];
 
 /** Minúscula, sem acento, sem espaço sobrando. "Higiene e limpeza" → "higiene e limpeza". */
@@ -153,8 +176,8 @@ function normalizar(texto: string): string {
  * Resolve um texto de causa numa chave de foto.
  *
  * "Outros" é a categoria do formulário e tem foto própria, mas só quando o
- * texto é mesmo "outros" — uma causa desconhecida cai em `generica`, que é
- * neutra de propósito (sacolas fechadas, conteúdo indefinido).
+ * texto é mesmo "outros". Causa desconhecida devolve nulo, e a `Capa` cai no
+ * padrão gerado por identificador.
  */
 function resolverUma(texto: string): ChaveDeCapa | null {
   const t = normalizar(texto);
@@ -172,11 +195,10 @@ function resolverUma(texto: string): ChaveDeCapa | null {
  * Aceita array porque `ongs.causas` é `TEXT[]`: vence a primeira entrada que
  * resolver.
  *
- * Causa desconhecida devolve nulo, e não a foto genérica. A genérica ficou
- * reservada para a categoria "Outros", que é uma escolha explícita de quem
- * cadastrou. Quando várias organizações sem categoria aparecem lado a lado,
- * a mesma foto repetida lê como defeito; o padrão gerado por identificador dá
- * uma capa diferente para cada uma, que é o comportamento certo.
+ * Causa desconhecida devolve nulo, e não a foto genérica. Quando várias
+ * organizações sem categoria aparecem lado a lado, a mesma foto repetida lê
+ * como defeito; o padrão gerado por identificador dá uma capa diferente para
+ * cada uma. A genérica só entra por escolha explícita da lista de radicais.
  */
 export function capaDaCausa(causa?: string | string[] | null): CapaDeCausa | null {
   const candidatos = Array.isArray(causa) ? causa : [causa];

@@ -18,13 +18,13 @@ import { capaDaCausa, SIZES_PADRAO } from "@/lib/capasPorCausa";
  * O monograma importa: um padrão puramente abstrato parece gerado por
  * máquina, e isso é o pior recado possível num produto cuja tese é
  * confirmação real. A letra carrega identidade. O matiz fica preso numa faixa
- * estreita ao redor do azul da marca, senão cada organização vira uma cor do
- * arco-íris e a identidade some.
+ * estreita ao redor do marinho da marca (`hsl(214 …)`), senão cada
+ * organização vira uma cor do arco-íris e a identidade some.
  *
  * O degradê é escuro de propósito. A versão pálida anterior, numa grade com
- * doze cards, lia como imagem que falhou ao carregar — o defeito exato que o
- * substituto existe para evitar. Escuro, com o monograma em branco por cima,
- * lê como capa de marca: escolha, não falha.
+ * doze cards, lia como imagem que falhou ao carregar, o defeito exato que o
+ * substituto existe para evitar. Escuro, com o monograma em Fraunces cor de
+ * papel por cima, lê como capa de marca: escolha, não falha.
  */
 
 /** Hash estável e barato. Não precisa ser criptográfico, só determinístico. */
@@ -75,13 +75,14 @@ function MarcaIlustrativa() {
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "linear-gradient(to top, hsl(200 60% 10% / 0.62) 0%, hsl(200 60% 10% / 0.24) 38%, hsl(200 60% 10% / 0.10) 100%)",
+            "linear-gradient(to top, hsl(var(--foreground) / 0.62) 0%, hsl(var(--foreground) / 0.24) 38%, hsl(var(--foreground) / 0.1) 100%)",
         }}
         aria-hidden="true"
       />
-      <span className="pointer-events-none absolute bottom-1.5 right-1.5 rounded-md bg-black/40 px-1.5 py-0.5 text-[10px] font-medium leading-tight tracking-wide text-white/90 backdrop-blur-[2px]"
-        /* À direita porque o avatar da ONG fica sobreposto no canto
-           inferior esquerdo da capa e os dois se atropelavam. */>
+      {/* À direita porque o avatar da ONG fica sobreposto no canto inferior
+          esquerdo da capa e os dois se atropelavam. Tinta sobre a foto, não
+          preto: a etiqueta é da mesma família que o véu. */}
+      <span className="pointer-events-none absolute bottom-2 right-2 rounded bg-foreground/60 px-1.5 py-0.5 text-xs font-medium leading-none tracking-wide text-card backdrop-blur-[2px]">
         Imagem ilustrativa
       </span>
     </>
@@ -137,18 +138,16 @@ export function Capa({
   }
 
   const s = semente(id);
-  const matiz = 188 + (s % 34);
+  // Faixa de 20 graus em volta do marinho (214): varia por registro sem sair
+  // da família da marca.
+  const matiz = 204 + (s % 20);
   const rotacao = 20 + (s % 140);
   const letras = nome ? monograma(nome) : null;
 
-  // Causa preenchida, mesmo que fora da lista, ganha foto: a genérica existe
-  // justamente para "Assistência social" e afins, e uma foto morna serve
-  // melhor que um degradê. Sem causa nenhuma o padrão gerado é melhor, porque
-  // ao menos é derivado deste registro.
   // Só entra na foto quando a causa resolve numa categoria de verdade.
-  // Antes, causa desconhecida caía na foto genérica, e várias organizações
-  // sem categoria apareciam lado a lado com a mesma imagem, o que lê como
-  // defeito. O padrão gerado varia por registro e resolve melhor.
+  // Causa desconhecida cai no padrão gerado: várias organizações sem
+  // categoria lado a lado com a mesma foto leem como defeito, e o padrão
+  // varia por registro.
   const foto = capaDaCausa(causa);
 
   if (foto) {
@@ -183,8 +182,8 @@ export function Capa({
       >
         <defs>
           <linearGradient id={`capa-${s}`} gradientTransform={`rotate(${rotacao} 0.5 0.5)`}>
-            <stop offset="0%" stopColor={`hsl(${matiz} 48% 40%)`} />
-            <stop offset="100%" stopColor={`hsl(${matiz - 16} 44% 62%)`} />
+            <stop offset="0%" stopColor={`hsl(${matiz} 50% 22%)`} />
+            <stop offset="100%" stopColor={`hsl(${matiz - 8} 42% 40%)`} />
           </linearGradient>
         </defs>
         <rect width="120" height="80" fill={`url(#capa-${s})`} />
@@ -192,21 +191,21 @@ export function Capa({
           cx={18 + (s % 90)}
           cy={(s >> 3) % 80}
           r={20 + (s % 16)}
-          fill={`hsl(${matiz} 56% 70%)`}
-          opacity="0.30"
+          fill={`hsl(${matiz} 40% 62%)`}
+          opacity="0.26"
         />
         <circle
           cx={(s >> 5) % 120}
           cy={12 + ((s >> 7) % 60)}
           r={12 + (s % 10)}
-          fill={`hsl(${matiz + 18} 60% 76%)`}
-          opacity="0.22"
+          fill={`hsl(${matiz + 12} 45% 72%)`}
+          opacity="0.18"
         />
       </svg>
 
       {letras && (
         <span
-          className="absolute inset-0 flex items-center justify-center font-display text-5xl font-extrabold tracking-tight text-white/85"
+          className="texto-display absolute inset-0 flex items-center justify-center font-display text-2xl-fluido font-semibold tracking-tight text-primary-foreground/90"
           aria-hidden="true"
         >
           {letras}
