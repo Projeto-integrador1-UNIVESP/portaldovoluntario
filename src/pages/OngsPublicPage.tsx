@@ -1,30 +1,14 @@
-import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, BadgeCheck, Building2, MapPin, PackageCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PublicShell } from "@/components/layout/PublicShell";
 import { Footer } from "@/components/layout/Footer";
 import { Seo } from "@/components/common/Seo";
-import { Capa } from "@/components/common/Capa";
+import { CardOng, type OngCardData } from "@/components/common/CardOng";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ErrorState } from "@/components/common/ErrorState";
-import { OngAvatar } from "@/components/common/OngAvatar";
 import { Skeleton } from "@/components/ui/skeleton";
 
-type OngDaLista = {
-  id: string;
-  slug: string | null;
-  nome: string;
-  missao: string | null;
-  descricao: string | null;
-  cidade: string | null;
-  estado: string | null;
-  logo_url: string | null;
-  img_url: string | null;
-  capa_url: string | null;
-  img_capa: string | null;
-  verificada_em: string | null;
-  causas: string[] | null;
+type OngDaLista = OngCardData & {
   /** Necessidades ativas com meta ainda não atingida. */
   necessidadesAbertas: number;
 };
@@ -84,6 +68,8 @@ export default function OngsPublicPage() {
     staleTime: 5 * 60 * 1000,
   });
 
+  const verificadas = data?.filter((o) => o.verificada_em).length ?? 0;
+
   return (
     <PublicShell>
       <Seo
@@ -91,16 +77,19 @@ export default function OngsPublicPage() {
         description="Conheça as organizações da plataforma, veja do que cada uma precisa agora e doe direto para ela."
       />
 
-      <section className="container py-14" aria-labelledby="titulo-ongs">
-        <h1 id="titulo-ongs" className="font-display text-2xl font-bold tracking-[-0.02em]">
-          Organizações parceiras
-        </h1>
-        <p className="mt-2 max-w-2xl text-muted-foreground">
-          Cada perfil mostra CNPJ, tempo de atuação e o que a organização está pedindo
-          hoje. Sua doação vai direto para ela.
-        </p>
+      <section className="container py-14 md:py-20" aria-labelledby="titulo-ongs">
+        <header className="max-w-2xl">
+          <p className="rotulo-caps">Quem recebe a sua doação</p>
+          <h1 id="titulo-ongs" className="mt-2 font-display text-2xl-fluido font-bold">
+            ONGs parceiras
+          </h1>
+          <p className="mt-3 text-base text-muted-foreground md:text-lg">
+            Cada perfil mostra o CNPJ da organização e o que ela está pedindo hoje. A doação
+            vai direto para a conta dela.
+          </p>
+        </header>
 
-        <div className="mt-6">
+        <div className="mt-10">
           {isPending ? (
             <div
               className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
@@ -109,15 +98,7 @@ export default function OngsPublicPage() {
             >
               <span className="sr-only">Carregando as organizações…</span>
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="rounded-xl border bg-card shadow-sutil">
-                  <Skeleton className="h-28 w-full rounded-b-none rounded-t-xl" />
-                  <div className="p-5">
-                    <Skeleton className="h-5 w-3/4" />
-                    <Skeleton className="mt-2 h-4 w-1/3" />
-                    <Skeleton className="mt-4 h-4 w-full" />
-                    <Skeleton className="mt-2 h-4 w-5/6" />
-                  </div>
-                </div>
+                <CardEsqueleto key={i} />
               ))}
             </div>
           ) : isError ? (
@@ -126,19 +107,32 @@ export default function OngsPublicPage() {
               description="Pode ter sido a conexão. Tente de novo em alguns segundos."
               onRetry={() => refetch()}
             />
-          ) : data!.length === 0 ? (
+          ) : data.length === 0 ? (
             <EmptyState
-              icon={Building2}
               title="Nenhuma ONG cadastrada ainda"
               description="Assim que uma organização entrar na plataforma, ela aparece aqui."
               action={{ label: "Ver projetos abertos", to: "/projetos" }}
             />
           ) : (
-            <div className="ao-rolar-escalonado grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {data!.map((ong) => (
-                <CardOng key={ong.id} ong={ong} />
-              ))}
-            </div>
+            <>
+              <p className="rotulo-caps">
+                <span className="numero text-foreground">{data.length}</span>{" "}
+                {data.length === 1 ? "organização" : "organizações"}
+                {verificadas > 0 && (
+                  <>
+                    <span aria-hidden="true"> · </span>
+                    <span className="numero text-foreground">{verificadas}</span>{" "}
+                    {verificadas === 1 ? "verificada" : "verificadas"}
+                  </>
+                )}
+              </p>
+
+              <div className="ao-rolar-escalonado mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {data.map((ong) => (
+                  <CardOng key={ong.id} ong={ong} pedidosAbertos={ong.necessidadesAbertas} />
+                ))}
+              </div>
+            </>
           )}
         </div>
       </section>
@@ -148,72 +142,23 @@ export default function OngsPublicPage() {
   );
 }
 
-/**
- * O card inteiro é um link para o perfil. Não há botão de doar aqui de
- * propósito: link dentro de link é HTML inválido, e ver de quem se trata vem
- * antes de transferir dinheiro.
- */
-function CardOng({ ong }: { ong: OngDaLista }) {
-  const capa = ong.capa_url || ong.img_capa;
-
+/** Esqueleto com a forma do `CardOng`: capa 16:9, avatar sobreposto, nome, cidade, texto e rodapé. */
+function CardEsqueleto() {
   return (
-    <Link
-      to={`/ongs/${ong.slug ?? ong.id}`}
-      className="elevavel group flex h-full flex-col overflow-hidden rounded-xl border bg-card shadow-sutil focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-    >
-      {/* `alt=""`: o nome da organização aparece logo abaixo. */}
-      <Capa src={capa} alt="" id={ong.id} className="h-28 w-full"
-        causa={ong.causas} />
-
-      <div className="flex min-w-0 flex-1 flex-col p-5">
-        <div className="flex min-w-0 items-start gap-3">
-          <OngAvatar
-            nome={ong.nome}
-            logoUrl={ong.logo_url}
-            imgUrl={ong.img_url}
-            tamanho="sm"
-            className="-mt-9 ring-4 ring-card"
-          />
-          <div className="min-w-0 flex-1">
-            <h2 className="truncate font-display font-bold" title={ong.nome}>
-              {ong.nome}
-            </h2>
-            {ong.cidade && (
-              <p className="mt-0.5 inline-flex items-center gap-1 text-xs text-muted-foreground">
-                <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
-                {ong.cidade}{ong.estado ? `, ${ong.estado}` : ""}
-              </p>
-            )}
-          </div>
+    <div className="overflow-hidden rounded-xl border bg-card shadow-sutil" aria-hidden="true">
+      <Skeleton className="aspect-[16/9] w-full rounded-none" />
+      <div className="p-5 pt-0">
+        <Skeleton className="-mt-6 h-12 w-12 rounded-full ring-4 ring-card" />
+        <Skeleton className="mt-3 h-6 w-3/4" />
+        <Skeleton className="mt-2 h-4 w-1/2" />
+        <Skeleton className="mt-4 h-4 w-full" />
+        <Skeleton className="mt-1.5 h-4 w-5/6" />
+        <div className="mt-3 flex gap-1.5">
+          <Skeleton className="h-6 w-24 rounded-full" />
+          <Skeleton className="h-6 w-20 rounded-full" />
         </div>
-
-        <p className="mt-3 line-clamp-3 text-sm text-muted-foreground">
-          {ong.missao || ong.descricao || "Esta organização ainda não publicou sua missão."}
-        </p>
-
-        <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs">
-          {ong.verificada_em && (
-            <span className="inline-flex items-center gap-1 font-medium text-success">
-              <BadgeCheck className="h-3.5 w-3.5" aria-hidden="true" />
-              Verificada
-            </span>
-          )}
-          <span className="inline-flex items-center gap-1 text-muted-foreground">
-            <PackageCheck className="h-3.5 w-3.5" aria-hidden="true" />
-            {ong.necessidadesAbertas === 0
-              ? "Nenhum pedido aberto"
-              : `${ong.necessidadesAbertas} ${ong.necessidadesAbertas === 1 ? "pedido aberto" : "pedidos abertos"}`}
-          </span>
-        </div>
-
-        <span className="mt-auto inline-flex items-center gap-1 pt-4 text-sm font-medium text-primary">
-          Ver perfil e pedidos
-          <ArrowRight
-            className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
-            aria-hidden="true"
-          />
-        </span>
+        <Skeleton className="mt-5 h-5 w-full" />
       </div>
-    </Link>
+    </div>
   );
 }
