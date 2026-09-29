@@ -1,4 +1,5 @@
 import { z } from "zod";
+import "@/lib/zodPtBr";
 import { MENSAGENS } from "@/lib/copy";
 
 export const emailSchema = z

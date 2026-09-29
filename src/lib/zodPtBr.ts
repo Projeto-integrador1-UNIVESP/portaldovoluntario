@@ -6,7 +6,7 @@ import { z, type ZodErrorMap } from "zod";
  * esta é a rede para o que ninguém escreveu. Sem ela, um `z.number()` que
  * chega vazio mostra "Required" em inglês na tela.
  */
-export const mapaDeErrosPtBr: ZodErrorMap = (issue, ctx) => {
+const mapaDeErrosPtBr: ZodErrorMap = (issue, ctx) => {
   switch (issue.code) {
     case z.ZodIssueCode.invalid_type:
       if (issue.received === "undefined" || issue.received === "null" || issue.received === "nan") {
@@ -58,3 +58,8 @@ export const mapaDeErrosPtBr: ZodErrorMap = (issue, ctx) => {
 export function instalarMensagensPtBr() {
   z.setErrorMap(mapaDeErrosPtBr);
 }
+
+// Instala ao ser importado. Os schemas em `src/lib/schemas` importam este
+// módulo, então o mapa vale em toda tela com formulário, e o zod não entra no
+// chunk inicial de quem só olha a home.
+instalarMensagensPtBr();

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import "@/lib/zodPtBr";
 import { CAUSAS } from "@/lib/constants/causas";
 import { MENSAGENS } from "@/lib/copy";
 
