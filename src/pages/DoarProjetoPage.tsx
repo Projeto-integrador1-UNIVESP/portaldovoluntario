@@ -29,7 +29,7 @@ import { useProjeto, type ProjetoPublico } from "@/hooks/queries/useProjeto";
 import type { Necessidade } from "@/components/common/NeedItem";
 import { maskCurrency, parseCurrency } from "@/lib/format";
 import { mensagemAmigavel } from "@/lib/erros";
-import { A_MARCA, MENSAGENS } from "@/lib/copy";
+import { A_MARCA, MENSAGENS, CTA } from "@/lib/copy";
 import { cn } from "@/lib/utils";
 import {
   doacaoDinheiroSchema, doacaoItemSchemaPara, unidadeAceitaFracao, VALORES_SUGERIDOS,
@@ -791,7 +791,9 @@ function Rodape({
   desabilitado?: boolean;
 }) {
   return (
-    <m.div layout="position" transition={{ duration: 0.28, ease: SUAVE }}>
+    // Sem animação de layout: o transform dela vira referência para a barra
+    // fixa do celular, que pulava para o meio do formulário.
+    <div>
       <p className="text-sm text-muted-foreground">
         Sua doação entra na barra do projeto quando a ONG confirmar que recebeu. Você recebe um
         e-mail nessa hora.
@@ -805,10 +807,10 @@ function Rodape({
           disabled={enviando || desabilitado}
         >
           {enviando && <Loader2 className="animate-spin" aria-hidden="true" />}
-          {enviando ? "Registrando…" : rotulo}
+          {enviando ? CTA.registrando : rotulo}
         </Button>
       </div>
-    </m.div>
+    </div>
   );
 }
 
