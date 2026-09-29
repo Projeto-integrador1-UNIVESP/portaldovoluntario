@@ -74,7 +74,8 @@ describe("ProjetosPage", () => {
     expect(screen.getByText("ONG verificada")).toBeInTheDocument();
     expect(screen.getByText("Assistência social")).toBeInTheDocument();
     expect(screen.getByText("2 pedidos abertos")).toBeInTheDocument();
-    expect(screen.getByText(/40% já confirmado pela ONG, faltam 60%/)).toBeInTheDocument();
+    expect(screen.getByText("60%")).toBeInTheDocument();
+    expect(screen.getByText("40% já confirmado pela ONG")).toBeInTheDocument();
     expect(rpc).toHaveBeenCalledWith("buscar_projetos", expect.objectContaining({ _q: undefined }));
   });
 

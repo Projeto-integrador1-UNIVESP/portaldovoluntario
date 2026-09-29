@@ -30,7 +30,10 @@ describe("ProjectCard", () => {
     expect(screen.getByRole("link")).toHaveAttribute("href", "/projetos/campanha-do-agasalho");
     expect(screen.getByText("ONG verificada")).toBeInTheDocument();
     expect(screen.getByText("3 pedidos abertos")).toBeInTheDocument();
-    expect(screen.getByText(/25% já confirmado pela ONG, faltam 75%/)).toBeInTheDocument();
+    expect(screen.getByText("Ver o que falta")).toBeInTheDocument();
+    expect(screen.getByText("75%")).toBeInTheDocument();
+    expect(screen.getByText("ainda falta confirmar")).toBeInTheDocument();
+    expect(screen.getByText("25% já confirmado pela ONG")).toBeInTheDocument();
   });
 
   /**
