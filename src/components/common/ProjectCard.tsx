@@ -117,7 +117,7 @@ export function ProjectCard({ projeto }: { projeto: ProjetoCardData }) {
                 />
                 <p className="mt-1.5 text-xs text-muted-foreground tabular-nums">
                   {progresso}% já confirmado pela ONG
-                  {progresso < 100 && ` — faltam ${100 - progresso}%`}
+                  {progresso < 100 && `, faltam ${100 - progresso}%`}
                 </p>
               </>
             ))}

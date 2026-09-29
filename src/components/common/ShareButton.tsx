@@ -23,7 +23,7 @@ export function ShareButton({ titulo, url }: ShareButtonProps) {
     }
   };
 
-  const linkWhatsapp = `https://wa.me/?text=${encodeURIComponent(`${titulo} — ${endereco}`)}`;
+  const linkWhatsapp = `https://wa.me/?text=${encodeURIComponent(`${titulo}\n${endereco}`)}`;
 
   return (
     <div className="flex flex-wrap gap-2">

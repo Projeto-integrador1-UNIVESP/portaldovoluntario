@@ -39,7 +39,7 @@ type TabelaAdminProps = {
   aoTentarDeNovo: () => void;
   /** `true` quando a consulta terminou sem nenhuma linha. */
   vazia: boolean;
-  /** `EmptyState` da lista — sempre com ação. */
+  /** `EmptyState` da lista, sempre com ação. */
   vazio: ReactNode;
   children: ReactNode;
   rodape?: ReactNode;
@@ -120,7 +120,7 @@ function EsqueletoDeTabela({ colunas, linhas = 6 }: { colunas: ColunaAdmin[]; li
 /**
  * Exclusão com confirmação. Substitui o `confirm()` nativo, que não respeita o
  * tema, não é traduzível e em alguns navegadores pode ser suprimido pelo
- * usuário — apagando um registro sem perguntar nada.
+ * usuário, apagando um registro sem perguntar nada.
  */
 export function ExcluirLinha({
   titulo, descricao, rotuloConfirmar = "Excluir", rotuloAcessivel, aoConfirmar, desabilitado,
@@ -200,7 +200,7 @@ export function ConfirmarAcao({
 
 /**
  * Liga/desliga um registro. Antes era `Badge` clicável em Projetos e Eventos e
- * `Switch` em ONGs e Usuários — o mesmo gesto com duas aparências, e a versão
+ * `Switch` em ONGs e Usuários: o mesmo gesto com duas aparências, e a versão
  * em `Badge` não era alcançável pelo teclado como controle de estado.
  */
 export function AlternarStatus({
@@ -309,7 +309,7 @@ export function Campo({
   );
 }
 
-/** Selo de ONG verificada pela administração — o que o site público exibe. */
+/** Selo de ONG verificada pela administração, como o site público exibe. */
 export function SeloVerificada({ verificadaEm }: { verificadaEm: string | null }) {
   if (!verificadaEm) {
     return <span className="text-xs text-muted-foreground">Aguardando verificação</span>;

@@ -100,8 +100,8 @@ export default function AdminCodigos() {
       const { error } = await inserir(codigo);
       if (!error) return codigo;
 
-      // `code` é UNIQUE. Numa colisão — ou num código digitado à mão que já
-      // existe — gerar outro resolve sem mandar o administrador tentar de novo.
+      // `code` é UNIQUE. Numa colisão, ou num código digitado à mão que já
+      // existe, gerar outro resolve sem mandar o administrador tentar de novo.
       if (!ehCodigoDuplicado(error)) throw error;
 
       const alternativo = gerarCodigoDeAcesso();
@@ -187,7 +187,7 @@ export default function AdminCodigos() {
           return (
             <TableRow key={c.id}>
               <TableCell className="font-mono font-semibold">{c.code}</TableCell>
-              <TableCell>{c.nome_ong_sugerido || "—"}</TableCell>
+              <TableCell>{c.nome_ong_sugerido || "Não informado"}</TableCell>
               <TableCell>
                 <Badge variant={estado.variante}>{estado.rotulo}</Badge>
                 {c.used && c.used_at && (

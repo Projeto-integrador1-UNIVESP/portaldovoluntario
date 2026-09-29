@@ -6,9 +6,9 @@ import { formatDate } from "@/lib/format";
  * O selo que diferencia esta plataforma.
  *
  * Em quase toda vitrine de doação a barra de progresso é uma promessa: sobe
- * assim que alguém diz que doou. Aqui ela é um recibo — só sobe quando alguém
- * da ONG atesta ter recebido. Esse selo é onde essa diferença fica visível
- * para quem está decidindo se confia.
+ * assim que alguém diz que doou. Aqui ela é um recibo: só sobe quando alguém
+ * da ONG atesta ter recebido. Esse selo é onde a diferença fica visível para
+ * quem está decidindo se confia.
  */
 
 type SeloConfirmacaoProps = {

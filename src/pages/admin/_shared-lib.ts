@@ -23,7 +23,7 @@ export const contarLinhas = async (
 };
 
 /**
- * Recua para a última página existente quando a atual deixa de existir — o que
+ * Recua para a última página existente quando a atual deixa de existir, o que
  * acontece ao excluir o único registro da última página. Sem isso a tela ficaria
  * mostrando o estado vazio com uma paginação dizendo que há registros.
  */
@@ -69,7 +69,7 @@ export const mensagemDeErro = (erro: unknown, padrao: string) => {
   return padrao;
 };
 
-/** `true` quando o erro é violação de unicidade — o caso de colisão de código. */
+/** `true` quando o erro é violação de unicidade, o caso de colisão de código. */
 export const ehCodigoDuplicado = (erro: unknown) => {
   const texto = (erro instanceof Error ? erro.message : String(erro ?? "")).toLowerCase();
   return texto.includes("duplicate key") || texto.includes("already exists");
@@ -101,7 +101,7 @@ export function gerarCodigoDeAcesso() {
 /**
  * Converte a data do campo de validade no último instante daquele dia, no fuso
  * de quem está usando. `new Date("2026-10-02").toISOString()` daria meia-noite
- * UTC, que no Brasil é 21h do dia 1º — o código expirava um dia antes do que a
+ * UTC, que no Brasil é 21h do dia 1º: o código expirava um dia antes do que a
  * tela prometia.
  */
 export function fimDoDiaLocal(data: string) {
@@ -158,7 +158,7 @@ export type DoacaoDetalhada = {
 
 /**
  * Junta as doações com ONG, perfil e necessidade em três consultas por id, em
- * vez do embed do PostgREST — que devolve `null` silenciosamente quando a RLS
+ * vez do embed do PostgREST, que devolve `null` silenciosamente quando a RLS
  * não alcança a tabela relacionada.
  */
 export const doacoesComRelacionados = async (

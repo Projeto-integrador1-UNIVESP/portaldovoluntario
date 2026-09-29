@@ -96,7 +96,7 @@ export default function OngsPublicPage() {
         </h1>
         <p className="mt-2 max-w-2xl text-muted-foreground">
           Cada perfil mostra CNPJ, tempo de atuação e o que a organização está pedindo
-          hoje. A doação vai direto para ela.
+          hoje. Sua doação vai direto para ela.
         </p>
 
         <div className="mt-6">
@@ -122,7 +122,7 @@ export default function OngsPublicPage() {
           ) : isError ? (
             <ErrorState
               title="Não foi possível carregar as organizações"
-              description="Pode ter sido uma falha de conexão. Tente de novo em alguns segundos."
+              description="Pode ter sido a conexão. Tente de novo em alguns segundos."
               onRetry={() => refetch()}
             />
           ) : data!.length === 0 ? (
@@ -130,7 +130,7 @@ export default function OngsPublicPage() {
               icon={Building2}
               title="Nenhuma ONG cadastrada ainda"
               description="Assim que uma organização entrar na plataforma, ela aparece aqui."
-              action={{ label: "Ver projetos", to: "/projetos" }}
+              action={{ label: "Ver projetos abertos", to: "/projetos" }}
             />
           ) : (
             <div className="ao-rolar-escalonado grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -205,7 +205,7 @@ function CardOng({ ong }: { ong: OngDaLista }) {
         </div>
 
         <span className="mt-auto inline-flex items-center gap-1 pt-4 text-sm font-medium text-primary">
-          Ver perfil
+          Ver perfil e pedidos
           <ArrowRight
             className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
             aria-hidden="true"

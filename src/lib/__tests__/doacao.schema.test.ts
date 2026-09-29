@@ -8,7 +8,7 @@ const identificacao = {
 };
 
 describe("doacaoDinheiroSchema", () => {
-  it("aceita nome, e-mail e valor — sem exigir senha", () => {
+  it("aceita nome, e-mail e valor, sem exigir senha", () => {
     const r = doacaoDinheiroSchema.safeParse({ ...identificacao, valor: 50 });
     expect(r.success).toBe(true);
   });

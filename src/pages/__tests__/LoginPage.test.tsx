@@ -58,7 +58,7 @@ describe("LoginPage", () => {
     await renderizar("/login?redirect=/doar/abc");
 
     expect(await screen.findByText(/Por que precisamos que você entre/)).toBeInTheDocument();
-    expect(screen.getByText(/confirmar, no seu nome, que a doação chegou/)).toBeInTheDocument();
+    expect(screen.getByText(/confirma, no seu nome, que a doação chegou/)).toBeInTheDocument();
   });
 
   it("não mostra explicação de redirect quando a pessoa chegou por conta própria", async () => {

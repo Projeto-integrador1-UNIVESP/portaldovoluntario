@@ -78,7 +78,7 @@ async function comRelacionados(linhas: { id_usuario: string; id_projeto: string 
  *
  * A tela baixava a tabela toda e filtrava as três abas na memória do navegador.
  * Agora cada aba é uma consulta com `.range()`, e os números das abas vêm de
- * contagens no servidor — então eles continuam certos mesmo com a lista paginada.
+ * contagens no servidor, então continuam certos mesmo com a lista paginada.
  */
 export default function AdminVoluntarios() {
   const queryClient = useQueryClient();
@@ -249,7 +249,7 @@ export default function AdminVoluntarios() {
       const total = data?.total ?? (todas ?? []).length;
       toast.success(
         (todas ?? []).length < total
-          ? `${(todas ?? []).length} de ${total} inscrições exportadas — o arquivo traz as mais recentes.`
+          ? `${(todas ?? []).length} de ${total} inscrições exportadas. O arquivo traz as mais recentes.`
           : `${(todas ?? []).length} ${(todas ?? []).length === 1 ? "inscrição exportada" : "inscrições exportadas"}.`,
       );
     } catch (erro) {

@@ -31,7 +31,7 @@ export function PublicHeader() {
   return (
     <header className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-sm">
       <div className="container flex h-16 items-center justify-between gap-2">
-        <Link to="/" aria-label="Solidariedade, página inicial">
+        <Link to="/" aria-label="Voluntá, página inicial">
           <Logo />
         </Link>
 

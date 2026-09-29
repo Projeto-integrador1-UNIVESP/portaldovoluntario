@@ -41,7 +41,7 @@ const COLUNAS = [
  * Extrato de doações.
  *
  * A versão anterior baixava a tabela inteira e calculava, no navegador, "total
- * na plataforma", "total por ONG" e "top 10 doadores" — somando pendentes e
+ * na plataforma", "total por ONG" e "top 10 doadores", somando pendentes e
  * canceladas junto com as confirmadas. Isso dava um número maior do que o
  * arrecadado que o site mostra, e a tela virava duas verdades sobre o mesmo
  * dado.
@@ -162,7 +162,7 @@ export default function AdminAuditoria() {
       const total = data?.total ?? completas.length;
       toast.success(
         completas.length < total
-          ? `${completas.length.toLocaleString("pt-BR")} de ${total.toLocaleString("pt-BR")} lançamentos exportados — o arquivo traz os mais recentes.`
+          ? `${completas.length.toLocaleString("pt-BR")} de ${total.toLocaleString("pt-BR")} lançamentos exportados. O arquivo traz os mais recentes.`
           : `${completas.length.toLocaleString("pt-BR")} ${completas.length === 1 ? "lançamento exportado" : "lançamentos exportados"}.`,
       );
     } catch (erro) {
@@ -251,9 +251,9 @@ export default function AdminAuditoria() {
       )}
 
       <Callout tom="confianca" className="mb-4">
-        Os valores acima contam só o que a organização confirmou ter recebido — é
-        o mesmo número que sobe a barra de progresso no site. O extrato abaixo
-        lista todo lançamento, confirmado ou não.
+        Os valores acima contam só o que a organização confirmou ter recebido. É o
+        mesmo número que sobe a barra de progresso no site. O extrato abaixo lista
+        todo lançamento, confirmado ou não.
       </Callout>
 
       <TabelaAdmin
@@ -300,12 +300,12 @@ export default function AdminAuditoria() {
               )}
             </TableCell>
 
-            <TableCell className="text-muted-foreground">{d.ong?.nome ?? "—"}</TableCell>
+            <TableCell className="text-muted-foreground">{d.ong?.nome ?? "Sem ONG"}</TableCell>
 
             <TableCell className="text-muted-foreground">
               {d.necessidade
                 ? `${d.quantidade ?? 0} ${d.necessidade.unidade ?? ""} de ${d.necessidade.nome}`
-                : (d.tipo_doacao ?? "—")}
+                : (d.tipo_doacao ?? "Não informado")}
             </TableCell>
 
             <TableCell>

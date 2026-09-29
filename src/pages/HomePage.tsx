@@ -20,10 +20,10 @@ import { formatCurrency } from "@/lib/format";
 /**
  * Página inicial.
  *
- * A promessa que organiza a tela é a que diferencia a plataforma: aqui a barra
- * de progresso é um recibo, não uma promessa — ela só anda quando a ONG
- * confirma que recebeu. Por isso o destaque não é um texto institucional nem
- * um carrossel decorativo, e sim o que está faltando agora.
+ * A tela é organizada em volta do que diferencia a plataforma: a barra de
+ * progresso aqui é um recibo. Ela só anda quando a ONG confirma que recebeu.
+ * Por isso o destaque da home é o que está faltando agora, no lugar de texto
+ * institucional ou carrossel.
  */
 export default function HomePage() {
   const { data, isPending, isError, refetch } = useHome();
@@ -53,8 +53,8 @@ export default function HomePage() {
 
             <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground md:text-lg">
               Cobertores, alimento, horas de voluntariado ou um Pix. Você escolhe o
-              que falta de verdade e doa direto para a organização — sem taxa e sem
-              precisar criar conta.
+              que falta de verdade e doa direto para a organização. Sem taxa, sem
+              criar conta.
             </p>
 
             <div className="mt-8 flex flex-wrap justify-center gap-3">
@@ -94,7 +94,7 @@ export default function HomePage() {
           </div>
           <Button variant="ghost" asChild>
             <Link to="/projetos">
-              Ver todos <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" />
+              Ver todos os projetos <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" />
             </Link>
           </Button>
         </div>
@@ -116,7 +116,7 @@ export default function HomePage() {
               icon={PackageCheck}
               title="Nenhuma necessidade aberta no momento"
               description="Quando uma ONG publicar um pedido, ele aparece aqui primeiro."
-              action={{ label: "Ver ONGs parceiras", to: "/ongs" }}
+              action={{ label: "Ver as ONGs parceiras", to: "/ongs" }}
             />
           ) : (
             <div className="ao-rolar-escalonado grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -140,28 +140,28 @@ export default function HomePage() {
               tinta="bg-tinta-agua"
               icone={Search}
               titulo="A ONG diz o que falta"
-              texto="Não é um pedido genérico de doação: é “100 cobertores até 2 de outubro”, com quantidade e prazo."
+              texto="No lugar de “aceitamos doações”, o pedido vem com número e data: “100 cobertores até 2 de outubro”."
             />
             <Passo
               numero="2"
               tinta="bg-tinta-areia"
               icone={HandHeart}
               titulo="Você doa direto"
-              texto="Pix na conta da própria organização. A plataforma não retém nada e não cobra taxa de ninguém."
+              texto="O Pix cai na conta da própria organização. A plataforma não retém nada e não cobra taxa de ninguém."
             />
             <Passo
               numero="3"
               tinta="bg-tinta-musgo"
               icone={BadgeCheck}
               titulo="A ONG confirma o recebimento"
-              texto="Só então a barra de progresso sobe. É por isso que o número que você vê aqui corresponde ao que chegou."
+              texto="Só então a barra de progresso sobe. O número que você lê nesta página é o que já chegou lá."
             />
           </div>
 
           <Callout tom="confianca" className="mx-auto mt-8 max-w-2xl bg-card">
             Em outras plataformas a barra sobe assim que alguém diz que doou. Aqui ela
-            depende de alguém da organização atestar que o item chegou — por isso ela
-            demora mais para andar, e por isso ela significa alguma coisa.
+            espera alguém da organização atestar que o item chegou. Anda mais devagar
+            por isso, e é por isso que ela vale como informação.
           </Callout>
         </div>
       </section>
@@ -174,12 +174,12 @@ export default function HomePage() {
               Organizações parceiras
             </h2>
             <p className="mt-1 text-muted-foreground">
-              Com CNPJ, missão e histórico de confirmações abertos para consulta.
+              Cada perfil mostra CNPJ, missão e o histórico de confirmações.
             </p>
           </div>
           <Button variant="ghost" asChild>
             <Link to="/ongs">
-              Ver todas <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" />
+              Ver todas as ONGs <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" />
             </Link>
           </Button>
         </div>
@@ -195,7 +195,7 @@ export default function HomePage() {
             <EmptyState
               icon={Building2}
               title="Nenhuma ONG cadastrada ainda"
-              description="É uma organização? Você pode solicitar o cadastro."
+              description="Trabalha em uma organização? Você pode pedir o cadastro dela."
               action={{ label: "Cadastrar minha ONG", to: "/cadastro?tipo=ong" }}
             />
           ) : (
@@ -218,7 +218,7 @@ export default function HomePage() {
             <h2 className="font-display text-2xl font-bold">Tem tempo em vez de dinheiro?</h2>
             <p className="max-w-xl text-muted-foreground">
               Várias organizações precisam de gente para separar doações, acompanhar
-              atividades ou ajudar numa ação de fim de semana.
+              atividades ou dar plantão numa ação de fim de semana.
             </p>
             <Button size="lg" asChild className="pressionavel">
               <Link to="/projetos">Ver projetos que precisam de voluntários</Link>

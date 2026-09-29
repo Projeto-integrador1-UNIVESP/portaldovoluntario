@@ -40,7 +40,7 @@ describe("fimDoDiaLocal", () => {
 
   it("não expira antes do dia escolhido", () => {
     // O bug anterior: `new Date("2026-10-02").toISOString()` dá meia-noite UTC,
-    // que no Brasil é 21h do dia 1º — a chave morria um dia antes.
+    // que no Brasil é 21h do dia 1º, então a chave morria um dia antes.
     const fim = new Date(fimDoDiaLocal("2026-10-02"));
     const meioDiaDoMesmoDia = new Date(2026, 9, 2, 12, 0, 0);
     expect(fim.getTime()).toBeGreaterThan(meioDiaDoMesmoDia.getTime());

@@ -74,7 +74,7 @@ function ConteudoDaBarra({ nav, aoNavegar }: { nav: NavItem[]; aoNavegar?: () =>
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-2 border-b border-sidebar-border p-4">
         <LogoSimbolo className="h-6 w-6" monocromatico />
-        <span className="font-display text-lg font-extrabold tracking-[-0.02em]">Solidariedade</span>
+        <span className="font-display text-lg font-extrabold tracking-[-0.02em]">Voluntá</span>
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto p-3" aria-label="Seções do painel">

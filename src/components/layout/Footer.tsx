@@ -14,7 +14,7 @@ const colunas = [
   {
     titulo: "Para ONGs",
     links: [
-      { label: "Cadastre sua ONG", to: "/cadastro" },
+      { label: "Cadastrar minha ONG", to: "/cadastro" },
       { label: "Entrar", to: "/login" },
     ],
   },
@@ -35,7 +35,7 @@ export function Footer() {
           <div>
             <Logo />
             <p className="mt-3 text-sm text-muted-foreground">
-              Necessidades reais de ONGs verificadas, com doação direta e sem taxa.
+              Pedidos publicados por ONGs verificadas. Você doa direto para elas, sem taxa.
             </p>
           </div>
 
@@ -59,7 +59,7 @@ export function Footer() {
         </div>
 
         <div className="mt-10 border-t pt-6 text-sm text-muted-foreground">
-          © {new Date().getFullYear()} Solidariedade — Projeto Integrador Univesp.
+          © {new Date().getFullYear()} Voluntá. Projeto Integrador da Univesp.
         </div>
       </div>
     </footer>

@@ -77,7 +77,7 @@ export default function ObrigadoPage() {
           <EmptyState
             title="Não encontramos essa doação"
             description="O link pode estar incompleto."
-            action={{ label: "Ver projetos", to: "/projetos" }}
+            action={{ label: "Ver projetos abertos", to: "/projetos" }}
           />
         </div>
       </PublicShell>
@@ -136,8 +136,8 @@ export default function ObrigadoPage() {
 
         {!confirmada && !cancelada && (
           <Callout tom="info" titulo="Quanto tempo costuma levar" className="mt-4">
-            Quem confirma é a organização, no painel dela — em geral em alguns dias úteis. Se
-            passar de uma semana sem confirmação,{" "}
+            Quem confirma é a organização, no painel dela. Costuma sair em alguns dias úteis.
+            Se passar de uma semana sem confirmação,{" "}
             {linkOng ? (
               <Link to={linkOng} className="font-medium text-primary underline underline-offset-2">
                 fale com {doacao.ong?.nome}
@@ -155,7 +155,7 @@ export default function ObrigadoPage() {
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             {doacao.projeto && <Linha rotulo="Projeto" valor={doacao.projeto.nome_projeto} />}
-            <Linha rotulo="Recebedor" valor={doacao.ong?.nome ?? "—"} />
+            <Linha rotulo="Recebedor" valor={doacao.ong?.nome ?? "Não informado"} />
             <Linha
               rotulo={ehItem ? "Item" : "Valor"}
               valor={
@@ -175,7 +175,7 @@ export default function ObrigadoPage() {
           titulo={
             ehItem
               ? "A entrega é entre você e a organização"
-              : "Este valor não passou pela Solidariedade"
+              : "Este valor não passou pelo Voluntá"
           }
           className="mt-4"
         >
@@ -195,13 +195,13 @@ export default function ObrigadoPage() {
                 <div>
                   <p className="font-medium">Quer acompanhar esta doação?</p>
                   <p className="text-sm text-muted-foreground">
-                    Criar uma conta leva três campos e você vê o status de tudo que já doou.
+                    São três campos, e você passa a ver o status de tudo que já doou.
                   </p>
                 </div>
                 <Button asChild className="shrink-0">
                   <Link to="/cadastro?tipo=doador">
                     <UserPlus className="mr-2 h-4 w-4" aria-hidden="true" />
-                    Criar conta
+                    Criar conta e acompanhar
                   </Link>
                 </Button>
               </CardContent>
@@ -226,8 +226,8 @@ export default function ObrigadoPage() {
  * É o caso de quem doa sem criar conta: as policies de SELECT em `doacoes`
  * cobrem o dono da conta, a ONG destinatária e o admin. Até existir uma leitura
  * pública por id, o que dá para entregar é o código (que está no próprio link)
- * e a explicação da espera — melhor do que "não encontramos essa doação" para
- * quem acabou de transferir dinheiro.
+ * e a explicação da espera. Serve melhor do que "não encontramos essa doação"
+ * para quem acabou de transferir dinheiro.
  */
 function ComprovanteSemDetalhes({ id }: { id: string }) {
   return (
@@ -241,8 +241,8 @@ function ComprovanteSemDetalhes({ id }: { id: string }) {
             Obrigado pela doação!
           </h1>
           <p className="mt-2 text-muted-foreground">
-            Não conseguimos abrir os detalhes desta doação nesta tela — eles ficam visíveis para
-            a organização e para quem doa com conta. Guarde o código abaixo.
+            Os detalhes desta doação não abrem nesta tela. Eles ficam visíveis para a
+            organização e para quem doa com conta. Guarde o código abaixo.
           </p>
         </div>
 
@@ -266,7 +266,7 @@ function ComprovanteSemDetalhes({ id }: { id: string }) {
               <Button asChild className="shrink-0">
                 <Link to="/cadastro?tipo=doador">
                   <UserPlus className="mr-2 h-4 w-4" aria-hidden="true" />
-                  Criar conta
+                  Criar conta e acompanhar
                 </Link>
               </Button>
             </CardContent>

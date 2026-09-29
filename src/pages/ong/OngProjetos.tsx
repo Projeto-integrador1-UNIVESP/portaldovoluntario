@@ -72,7 +72,7 @@ const VAZIO: ProjetoInput = {
  *
  * O projeto sozinho não serve para o doador: quem abre o site procura o que
  * está faltando. Por isso criar um projeto leva direto ao cadastro da primeira
- * necessidade, e cada linha da lista tem o caminho para as necessidades dela —
+ * necessidade, e cada linha da lista tem o caminho para as necessidades dela:
  * antes as duas telas não se conheciam.
  */
 export default function OngProjetos() {
@@ -224,8 +224,8 @@ export default function OngProjetos() {
         <EmptyState
           icon={FolderOpen}
           title="Você ainda não tem projetos"
-          description="O projeto é o guarda-chuva das suas necessidades: é dentro dele que você diz o que está faltando e quanto falta."
-          action={{ label: "Criar o primeiro projeto", onClick: abrirNovo }}
+          description="O projeto é o guarda-chuva das suas necessidades: é dentro dele que você diz o que falta e quanto falta."
+          action={{ label: "Criar meu primeiro projeto", onClick: abrirNovo }}
         />
       ) : (
         <>
@@ -269,9 +269,9 @@ export default function OngProjetos() {
                         <span className="block break-words">{p.nome_projeto}</span>
                       </TableCell>
                       <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
-                        {p.data_inicio ? formatDate(p.data_inicio) : "—"}
+                        {p.data_inicio ? formatDate(p.data_inicio) : "Sem data"}
                         {" até "}
-                        {p.data_fim ? formatDate(p.data_fim) : "—"}
+                        {p.data_fim ? formatDate(p.data_fim) : "Sem data"}
                       </TableCell>
                       <TableCell>
                         <Switch
@@ -338,7 +338,7 @@ export default function OngProjetos() {
             <DialogDescription>
               {editando
                 ? "As mudanças aparecem na página pública do projeto."
-                : "Depois de criar, você diz o que está faltando — é isso que o doador vê primeiro."}
+                : "Depois de criar, você diz o que está faltando. É isso que o doador lê primeiro."}
             </DialogDescription>
           </DialogHeader>
 

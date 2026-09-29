@@ -120,7 +120,7 @@ export default function AdminProjetos() {
     mutationFn: async () => {
       if (!form.nome_projeto.trim()) throw new Error("Informe o nome do projeto.");
       if (!form.id_ong) throw new Error("Escolha a ONG responsável.");
-      if (!form.descricao.trim()) throw new Error("Escreva a descrição — é o que o doador lê.");
+      if (!form.descricao.trim()) throw new Error("Escreva a descrição. É o que o doador lê.");
       if (!form.data_inicio) throw new Error("Informe a data de início.");
       if (!form.data_fim) throw new Error("Informe a data de término.");
       if (isEndBeforeStart(form.data_inicio, form.data_fim)) {
@@ -276,18 +276,18 @@ export default function AdminProjetos() {
             <TableCell className="max-w-64">
               <div className="break-words font-medium">{p.nome_projeto}</div>
               <div className="text-xs text-muted-foreground">
-                {p.cidade || "Sem cidade — não aparece no filtro por cidade"}
+                {p.cidade || "Sem cidade, não aparece no filtro por cidade"}
               </div>
             </TableCell>
 
-            <TableCell className="text-muted-foreground">{p.ong ?? "—"}</TableCell>
+            <TableCell className="text-muted-foreground">{p.ong ?? "Sem ONG"}</TableCell>
 
             <TableCell className="text-muted-foreground">
-              {p.data_inicio ? formatDate(p.data_inicio) : "—"}
+              {p.data_inicio ? formatDate(p.data_inicio) : "Sem data"}
               {p.data_fim ? ` a ${formatDate(p.data_fim)}` : ""}
             </TableCell>
 
-            <TableCell className="text-muted-foreground">{p.causa || "—"}</TableCell>
+            <TableCell className="text-muted-foreground">{p.causa || "Sem causa"}</TableCell>
 
             <TableCell>
               <AlternarStatus
@@ -311,7 +311,7 @@ export default function AdminProjetos() {
                 <ExcluirLinha
                   rotuloAcessivel={`Excluir ${p.nome_projeto}`}
                   titulo="Excluir este projeto?"
-                  descricao="As necessidades publicadas nele são apagadas, e as doações feitas para essas necessidades perdem o vínculo com o item — elas continuam no histórico, mas sem dizer a que se referiam. Para tirar do ar sem perder nada, desative."
+                  descricao="As necessidades publicadas nele são apagadas, e as doações feitas para elas perdem o vínculo com o item: continuam no histórico, mas sem dizer a que se referiam. Para tirar do ar sem perder nada, desative."
                   aoConfirmar={() => excluir.mutate(p.id)}
                 />
               </div>

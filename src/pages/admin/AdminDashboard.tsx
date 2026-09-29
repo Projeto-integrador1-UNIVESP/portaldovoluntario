@@ -25,8 +25,8 @@ const DIAS_ATE_DOACAO_TRAVAR = 7;
  * A tela antiga eram sete contadores no mesmo peso visual, incluindo um card
  * "Voluntários: Ver" que não mostrava número nenhum. Contagem não é o que o
  * administrador precisa ver primeiro: o que precisa dele são as ONGs esperando
- * verificação de CNPJ e as doações que a ONG não confirmou há dias — porque
- * enquanto ninguém confirma, o progresso público do projeto não anda.
+ * verificação de CNPJ e as doações que a ONG não confirmou há dias. Enquanto
+ * ninguém confirma, o progresso público do projeto não anda.
  *
  * As contagens usam `head: true`: o servidor devolve só o total, sem trafegar
  * linha. O total em dinheiro vem da RPC que já soma no banco, em vez de baixar
@@ -76,7 +76,7 @@ export default function AdminDashboard() {
         supabase.rpc("get_public_home_stats"),
       ]);
 
-      // Sem isto, uma RPC que falha mostraria "R$ 0,00" — e zero arrecadado é
+      // Sem isto, uma RPC que falha mostraria "R$ 0,00". E zero arrecadado é
       // uma afirmação, não um erro de carregamento.
       if (stats.error) throw new Error(stats.error.message);
 
@@ -169,7 +169,7 @@ export default function AdminDashboard() {
                   ? "Uma doação está sem confirmação"
                   : `${data.doacoesTravadas} doações estão sem confirmação`}{" "}
                 há mais de {DIAS_ATE_DOACAO_TRAVAR} dias. A barra de um projeto só sobe
-                quando a ONG confirma que recebeu — até lá, quem doou não vê o próprio
+                quando a ONG confirma que recebeu. Até lá, quem doou não vê o próprio
                 efeito. Vale cobrar a organização.
                 <div className="mt-3">
                   <Button size="sm" variant="outline" asChild>

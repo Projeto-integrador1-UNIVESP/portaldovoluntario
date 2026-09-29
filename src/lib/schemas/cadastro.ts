@@ -16,8 +16,8 @@ const aceiteSchema = z.literal(true, {
 /**
  * Cadastro de doador: três campos obrigatórios.
  *
- * Antes eram nove, incluindo data de nascimento, CEP e logradouro — dados sem
- * finalidade no momento do cadastro, o que contraria a minimização da LGPD.
+ * Antes eram nove, incluindo data de nascimento, CEP e logradouro. São dados
+ * sem finalidade no momento do cadastro, o que contraria a minimização da LGPD.
  * Telefone e endereço passam a ser pedidos só quando forem necessários, por
  * exemplo ao agendar a coleta de uma doação de itens.
  */
@@ -30,7 +30,7 @@ export const cadastroDoadorSchema = z.object({
 
 const telefoneSchema = z
   .string()
-  .refine((v) => [10, 11].includes(onlyDigits(v).length), "Informe o telefone com DDD (8 ou 9 dígitos)");
+  .refine((v) => [10, 11].includes(onlyDigits(v).length), "Informe o telefone com DDD");
 
 const cepSchema = z
   .string()

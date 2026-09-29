@@ -29,8 +29,8 @@ type NeedItemProps = {
  *
  * O número que recebe peso visual é **o que falta**, não o que já chegou:
  * "faltam 68 cobertores" é um pedido, "32 de 100" é um relatório. A barra
- * continua na linha de baixo como contexto — ela é o recibo do que a ONG já
- * confirmou ter recebido, e é isso que explica por que ela anda devagar.
+ * continua na linha de baixo como contexto. Ela é o recibo do que a ONG já
+ * confirmou ter recebido, e daí vem a lentidão dela.
  */
 export function NeedItem({ necessidade, linkDoar }: NeedItemProps) {
   const prazo = formatPrazo(necessidade.prazo);
@@ -97,7 +97,7 @@ export function NeedItem({ necessidade, linkDoar }: NeedItemProps) {
 
       {linkDoar && !completa && (
         <Button variant="cta" asChild className="pressionavel mt-4 w-full sm:w-auto">
-          <Link to={linkDoar}>{emReais ? "Contribuir" : "Quero doar"}</Link>
+          <Link to={linkDoar}>{emReais ? "Doar por Pix" : "Doar este item"}</Link>
         </Button>
       )}
     </li>

@@ -21,7 +21,7 @@ const num = (v: unknown) => Number(v ?? 0);
  *
  * O primeiro número da tela é o que depende dela: quantas doações estão
  * esperando a confirmação de recebimento. É essa confirmação que faz a barra
- * pública do projeto andar — enquanto ela não acontece, quem doou não vê nada
+ * pública do projeto andar. Enquanto ela não acontece, quem doou não vê nada
  * mudar. Os totais arrecadados vêm depois, porque só contam o que foi confirmado.
  */
 export default function OngDashboard() {
@@ -76,7 +76,7 @@ export default function OngDashboard() {
       <Seo title="Painel da ONG" noIndex />
       <PageHeader
         title="Painel da ONG"
-        description="O que depende de você e o que já foi confirmado."
+        description="O que está esperando você e o que já foi confirmado."
         icon={<LayoutDashboard className="h-6 w-6" aria-hidden="true" />}
       />
 
@@ -158,7 +158,7 @@ export default function OngDashboard() {
               <EmptyState
                 icon={FolderOpen}
                 title="Você ainda não tem projetos"
-                description="O projeto é onde você diz o que está faltando. Sem ele, ninguém consegue doar um item específico."
+                description="O projeto é onde você diz o que está faltando. Sem ele, ninguém consegue doar um item certo."
                 action={{ label: "Criar meu primeiro projeto", to: "/ong/projetos" }}
               />
             </div>
@@ -167,7 +167,7 @@ export default function OngDashboard() {
               <EmptyState
                 icon={Package}
                 title="Nenhuma necessidade publicada"
-                description="Seus projetos estão cadastrados, mas sem dizer do que precisam — e é a necessidade que o doador vê primeiro."
+                description="Seus projetos estão cadastrados, mas nenhum diz do que precisa. É a necessidade que o doador lê primeiro."
                 action={{ label: "Dizer o que está faltando", to: "/ong/necessidades" }}
               />
             </div>

@@ -185,7 +185,7 @@ export default function DoarProjetoPage() {
         >
           {ehItem ? (
             <>
-              A Solidariedade não recebe nem guarda os itens: você entrega para{" "}
+              O Voluntá não recebe nem guarda os itens: você entrega para{" "}
               <strong className="font-medium text-foreground">{projeto.ong?.nome}</strong>, sem
               taxa nenhuma. Aqui você só registra a doação para a ONG poder confirmar o
               recebimento.
@@ -194,16 +194,16 @@ export default function DoarProjetoPage() {
             <>
               {temPix ? "O Pix sai da sua conta direto para " : "A transferência vai direto para "}
               <strong className="font-medium text-foreground">{nomeRecebedor}</strong>. A
-              Solidariedade não processa o pagamento, não retém valor nenhum e não cobra taxa —
-              nem de você, nem da organização. Antes de confirmar, confira se o nome do recebedor
-              no app do seu banco é esse.
+              Voluntá não processa o pagamento, não retém valor nenhum e não cobra taxa
+              de ninguém: nem de você, nem da organização. Antes de confirmar, confira se o nome
+              do recebedor no app do seu banco é esse.
             </>
           )}
         </Callout>
 
         <Stepper passos={passos} atual={passoAtual} className="mt-6" />
 
-        {/* Passo 1 — o que doar */}
+        {/* Passo 1: o que doar */}
         <Card className="mt-4">
           <CardHeader>
             <CardTitle className="text-lg">O que você quer doar?</CardTitle>
@@ -317,7 +317,7 @@ export default function DoarProjetoPage() {
                                   <span className="mt-1 block text-sm text-muted-foreground">
                                     {projeto.ong.endereco_entrega}
                                     {projeto.ong.horarios_recebimento
-                                      ? ` — ${projeto.ong.horarios_recebimento}`
+                                      ? `. Recebe ${projeto.ong.horarios_recebimento}`
                                       : ""}
                                   </span>
                                 )}
@@ -328,7 +328,7 @@ export default function DoarProjetoPage() {
                               <Label htmlFor="entrega-coleta" className="flex-1 cursor-pointer font-normal">
                                 <span className="font-medium">Quero combinar uma coleta</span>
                                 <span className="mt-1 block text-sm text-muted-foreground">
-                                  A ONG entra em contato pelo e-mail que você informar.
+                                  A ONG escreve para o e-mail que você informar e combina dia e hora.
                                 </span>
                               </Label>
                             </div>
@@ -345,7 +345,7 @@ export default function DoarProjetoPage() {
 
               <AvisoDeConfirmacao />
 
-              <BarraDeAcao rotulo="Registrar minha doação" enviando={enviando} />
+              <BarraDeAcao rotulo="Registrar e avisar a ONG" enviando={enviando} />
             </form>
           </Form>
         ) : (
@@ -418,8 +418,8 @@ export default function DoarProjetoPage() {
                   <CardHeader>
                     <CardTitle className="text-lg">Pague com Pix</CardTitle>
                     <CardDescription>
-                      Faça a transferência no app do seu banco e depois registre a doação
-                      aqui, para a ONG conseguir confirmar o recebimento.
+                      Faça a transferência no app do seu banco. Depois registre aqui, para a
+                      ONG conseguir confirmar que o valor chegou.
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -504,9 +504,9 @@ function SeloDaOng({ ong }: { ong: OngDoProjeto }) {
 function AvisoDeConfirmacao() {
   return (
     <Callout tom="info" titulo="A barra do projeto não sobe na hora" className="mt-4">
-      Depois de registrar, sua doação fica aguardando a organização confirmar que recebeu — é
-      isso que mantém os números daqui honestos. Você recebe um e-mail quando a confirmação
-      sair.
+      Depois de registrar, sua doação fica esperando a organização confirmar que recebeu. É
+      essa checagem que mantém os números daqui honestos. Você recebe um e-mail assim que a
+      confirmação sair.
     </Callout>
   );
 }
@@ -553,7 +553,7 @@ function CamposDeIdentificacao({ form }: { form: UseFormReturn<IdentificacaoDoad
       <CardHeader>
         <CardTitle className="text-lg">Quem está doando</CardTitle>
         <CardDescription>
-          Não é preciso criar senha. Usamos o e-mail para avisar quando a ONG confirmar.
+          Não precisa criar senha. O e-mail serve para te avisar quando a ONG confirmar.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -594,8 +594,8 @@ function CamposDeIdentificacao({ form }: { form: UseFormReturn<IdentificacaoDoad
               <div className="space-y-1 leading-none">
                 <FormLabel className="font-normal">Quero doar anonimamente</FormLabel>
                 <FormDescription>
-                  Seu nome não aparece em nenhuma exibição pública. A ONG ainda vê os dados
-                  para poder confirmar o recebimento.
+                  Seu nome não aparece em nenhuma tela pública. A ONG continua vendo os dados,
+                  porque é ela que confirma o recebimento.
                 </FormDescription>
               </div>
             </FormItem>

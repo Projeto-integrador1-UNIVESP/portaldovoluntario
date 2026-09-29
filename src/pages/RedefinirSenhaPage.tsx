@@ -28,7 +28,7 @@ export default function RedefinirSenhaPage() {
 
   useEffect(() => {
     // O link do e-mail abre a página já com uma sessão de recuperação. Sem ela
-    // não há o que redefinir — normalmente o link expirou ou já foi usado.
+    // não há o que redefinir: normalmente o link expirou ou já foi usado.
     supabase.auth.getSession().then(({ data }) => {
       setTemSessaoDeRecuperacao(Boolean(data.session));
     });
@@ -40,7 +40,7 @@ export default function RedefinirSenhaPage() {
       toast.error("Não foi possível alterar a senha. Peça um novo link e tente de novo.");
       return;
     }
-    toast.success("Senha alterada. Você já pode entrar.");
+    toast.success("Senha alterada. Entre com ela agora.");
     navigate("/login", { replace: true });
   };
 
@@ -52,17 +52,17 @@ export default function RedefinirSenhaPage() {
           <CardHeader>
             <h1 className="font-display text-2xl font-bold">Criar nova senha</h1>
             <CardDescription>
-              Escolha uma senha que você não use em outros sites.
+              Use uma senha que você não repita em outros sites.
             </CardDescription>
           </CardHeader>
           <CardContent>
             {temSessaoDeRecuperacao === false ? (
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground">
-                  Este link expirou ou já foi usado. Peça um novo para continuar.
+                  Este link expirou ou já foi usado. Peça outro para seguir.
                 </p>
                 <Button asChild size="lg" className="pressionavel w-full">
-                  <Link to="/esqueci-senha">Pedir um novo link</Link>
+                  <Link to="/esqueci-senha">Pedir um link novo</Link>
                 </Button>
               </div>
             ) : (

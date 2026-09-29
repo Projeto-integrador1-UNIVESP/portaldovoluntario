@@ -29,7 +29,7 @@ const renderizar = async (rota: string) => {
   );
 };
 
-describe("CadastroPage — doador", () => {
+describe("CadastroPage: doador", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     signUp.mockResolvedValue({ data: {}, error: null });
@@ -91,7 +91,7 @@ describe("CadastroPage — doador", () => {
   });
 });
 
-describe("CadastroPage — ONG", () => {
+describe("CadastroPage: ONG", () => {
   it("mantém os campos de endereço, exigidos pela Edge Function ong-signup", async () => {
     await renderizar("/cadastro?tipo=ong");
 

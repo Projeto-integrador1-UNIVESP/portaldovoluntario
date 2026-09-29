@@ -28,15 +28,15 @@ import { useProjeto } from "@/hooks/queries/useProjeto";
 import { formatDate, formatPrazo } from "@/lib/format";
 
 /**
- * Página do projeto — a tela que converte.
+ * Página do projeto: a tela que converte.
  *
  * A ordem da página é a ordem das perguntas de quem está decidindo: o que
  * falta, por que eu confio nesse número, e só depois quem é o projeto. O
  * argumento de confiança fica encostado na lista de necessidades, junto dos
  * botões de doar: prova de confiança longe da ação não converte.
  *
- * O voluntariado continua aqui, mas com peso visual de alternativa — sem card,
- * sem sombra, sem laranja.
+ * O voluntariado continua aqui, com peso visual de alternativa: sem card, sem
+ * sombra, sem laranja.
  */
 export default function ProjetoPage() {
   const { slug } = useParams();
@@ -52,7 +52,7 @@ export default function ProjetoPage() {
    * `doacoes` só liberam a leitura para quem administra a ONG e para o admin,
    * então para o visitante anônimo a contagem volta zerada e o componente se
    * esconde sozinho (ele já exige uma amostra mínima). Para o dado aparecer ao
-   * público falta uma RPC pública agregada — fora do escopo desta tela.
+   * público falta uma RPC pública agregada, fora do escopo desta tela.
    */
   const { data: taxa } = useTaxaConfirmacao(idOng);
 
@@ -75,7 +75,7 @@ export default function ProjetoPage() {
       toast.error("Não foi possível registrar sua inscrição. Tente novamente.");
       return;
     }
-    toast.success("Inscrição enviada! A ONG vai avaliar e responder.");
+    toast.success("Inscrição enviada. A ONG recebeu seu contato e vai responder.");
   };
 
   if (isPending) {
@@ -93,7 +93,7 @@ export default function ProjetoPage() {
         <div className="container max-w-4xl py-16">
           <ErrorState
             title="Não foi possível carregar este projeto"
-            description="Pode ter sido uma falha de conexão. Tente de novo em alguns segundos."
+            description="Pode ter sido a conexão. Tente de novo em alguns segundos."
             onRetry={() => refetch()}
           />
         </div>
@@ -165,8 +165,8 @@ export default function ProjetoPage() {
         ) : (
           /*
            * Projeto sem foto não vira retângulo cinza: o espaço passa a carregar
-           * a tese do produto. Mais baixo que a foto de propósito — um
-           * substituto não deve empurrar a necessidade para fora da primeira
+           * a tese do produto. É mais baixo que a foto de propósito: um
+           * substituto não pode empurrar a necessidade para fora da primeira
            * tela.
            */
           <div className="mb-6 flex h-36 flex-col items-center justify-center gap-3 rounded-xl border bg-gradient-to-br from-secondary via-card to-secondary/60 px-6 text-center md:h-44">
@@ -243,8 +243,8 @@ export default function ProjetoPage() {
               <EmptyState
                 icon={Package}
                 title="A ONG ainda não publicou necessidades"
-                description="Você pode contribuir com uma doação em dinheiro, que a organização aplica onde faltar."
-                action={{ label: "Doar para o projeto", to: linkDoar }}
+                description="Dá para ajudar com dinheiro. A organização aplica onde estiver faltando."
+                action={{ label: "Doar em dinheiro por Pix", to: linkDoar }}
               />
             </div>
           ) : (
@@ -265,11 +265,11 @@ export default function ProjetoPage() {
             titulo="Essas barras só andam quando a ONG confirma que recebeu"
             className="mt-6"
           >
-            Você doa direto para a organização — o Pix cai na conta dela. A plataforma
+            Você doa direto para a organização: o Pix cai na conta dela. A plataforma
             não recebe nem retém o seu dinheiro, e não cobra taxa de ninguém. O
             progresso desta página sobe só depois que alguém da ONG registra o
-            recebimento. É por isso que ele demora mais — e por isso ele significa
-            alguma coisa.
+            recebimento. Leva mais tempo, e é essa demora que torna o número
+            confiável.
           </Callout>
 
           {taxa && (
@@ -280,8 +280,8 @@ export default function ProjetoPage() {
 
           {/*
            * O laranja da tela fica com o botão de cada necessidade. O caminho
-           * genérico existe para quem não quer escolher item, em peso menor —
-           * exceto quando não há necessidade nenhuma, e aí ele é a única ação.
+           * genérico existe em peso menor, para quem não quer escolher item.
+           * Quando não há necessidade nenhuma, ele passa a ser a única ação.
            */}
           <div className="mt-6 hidden md:block">
             <Button
@@ -290,7 +290,7 @@ export default function ProjetoPage() {
               asChild
               className="pressionavel"
             >
-              <Link to={linkDoar}>Doar em dinheiro para o projeto</Link>
+              <Link to={linkDoar}>Doar em dinheiro por Pix</Link>
             </Button>
           </div>
         </section>
@@ -306,7 +306,7 @@ export default function ProjetoPage() {
           </section>
         )}
 
-        {/* Alternativa para quem tem tempo em vez de dinheiro — sem competir com a doação. */}
+        {/* Alternativa para quem tem tempo em vez de dinheiro, sem competir com a doação. */}
         <section className="mt-10 border-t pt-8" aria-labelledby="titulo-voluntariado">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="min-w-0">
@@ -318,7 +318,7 @@ export default function ProjetoPage() {
                 Tem tempo em vez de dinheiro?
               </h2>
               <p className="mt-1 max-w-prose text-sm text-muted-foreground">
-                Inscreva-se como voluntário: a organização recebe seu contato e responde.
+                Deixe seu contato com a organização. Ela responde dizendo como você pode ajudar.
               </p>
             </div>
             <Button
@@ -327,7 +327,7 @@ export default function ProjetoPage() {
               onClick={participar}
               disabled={inscrevendo}
             >
-              {inscrevendo ? "Enviando…" : "Quero ser voluntário"}
+              {inscrevendo ? "Enviando seu contato…" : "Quero ser voluntário"}
             </Button>
           </div>
         </section>
@@ -336,7 +336,7 @@ export default function ProjetoPage() {
       {/* No celular a ação principal fica alcançável sem rolar. */}
       <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-card/95 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur md:hidden">
         <Button size="lg" variant="cta" asChild className="pressionavel w-full shadow-cta">
-          <Link to={linkDoar}>Doar para este projeto</Link>
+          <Link to={linkDoar}>Doar para este projeto por Pix</Link>
         </Button>
       </div>
 

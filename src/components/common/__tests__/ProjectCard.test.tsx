@@ -30,12 +30,12 @@ describe("ProjectCard", () => {
     expect(screen.getByRole("link")).toHaveAttribute("href", "/projetos/campanha-do-agasalho");
     expect(screen.getByText("ONG verificada")).toBeInTheDocument();
     expect(screen.getByText("3 pedidos abertos")).toBeInTheDocument();
-    expect(screen.getByText(/25% já confirmado pela ONG — faltam 75%/)).toBeInTheDocument();
+    expect(screen.getByText(/25% já confirmado pela ONG, faltam 75%/)).toBeInTheDocument();
   });
 
   /**
    * A página da ONG monta o card com um `as ProjetoCardData` e sem os campos
-   * novos, e uma asserção de tipo não acusa isso — este teste é a única prova
+   * novos, e uma asserção de tipo não acusa isso. Este teste é a única prova
    * de que a tela dela continua funcionando.
    */
   it("degrada sem ONG, sem causa e sem progresso (o caso da página da ONG)", () => {

@@ -19,9 +19,9 @@ type ProgressBarProps = {
  *
  * A faixa sólida é o que a ONG confirmou ter recebido; a faixa listrada é o
  * que foi declarado e ainda aguarda confirmação. Uma barra única somando os
- * dois seria mais bonita e seria mentira por omissão — e é exatamente a
- * mentira que as outras plataformas contam ao subir a barra no instante em
- * que alguém diz que doou.
+ * dois seria mais bonita, e seria mentira por omissão: é a mentira que as
+ * outras plataformas contam ao subir a barra no instante em que alguém diz
+ * que doou.
  */
 export function ProgressBar({
   arrecadado,
