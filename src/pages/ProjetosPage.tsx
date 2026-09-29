@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { FolderOpen, Search, SlidersHorizontal } from "lucide-react";
+import { ArrowUpDown, Search, SlidersHorizontal } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PublicShell } from "@/components/layout/PublicShell";
 import { Footer } from "@/components/layout/Footer";
@@ -29,6 +29,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { capaDaCausa } from "@/lib/capasPorCausa";
 import { diasRestantes } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -178,6 +179,13 @@ export default function ProjetosPage() {
 
   const filtrosAtivos = [filtros.termo, filtros.cidade, filtros.causa].filter(Boolean).length;
 
+  /**
+   * Ritmo editorial: na primeira página, sem filtro, o primeiro projeto vira
+   * um card largo. Com filtro ou em outra página a lista é resultado de
+   * busca, e uma grade regular lê melhor.
+   */
+  const comDestaque = paginaAtual === 0 && filtrosAtivos === 0;
+
   const trocarFiltros = (parcial: Partial<Filtros>) => {
     setPagina(0);
     setFiltros((atual) => ({ ...atual, ...parcial }));
@@ -199,80 +207,98 @@ export default function ProjetosPage() {
   const causas = opcoes.data?.causas ?? [];
 
   // Um select que só tem "todas" não filtra nada: fica desabilitado até a
-  // primeira ONG preencher a cidade ou a causa do projeto.
-  const camposDeFiltro = (idPrefixo: string, className: string) => (
-    <div className={className}>
-      <div>
-        <Label htmlFor={`${idPrefixo}-cidade`}>Cidade</Label>
-        <Select
-          value={filtros.cidade || TODAS}
-          onValueChange={(v) => trocarFiltros({ cidade: v === TODAS ? "" : v })}
-        >
-          <SelectTrigger
-            id={`${idPrefixo}-cidade`}
-            className="mt-1.5"
-            disabled={cidades.length === 0}
-          >
-            <SelectValue placeholder="Todas as cidades" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={TODAS}>Todas as cidades</SelectItem>
-            {cidades.map((cidade) => (
-              <SelectItem key={cidade} value={cidade}>
-                {cidade}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+  // primeira ONG preencher a cidade ou a causa do projeto. Na barra de
+  // desktop os rótulos ficam só para o leitor de tela: o valor exibido
+  // ("Todas as cidades") já diz o que o campo é.
+  const camposDeFiltro = (idPrefixo: string, className: string, rotulosVisiveis: boolean) => {
+    const rotulo = cn(!rotulosVisiveis && "sr-only");
+    const gatilho = cn(rotulosVisiveis ? "mt-1.5" : "h-12");
 
-      <div>
-        <Label htmlFor={`${idPrefixo}-causa`}>Causa</Label>
-        <Select
-          value={filtros.causa || TODAS}
-          onValueChange={(v) => trocarFiltros({ causa: v === TODAS ? "" : v })}
-        >
-          <SelectTrigger
-            id={`${idPrefixo}-causa`}
-            className="mt-1.5"
-            disabled={causas.length === 0}
+    return (
+      <div className={className}>
+        <div>
+          <Label htmlFor={`${idPrefixo}-cidade`} className={rotulo}>
+            Cidade
+          </Label>
+          <Select
+            value={filtros.cidade || TODAS}
+            onValueChange={(v) => trocarFiltros({ cidade: v === TODAS ? "" : v })}
           >
-            <SelectValue placeholder="Todas as causas" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={TODAS}>Todas as causas</SelectItem>
-            {causas.map((causa) => (
-              <SelectItem key={causa} value={causa}>
-                {causa}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+            <SelectTrigger
+              id={`${idPrefixo}-cidade`}
+              className={gatilho}
+              disabled={cidades.length === 0}
+            >
+              <SelectValue placeholder="Todas as cidades" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={TODAS}>Todas as cidades</SelectItem>
+              {cidades.map((cidade) => (
+                <SelectItem key={cidade} value={cidade}>
+                  {cidade}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-      <div>
-        <Label htmlFor={`${idPrefixo}-ordem`}>Ordenar por</Label>
-        <Select
-          value={ordem}
-          onValueChange={(v) => {
-            setPagina(0);
-            setOrdem(v as Ordem);
-          }}
-        >
-          <SelectTrigger id={`${idPrefixo}-ordem`} className="mt-1.5">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {Object.entries(ORDENACOES).map(([valor, rotulo]) => (
-              <SelectItem key={valor} value={valor}>
-                {rotulo}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div>
+          <Label htmlFor={`${idPrefixo}-causa`} className={rotulo}>
+            Causa
+          </Label>
+          <Select
+            value={filtros.causa || TODAS}
+            onValueChange={(v) => trocarFiltros({ causa: v === TODAS ? "" : v })}
+          >
+            <SelectTrigger
+              id={`${idPrefixo}-causa`}
+              className={gatilho}
+              disabled={causas.length === 0}
+            >
+              <SelectValue placeholder="Todas as causas" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={TODAS}>Todas as causas</SelectItem>
+              {causas.map((causa) => (
+                <SelectItem key={causa} value={causa}>
+                  {causa}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label htmlFor={`${idPrefixo}-ordem`} className={rotulo}>
+            Ordenar por
+          </Label>
+          <Select
+            value={ordem}
+            onValueChange={(v) => {
+              setPagina(0);
+              setOrdem(v as Ordem);
+            }}
+          >
+            <SelectTrigger id={`${idPrefixo}-ordem`} className={gatilho}>
+              <span className="flex min-w-0 items-center gap-2">
+                {!rotulosVisiveis && (
+                  <ArrowUpDown className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                )}
+                <SelectValue />
+              </span>
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(ORDENACOES).map(([valor, rotulo]) => (
+                <SelectItem key={valor} value={valor}>
+                  {rotulo}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <PublicShell>
@@ -281,94 +307,108 @@ export default function ProjetosPage() {
         description="Veja os projetos das ONGs parceiras, o que cada uma pediu e quanto já foi confirmado como recebido."
       />
 
-      <div className="container py-14">
-        {/* O texto do H1 é contrato do e2e (`e2e/navegacao-publica.spec.ts`), que
-            casa o nome acessível exato em nível 1 depois de clicar no menu. */}
-        <h1 className="font-display text-2xl font-bold">Projetos</h1>
-        <p className="mt-2 max-w-2xl text-muted-foreground">
-          Cada projeto mostra o que a organização pediu e quanto ela já confirmou ter
-          recebido. Filtre por cidade e causa para achar o que está perto de você.
-        </p>
+      <div className="container py-14 md:py-20">
+        <header className="max-w-2xl">
+          <p className="rotulo-caps">Pedidos abertos das ONGs parceiras</p>
+          {/* O texto do H1 é contrato do e2e (`e2e/navegacao-publica.spec.ts`), que
+              casa o nome acessível exato em nível 1 depois de clicar no menu. */}
+          <h1 className="mt-2 font-display text-2xl-fluido font-bold">Projetos</h1>
+          <p className="mt-3 text-base text-muted-foreground md:text-lg">
+            Cada projeto lista o que a ONG pediu e quanto ela já confirmou ter recebido.
+            Filtre por cidade ou causa para achar o que está perto de você.
+          </p>
+        </header>
 
-        <div className="mt-6 flex flex-col gap-3">
-          <div className="flex gap-2">
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                trocarFiltros({ termo: busca });
-              }}
-              className="flex flex-1 gap-2 md:max-w-md"
-              noValidate
-            >
-              <Label htmlFor="busca-projetos" className="sr-only">
-                Buscar projetos
-              </Label>
-              <Input
-                id="busca-projetos"
-                name="busca"
-                type="search"
-                autoComplete="off"
-                placeholder="Projeto, ONG ou cidade"
-                value={busca}
-                onChange={(e) => setBusca(e.target.value)}
-              />
-              <Button type="submit" className="pressionavel shrink-0">
-                <Search className="h-4 w-4 md:mr-2" aria-hidden="true" />
-                <span className="sr-only md:not-sr-only">Buscar</span>
-              </Button>
-            </form>
-
-            <Sheet open={filtrosAbertos} onOpenChange={setFiltrosAbertos}>
-              <SheetTrigger asChild>
-                <Button variant="outline" className="pressionavel shrink-0 md:hidden">
-                  <SlidersHorizontal className="mr-2 h-4 w-4" aria-hidden="true" />
-                  Filtros
-                  {filtrosAtivos > 0 && (
-                    <Badge className="ml-2 tabular-nums">{filtrosAtivos}</Badge>
-                  )}
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-[88vw] max-w-sm overflow-y-auto">
-                <SheetHeader className="text-left">
-                  <SheetTitle className="font-display text-xl">Filtros</SheetTitle>
-                  <SheetDescription>
-                    A lista atualiza enquanto você escolhe.
-                  </SheetDescription>
-                </SheetHeader>
-
-                {camposDeFiltro("celular", "mt-6 grid gap-4")}
-
-                <div className="mt-8 flex flex-col gap-2">
-                  <SheetClose asChild>
-                    <Button className="pressionavel w-full">
-                      Ver {total} {total === 1 ? "projeto" : "projetos"}
-                    </Button>
-                  </SheetClose>
-                  <Button
-                    variant="ghost"
-                    className="w-full"
-                    onClick={limparFiltros}
-                    disabled={filtrosAtivos === 0}
-                  >
-                    Limpar filtros
-                  </Button>
+        {/* Busca, filtros e atalhos de causa numa barra de papel só. */}
+        <div className="mt-8 rounded-xl border bg-card p-3 shadow-sutil md:mt-10 md:p-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+            <div className="flex min-w-0 flex-1 gap-2">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  trocarFiltros({ termo: busca });
+                }}
+                className="flex min-w-0 flex-1 gap-2"
+                noValidate
+              >
+                <Label htmlFor="busca-projetos" className="sr-only">
+                  Buscar projetos
+                </Label>
+                <div className="relative min-w-0 flex-1">
+                  <Search
+                    className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                    aria-hidden="true"
+                  />
+                  <Input
+                    id="busca-projetos"
+                    name="busca"
+                    type="search"
+                    autoComplete="off"
+                    placeholder="Projeto, ONG ou cidade"
+                    className="h-12 pl-10 md:text-base"
+                    value={busca}
+                    onChange={(e) => setBusca(e.target.value)}
+                  />
                 </div>
-              </SheetContent>
-            </Sheet>
+                <Button type="submit" size="lg" className="shrink-0 px-4 md:px-6">
+                  <Search className="md:hidden" aria-hidden="true" />
+                  <span className="sr-only md:not-sr-only">Buscar</span>
+                </Button>
+              </form>
+
+              <Sheet open={filtrosAbertos} onOpenChange={setFiltrosAbertos}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="lg" className="shrink-0 px-4 md:hidden">
+                    <SlidersHorizontal aria-hidden="true" />
+                    Filtros
+                    {filtrosAtivos > 0 && (
+                      <Badge className="numero ml-1 px-2">{filtrosAtivos}</Badge>
+                    )}
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[88vw] max-w-sm overflow-y-auto">
+                  <SheetHeader className="text-left">
+                    <SheetTitle className="font-display text-xl">Filtros</SheetTitle>
+                    <SheetDescription>A lista atualiza enquanto você escolhe.</SheetDescription>
+                  </SheetHeader>
+
+                  {camposDeFiltro("celular", "mt-6 grid gap-4", true)}
+
+                  <div className="mt-8 flex flex-col gap-2">
+                    <SheetClose asChild>
+                      <Button className="w-full">
+                        Ver {total} {total === 1 ? "projeto" : "projetos"}
+                      </Button>
+                    </SheetClose>
+                    <Button
+                      variant="ghost"
+                      className="w-full"
+                      onClick={limparFiltros}
+                      disabled={filtrosAtivos === 0}
+                    >
+                      Limpar filtros
+                    </Button>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+
+            {camposDeFiltro(
+              "desktop",
+              "hidden gap-2 md:grid md:grid-cols-3 lg:w-[34rem] lg:shrink-0",
+              false,
+            )}
           </div>
 
-          {camposDeFiltro("desktop", "hidden max-w-3xl gap-3 md:grid md:grid-cols-3")}
-
           {/*
-           * Atalho de causa em pílula, acima da grade.
-           * Os selects continuam existindo e são a via acessível completa; estes
-           * botões são o caminho de um toque, que é como as vitrines de campanha
-           * brasileiras resolvem a primeira decisão do visitante. Rolagem
-           * horizontal contida no celular, para não empurrar a página.
+           * Atalho de causa em chip, com a miniatura da foto da categoria.
+           * Os selects continuam existindo e são a via acessível completa;
+           * estes botões são o caminho de um toque. Rolagem horizontal contida
+           * no celular, para não empurrar a página.
            */}
           {causas.length > 1 && (
             <div
-              className="rolagem-contida -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
+              className="rolagem-contida -mx-3 mt-3 flex gap-2 overflow-x-auto px-3 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 md:mt-4"
               role="group"
               aria-label="Filtrar por causa"
             >
@@ -381,6 +421,7 @@ export default function ProjetosPage() {
                 <ChipDeCausa
                   key={causa}
                   rotulo={causa}
+                  miniatura={capaDaCausa(causa)?.src}
                   ativo={filtros.causa === causa}
                   onClick={() => trocarFiltros({ causa: filtros.causa === causa ? "" : causa })}
                 />
@@ -389,11 +430,11 @@ export default function ProjetosPage() {
           )}
         </div>
 
-        <div ref={inicioDosResultados} className="mt-8 scroll-mt-4" aria-busy={isFetching}>
+        <div ref={inicioDosResultados} className="mt-10 scroll-mt-4" aria-busy={isFetching}>
           {isPending ? (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: 6 }).map((_, i) => (
-                <CardEsqueleto key={i} />
+                <CardEsqueleto key={i} largo={comDestaque && i === 0} />
               ))}
             </div>
           ) : isError ? (
@@ -404,7 +445,7 @@ export default function ProjetosPage() {
             />
           ) : total === 0 ? (
             <EmptyState
-              icon={FolderOpen}
+              ilustracao={filtrosAtivos > 0 ? "vazio" : "caixa"}
               title={
                 filtrosAtivos > 0
                   ? "Nenhum projeto com esses filtros"
@@ -424,10 +465,9 @@ export default function ProjetosPage() {
           ) : (
             <>
               <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                <p role="status" className="text-sm text-muted-foreground">
-                  <span className="numero font-semibold text-foreground">{total}</span>{" "}
-                  {total === 1 ? "projeto aberto" : "projetos abertos"} de organizações
-                  cadastradas
+                <p role="status" className="rotulo-caps">
+                  <span className="numero text-foreground">{total}</span>{" "}
+                  {total === 1 ? "projeto aberto" : "projetos abertos"}
                   {ultimaPagina > 0 && (
                     <span className="numero">
                       {` · página ${paginaAtual + 1} de ${ultimaPagina + 1}`}
@@ -449,30 +489,36 @@ export default function ProjetosPage() {
               )}
 
               <div className="ao-rolar-escalonado mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {visiveis.map((projeto) => (
-                  <ProjectCard key={projeto.id} projeto={paraCard(projeto)} />
-                ))}
+                {visiveis.map((projeto, i) => {
+                  const largo = comDestaque && i === 0;
+                  return (
+                    <ProjectCard
+                      key={projeto.id}
+                      projeto={paraCard(projeto)}
+                      variante={largo ? "largo" : "padrao"}
+                      className={largo ? "sm:col-span-2" : undefined}
+                    />
+                  );
+                })}
               </div>
 
               {ultimaPagina > 0 && (
                 <nav
-                  className="mt-10 flex items-center justify-center gap-4"
+                  className="mt-12 flex items-center justify-center gap-4"
                   aria-label="Paginação dos projetos"
                 >
                   <Button
                     variant="outline"
-                    className="pressionavel"
                     onClick={() => irParaPagina(Math.max(0, paginaAtual - 1))}
                     disabled={paginaAtual === 0}
                   >
                     Anterior
                   </Button>
-                  <span className="text-sm text-muted-foreground tabular-nums">
+                  <span className="numero text-sm text-muted-foreground">
                     {paginaAtual + 1} de {ultimaPagina + 1}
                   </span>
                   <Button
                     variant="outline"
-                    className="pressionavel"
                     onClick={() => irParaPagina(Math.min(ultimaPagina, paginaAtual + 1))}
                     disabled={paginaAtual >= ultimaPagina}
                   >
@@ -490,40 +536,53 @@ export default function ProjetosPage() {
   );
 }
 
-/** Esqueleto com a mesma forma do card: capa, ONG, título, resumo, dados e barra. */
-function CardEsqueleto() {
+/** Esqueleto com a mesma forma do card: capa 4:3, ONG, título, resumo, número, barra e ação. */
+function CardEsqueleto({ largo = false }: { largo?: boolean }) {
   return (
-    <div className="overflow-hidden rounded-xl border bg-card shadow-sutil">
-      <Skeleton className="h-44 w-full rounded-none" />
-      <div className="p-5">
-        <Skeleton className="h-3 w-24" />
-        <Skeleton className="mt-2.5 h-5 w-3/4" />
-        <Skeleton className="mt-2.5 h-3 w-28" />
+    <div
+      className={cn(
+        "overflow-hidden rounded-xl border bg-card shadow-sutil",
+        largo && "sm:col-span-2 md:grid md:grid-cols-2",
+      )}
+      aria-hidden="true"
+    >
+      <Skeleton
+        className={cn(
+          "w-full rounded-none",
+          largo ? "aspect-[4/3] md:aspect-auto md:h-full md:min-h-[20rem]" : "aspect-[4/3]",
+        )}
+      />
+      <div className={largo ? "p-6 md:p-8" : "p-5"}>
+        <Skeleton className="h-4 w-28" />
+        <Skeleton className="mt-2.5 h-6 w-3/4" />
+        <Skeleton className="mt-2.5 h-4 w-24" />
         <Skeleton className="mt-3 h-4 w-full" />
         <Skeleton className="mt-1.5 h-4 w-5/6" />
-        <Skeleton className="mt-5 h-6 w-40" />
-        <Skeleton className="mt-2 h-1.5 w-full rounded-full" />
-        <Skeleton className="mt-1.5 h-3 w-48" />
-        <Skeleton className="mt-4 h-10 w-full rounded-controle" />
+        <Skeleton className="mt-6 h-7 w-44" />
+        <Skeleton className="mt-2.5 h-2 w-full rounded-full" />
+        <Skeleton className="mt-2 h-3 w-48" />
+        <Skeleton className="mt-5 h-5 w-32" />
       </div>
     </div>
   );
 }
 
 /**
- * Pílula de filtro por causa.
+ * Chip de filtro por causa, com a miniatura redonda da foto da categoria.
  *
  * `aria-pressed` em vez de papel de aba: não há painel por causa, é um botão de
- * duas posições. Altura de 36px para caber o alvo de toque sem engordar a
- * faixa, e `whitespace-nowrap` porque "População em situação de rua" quebraria
- * em três linhas dentro da pílula.
+ * duas posições. 40px de altura para caber o alvo de toque, e
+ * `whitespace-nowrap` porque "População em situação de rua" quebraria em três
+ * linhas dentro do chip. A miniatura é `alt=""`: o rótulo já diz a causa.
  */
 function ChipDeCausa({
   rotulo,
+  miniatura,
   ativo,
   onClick,
 }: {
   rotulo: string;
+  miniatura?: string;
   ativo: boolean;
   onClick: () => void;
 }) {
@@ -533,12 +592,25 @@ function ChipDeCausa({
       onClick={onClick}
       aria-pressed={ativo}
       className={cn(
-        "pressionavel h-9 shrink-0 whitespace-nowrap rounded-full border px-3.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        "pressionavel inline-flex h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-controle border pr-3.5 text-sm font-medium transition-[background-color,color,border-color] duration-150 ease-suave focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        miniatura ? "pl-1.5" : "pl-3.5",
         ativo
           ? "border-primary bg-primary text-primary-foreground"
-          : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground",
+          : "border-border bg-background text-foreground hover:border-primary/40 hover:bg-accent",
       )}
     >
+      {miniatura && (
+        <img
+          src={miniatura}
+          alt=""
+          className={cn(
+            "h-7 w-7 rounded-full object-cover ring-2",
+            ativo ? "ring-primary-foreground/30" : "ring-card",
+          )}
+          loading="lazy"
+          decoding="async"
+        />
+      )}
       {rotulo}
     </button>
   );
