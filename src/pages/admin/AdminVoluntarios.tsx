@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { Check, Download, Plus, UserCheck, X } from "lucide-react";
@@ -19,21 +19,31 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { exportToCsv } from "@/lib/exportCsv";
+import { CTA, TERMOS, VAZIO } from "@/lib/copy";
+import { ErroAmigavel, ErroDeValidacao } from "@/lib/erros";
 import { formatDate } from "@/lib/format";
-import { isValidEmail } from "@/lib/validators";
-import { Campo, ExcluirLinha, Paginacao, TabelaAdmin } from "./_shared";
-import { POR_PAGINA, contarLinhas, mensagemDeErro, useCorrigirPaginaVazia } from "./_shared-lib";
+import { VOLUNTARIO_VAZIO, voluntarioAdminSchema, type VoluntarioAdminForm } from "@/lib/schemas/admin";
+import { Campo, ExcluirLinha, Paginacao, TabelaAdmin, Vazio } from "./_shared";
+import {
+  POR_PAGINA, baixarCsv, contarLinhas, mensagemDeErro, useCorrigirPaginaVazia, useValidacao,
+} from "./_shared-lib";
 
 type Situacao = "pendente" | "aprovado" | "rejeitado";
 
 const TETO_DO_CSV = 5_000;
 
-const ROTULOS: Record<Situacao, string> = {
-  pendente: "Aguardando",
-  aprovado: "Aprovados",
-  rejeitado: "Recusados",
+/** Um termo por situação, o mesmo da aba, da etiqueta e do CSV. */
+const TERMO: Record<Situacao, string> = {
+  pendente: TERMOS.aguardando,
+  aprovado: TERMOS.aprovado,
+  rejeitado: TERMOS.recusado,
 };
+
+const ABAS: { valor: Situacao; rotulo: string }[] = [
+  { valor: "pendente", rotulo: TERMOS.aguardando },
+  { valor: "aprovado", rotulo: `${TERMOS.aprovado}s` },
+  { valor: "rejeitado", rotulo: `${TERMOS.recusado}s` },
+];
 
 const COLUNAS = [
   { rotulo: "Voluntário" },
@@ -52,6 +62,9 @@ type Inscricao = {
   pessoa: { nome: string; email: string } | null;
   projeto: string | null;
 };
+
+/** `%` e `_` são coringas do `ilike`: sem escapar, "joao_silva@" casaria "joao.silva@". */
+const escaparParaIlike = (texto: string) => texto.replace(/[\\%_]/g, "\\$&");
 
 /** Nome da pessoa e do projeto de cada inscrição, em duas consultas por id. */
 async function comRelacionados(linhas: { id_usuario: string; id_projeto: string }[]) {
@@ -76,8 +89,7 @@ async function comRelacionados(linhas: { id_usuario: string; id_projeto: string 
 /**
  * Inscrições de voluntariado.
  *
- * A tela baixava a tabela toda e filtrava as três abas na memória do navegador.
- * Agora cada aba é uma consulta com `.range()`, e os números das abas vêm de
+ * Cada aba é uma consulta com `.range()`, e os números das abas vêm de
  * contagens no servidor, então continuam certos mesmo com a lista paginada.
  */
 export default function AdminVoluntarios() {
@@ -87,7 +99,8 @@ export default function AdminVoluntarios() {
   const [pagina, setPagina] = useState(0);
   const [criando, setCriando] = useState(false);
   const [exportando, setExportando] = useState(false);
-  const [form, setForm] = useState({ email: "", id_projeto: "", status: "aprovado" as Situacao });
+  const [form, setForm] = useState<VoluntarioAdminForm>(VOLUNTARIO_VAZIO);
+  const { erros, validar, erroDoServidor, limpar } = useValidacao(voluntarioAdminSchema, "voluntario");
 
   const { data, isPending, isError, refetch } = useQuery({
     queryKey: ["admin-voluntarios", situacao, pagina],
@@ -167,11 +180,11 @@ export default function AdminVoluntarios() {
         .eq("id", id)
         .select("id");
       if (error) throw error;
-      if (!alteradas?.length) throw new Error("Sem permissão para alterar esta inscrição.");
+      if (!alteradas?.length) throw new ErroAmigavel("Sua conta não tem permissão para alterar esta inscrição.");
       return status;
     },
     onSuccess: (status) => {
-      toast.success(status === "aprovado" ? "Inscrição aprovada." : "Inscrição recusada.");
+      toast.success(status === "aprovado" ? "Inscrição aprovada" : "Inscrição recusada");
       if (linhas.length === 1 && pagina > 0) setPagina(pagina - 1);
       queryClient.invalidateQueries({ queryKey: ["admin-voluntarios"] });
     },
@@ -184,7 +197,7 @@ export default function AdminVoluntarios() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Inscrição removida.");
+      toast.success("Voluntário removido do projeto");
       if (linhas.length === 1 && pagina > 0) setPagina(pagina - 1);
       queryClient.invalidateQueries({ queryKey: ["admin-voluntarios"] });
     },
@@ -192,34 +205,30 @@ export default function AdminVoluntarios() {
   });
 
   const criar = useMutation({
-    mutationFn: async () => {
-      if (!isValidEmail(form.email)) throw new Error("Informe o e-mail de quem vai ser inscrito.");
-      if (!form.id_projeto) throw new Error("Escolha o projeto.");
-
+    mutationFn: async (dados: VoluntarioAdminForm) => {
       // Buscar a pessoa pelo e-mail evita carregar a tabela de perfis num
-      // `Select`, que era o que a versão anterior fazia.
+      // `Select`. O erro de "não existe" é de campo: aparece embaixo do e-mail.
       const { data: pessoa, error: erroDaBusca } = await supabase
         .from("profiles")
         .select("user_id")
-        .ilike("email", form.email.trim())
+        .ilike("email", escaparParaIlike(dados.email.trim()))
         .maybeSingle();
       if (erroDaBusca) throw erroDaBusca;
-      if (!pessoa) throw new Error("Não existe conta com esse e-mail na plataforma.");
+      if (!pessoa) throw new ErroDeValidacao("Não existe conta com esse e-mail na plataforma", "email");
 
       const { error } = await supabase.from("voluntariado").insert({
         id_usuario: pessoa.user_id,
-        id_projeto: form.id_projeto,
-        status: form.status,
+        id_projeto: dados.id_projeto,
+        status: dados.status,
       });
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Voluntário inscrito.");
-      setCriando(false);
-      setForm({ email: "", id_projeto: "", status: "aprovado" });
+      toast.success("Voluntário inscrito no projeto");
+      fecharCriacao();
       queryClient.invalidateQueries({ queryKey: ["admin-voluntarios"] });
     },
-    onError: (erro) => toast.error(mensagemDeErro(erro, "Não foi possível inscrever o voluntário.")),
+    onError: (erro) => erroDoServidor(erro, "Não foi possível inscrever o voluntário."),
   });
 
   const exportar = async () => {
@@ -235,28 +244,34 @@ export default function AdminVoluntarios() {
       if (error) throw error;
 
       const { porPessoa, porProjeto } = await comRelacionados(todas ?? []);
-      exportToCsv(
+      baixarCsv(
         `voluntarios-${situacao}.csv`,
         (todas ?? []).map((v) => ({
           nome: porPessoa.get(v.id_usuario)?.nome ?? "",
           email: porPessoa.get(v.id_usuario)?.email ?? "",
           projeto: porProjeto.get(v.id_projeto) ?? "",
           inscricao: formatDate(v.data_inscricao),
-          situacao: v.status ?? "",
+          situacao: TERMO[(v.status as Situacao) ?? "pendente"] ?? v.status ?? "",
         })),
-      );
-
-      const total = data?.total ?? (todas ?? []).length;
-      toast.success(
-        (todas ?? []).length < total
-          ? `${(todas ?? []).length} de ${total} inscrições exportadas. O arquivo traz as mais recentes.`
-          : `${(todas ?? []).length} ${(todas ?? []).length === 1 ? "inscrição exportada" : "inscrições exportadas"}.`,
+        data?.total ?? (todas ?? []).length,
       );
     } catch (erro) {
       toast.error(mensagemDeErro(erro, "Não foi possível gerar o arquivo."));
     } finally {
       setExportando(false);
     }
+  };
+
+  const fecharCriacao = () => {
+    setCriando(false);
+    setForm(VOLUNTARIO_VAZIO);
+    limpar();
+  };
+
+  const enviar = (evento: FormEvent) => {
+    evento.preventDefault();
+    const dados = validar(form);
+    if (dados) criar.mutate(dados);
   };
 
   const trocarSituacao = (nova: string) => {
@@ -277,11 +292,11 @@ export default function AdminVoluntarios() {
         action={
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={exportar} disabled={exportando}>
-              <Download className="h-4 w-4" aria-hidden="true" />
-              {exportando ? "Gerando…" : "Exportar CSV"}
+              <Download aria-hidden="true" />
+              {exportando ? "Gerando…" : CTA.exportarCsv}
             </Button>
             <Button onClick={() => setCriando(true)}>
-              <Plus className="h-4 w-4" aria-hidden="true" />
+              <Plus aria-hidden="true" />
               Inscrever voluntário
             </Button>
           </div>
@@ -289,10 +304,10 @@ export default function AdminVoluntarios() {
       />
 
       <Tabs value={situacao} onValueChange={trocarSituacao} className="mb-4">
-        <TabsList className="flex-wrap">
-          {(Object.keys(ROTULOS) as Situacao[]).map((s) => (
-            <TabsTrigger key={s} value={s}>
-              {ROTULOS[s]} ({data?.contagens[s] ?? 0})
+        <TabsList className="h-auto flex-wrap justify-start">
+          {ABAS.map((a) => (
+            <TabsTrigger key={a.valor} value={a.valor}>
+              {a.rotulo} ({data?.contagens[a.valor] ?? 0})
             </TabsTrigger>
           ))}
         </TabsList>
@@ -307,7 +322,6 @@ export default function AdminVoluntarios() {
         vazia={linhas.length === 0}
         vazio={
           <EmptyState
-            icon={UserCheck}
             title={
               situacao === "pendente"
                 ? "Nenhuma inscrição aguardando resposta"
@@ -328,23 +342,25 @@ export default function AdminVoluntarios() {
         {linhas.map((v) => (
           <TableRow key={v.id}>
             <TableCell className="max-w-64">
-              <div className="break-words font-medium">{v.pessoa?.nome ?? "Conta removida"}</div>
+              <div className="break-words font-medium">
+                {v.pessoa?.nome ?? <Vazio texto="Conta removida" />}
+              </div>
               <div className="break-all text-xs text-muted-foreground">{v.pessoa?.email ?? ""}</div>
             </TableCell>
 
             <TableCell className="text-muted-foreground">
-              {v.projeto ?? "Projeto removido"}
+              {v.projeto ?? <Vazio texto={VAZIO.semProjeto} />}
             </TableCell>
 
-            <TableCell className="text-muted-foreground">{formatDate(v.data_inscricao)}</TableCell>
+            <TableCell className="numero text-muted-foreground">{formatDate(v.data_inscricao)}</TableCell>
 
             <TableCell>
               <Badge
                 variant={
-                  v.status === "aprovado" ? "default" : v.status === "rejeitado" ? "destructive" : "secondary"
+                  v.status === "aprovado" ? "success" : v.status === "rejeitado" ? "neutro" : "secondary"
                 }
               >
-                {v.status === "aprovado" ? "Aprovado" : v.status === "rejeitado" ? "Recusado" : "Aguardando"}
+                {TERMO[(v.status as Situacao) ?? "pendente"] ?? TERMOS.aguardando}
               </Badge>
             </TableCell>
 
@@ -357,7 +373,7 @@ export default function AdminVoluntarios() {
                     disabled={mudarSituacao.isPending}
                     onClick={() => mudarSituacao.mutate({ id: v.id, status: "aprovado" })}
                   >
-                    <Check className="h-4 w-4" aria-hidden="true" />
+                    <Check aria-hidden="true" />
                     Aprovar
                   </Button>
                 )}
@@ -368,16 +384,16 @@ export default function AdminVoluntarios() {
                     disabled={mudarSituacao.isPending}
                     onClick={() => mudarSituacao.mutate({ id: v.id, status: "rejeitado" })}
                   >
-                    <X className="h-4 w-4" aria-hidden="true" />
+                    <X aria-hidden="true" />
                     Recusar
                   </Button>
                 )}
                 <ExcluirLinha
                   rotuloAcessivel={`Remover a inscrição de ${v.pessoa?.nome ?? "voluntário"}`}
-                  titulo="Remover esta inscrição?"
+                  titulo={`Remover ${v.pessoa?.nome ?? "este voluntário"} do projeto?`}
                   descricao="A pessoa sai da lista do projeto. Ela pode se inscrever de novo pelo site."
-                  rotuloConfirmar="Remover"
-                  aoConfirmar={() => excluir.mutate(v.id)}
+                  rotuloConfirmar={CTA.remover("voluntário")}
+                  aoConfirmar={() => excluir.mutateAsync(v.id)}
                 />
               </div>
             </TableCell>
@@ -385,74 +401,83 @@ export default function AdminVoluntarios() {
         ))}
       </TabelaAdmin>
 
-      <Dialog open={criando} onOpenChange={setCriando}>
-        <DialogContent>
+      <Dialog open={criando} onOpenChange={(aberto) => (aberto ? setCriando(true) : fecharCriacao())}>
+        <DialogContent className="rolagem-contida">
           <DialogHeader>
-            <DialogTitle>Inscrever voluntário</DialogTitle>
+            <DialogTitle className="font-display text-xl">Inscrever voluntário</DialogTitle>
             <DialogDescription>
               Para quem se ofereceu por fora do site. A pessoa precisa já ter conta
               na plataforma.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <form noValidate onSubmit={enviar} className="grid gap-4">
             <Campo
               id="voluntario-email"
               rotulo="E-mail da pessoa"
               obrigatorio
               dica="O mesmo e-mail que ela usa para entrar na plataforma."
+              erro={erros.email}
             >
               <Input
                 id="voluntario-email"
+                name="email"
                 type="email"
+                inputMode="email"
                 autoComplete="off"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
               />
             </Campo>
 
-            <Campo id="voluntario-projeto" rotulo="Projeto" obrigatorio>
-              <Select
-                value={form.id_projeto}
-                onValueChange={(v) => setForm({ ...form, id_projeto: v })}
-              >
-                <SelectTrigger id="voluntario-projeto">
-                  <SelectValue placeholder="Escolha o projeto" />
-                </SelectTrigger>
-                <SelectContent>
-                  {(projetos ?? []).map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.nome_projeto}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <Campo id="voluntario-id_projeto" rotulo="Projeto" obrigatorio erro={erros.id_projeto}>
+              {(a11y) => (
+                <Select
+                  value={form.id_projeto}
+                  onValueChange={(v) => setForm({ ...form, id_projeto: v })}
+                  name="id_projeto"
+                >
+                  <SelectTrigger {...a11y}>
+                    <SelectValue placeholder="Escolha o projeto" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(projetos ?? []).map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.nome_projeto}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </Campo>
 
-            <Campo id="voluntario-situacao" rotulo="Situação">
-              <Select
-                value={form.status}
-                onValueChange={(v) => setForm({ ...form, status: v as Situacao })}
-              >
-                <SelectTrigger id="voluntario-situacao">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="aprovado">Aprovado</SelectItem>
-                  <SelectItem value="pendente">Aguardando</SelectItem>
-                </SelectContent>
-              </Select>
+            <Campo id="voluntario-status" rotulo="Situação" erro={erros.status}>
+              {(a11y) => (
+                <Select
+                  value={form.status}
+                  onValueChange={(v) => setForm({ ...form, status: v as VoluntarioAdminForm["status"] })}
+                  name="status"
+                >
+                  <SelectTrigger {...a11y}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="aprovado">{TERMOS.aprovado}</SelectItem>
+                    <SelectItem value="pendente">{TERMOS.aguardando}</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
             </Campo>
-          </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCriando(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={() => criar.mutate()} disabled={criar.isPending}>
-              {criar.isPending ? "Inscrevendo…" : "Inscrever"}
-            </Button>
-          </DialogFooter>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={fecharCriacao}>
+                {CTA.cancelar}
+              </Button>
+              <Button type="submit" disabled={criar.isPending}>
+                {criar.isPending ? "Inscrevendo…" : "Inscrever voluntário"}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </DashboardLayout>
