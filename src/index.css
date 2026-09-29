@@ -56,7 +56,13 @@
     --radius: 0.75rem;
     --raio-controle: 0.625rem;
 
-    --success: 142 76% 36%;
+    /* 28%, e não os 36% de antes: a `axe` reprovou a Home e a listagem de ONGs
+       assim que o banco ganhou dados de verdade e os selos verdes entraram em
+       tela. 36% dá 3.35:1, e texto de 12px precisa de 4.5:1. O token é um só e
+       serve a vinte usos, então a correção é aqui, não em cada tela.
+       28% dá 4.96:1 sobre `--background` e folga ainda maior sobre `--card`,
+       que é branco puro e é onde a maioria dos selos vive. */
+    --success: 142 76% 28%;
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
