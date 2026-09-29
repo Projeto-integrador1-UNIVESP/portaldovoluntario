@@ -210,22 +210,14 @@
     }
   }
 
-  /* Forma orgânica para foto ou tinta. Duas variantes, para não repetir. */
+  /* Forma orgânica para a foto do hero. */
   .forma-organica-1 {
     border-radius: 42% 58% 55% 45% / 48% 40% 60% 52%;
   }
-  .forma-organica-2 {
-    border-radius: 63% 37% 54% 46% / 55% 48% 52% 45%;
-  }
-  @media (prefers-reduced-motion: no-preference) {
-    .forma-viva {
-      animation: morfar 14s ease-in-out infinite alternate;
-    }
-  }
 
-  /* Skeleton com brilho cor de papel. Sem loop agressivo. */
-  /* Só a imagem do brilho: a cor de fundo continua vindo do `bg-*` de quem
-     usa, então o skeleton funciona também sobre tinta escura. */
+  /* Skeleton com brilho cor de papel, sem loop agressivo. Só a imagem do
+     brilho: a cor de fundo vem do `bg-*` de quem usa, então o skeleton
+     funciona também sobre tinta escura. */
   .brilho-papel {
     background-image: linear-gradient(90deg, transparent 0%, hsl(var(--card) / 0.55) 50%, transparent 100%);
     background-size: 200% 100%;
@@ -246,10 +238,6 @@
    */
   .confirmou {
     animation: pulsar-sucesso var(--duracao-lenta) var(--easing-elastico) both;
-  }
-
-  .numero-vivo {
-    transition: color var(--duracao-media) var(--easing-suave);
   }
 }
 
@@ -290,10 +278,6 @@
 
 @keyframes desenhar {
   to { stroke-dashoffset: 0; }
-}
-
-@keyframes morfar {
-  to { border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; }
 }
 
 @keyframes brilho-papel {

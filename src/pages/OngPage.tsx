@@ -26,7 +26,7 @@ import {
   BreadcrumbPage, BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { formatCnpj, formatCurrency, formatPhone } from "@/lib/format";
-import { normalizeUrl } from "@/lib/validators";
+import { normalizeUrl, onlyDigits } from "@/lib/validators";
 import { cn, larguraNaGrade } from "@/lib/utils";
 
 const ehUuid = (v: string) =>
@@ -417,7 +417,7 @@ export default function OngPage() {
                   <ul className="mt-6 divide-y">
                     {ong.telefone && (
                       <Contato icone={Phone} rotulo="Telefone">
-                        <a href={`tel:${ong.telefone.replace(/\D/g, "")}`} className="link-vivo text-primary">
+                        <a href={`tel:${onlyDigits(ong.telefone)}`} className="link-vivo text-primary">
                           {formatPhone(ong.telefone)}
                         </a>
                       </Contato>
