@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ExternalLink, LogOut, Menu } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { LogoSimbolo } from "@/components/brand/Logo";
+import { Logo } from "@/components/brand/Logo";
 import { OngAvatar } from "@/components/common/OngAvatar";
 import { SeloVerificada } from "@/components/common/SeloVerificada";
 import { useAuth } from "@/contexts/AuthContext";
@@ -128,11 +128,13 @@ function ConteudoDaBarra({
   return (
     <div className="flex h-full flex-col">
       <div className="px-5 pb-4 pt-5">
-        {/* `Logo` fixa a cor da marca mesmo em monocromático; sobre a tinta
-            marinho só o símbolo (que herda `currentColor`) fica legível. */}
-        <Link to="/" className="inline-flex items-center gap-2" aria-label="Voluntá, ir ao site">
-          <LogoSimbolo monocromatico compacto className="h-6 w-6" />
-          <span className="font-display text-lg font-semibold tracking-[-0.02em]">Voluntá</span>
+        {/* A mesma marca do site, herdando a cor da tinta. */}
+        <Link
+          to="/"
+          className="inline-flex text-sidebar-foreground [&_*]:text-inherit"
+          aria-label="Voluntá, ir ao site"
+        >
+          <Logo monocromatico />
         </Link>
       </div>
 
