@@ -55,7 +55,7 @@ const OngAuditoria = lazy(() => import("./pages/ong/OngAuditoria"));
  * `motion.div` por engano, o que traria a biblioteca inteira para o bundle
  * inicial. `domMax` inclui layout e drag, que o stepper de doação usa.
  */
-const carregarMotion = () => import("motion/react").then((mod) => mod.domMax);
+const carregarMotion = () => import("./lib/recursosDeMovimento").then((mod) => mod.default);
 
 /**
  * Cada navegação nasce num contêiner novo (chave = rota), e `@starting-style`
