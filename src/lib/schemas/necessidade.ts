@@ -23,10 +23,14 @@ export const necessidadeSchema = z
     categoria: z.string().optional(),
     unidade: z.string().optional(),
     meta: z
-      .number({ invalid_type_error: "Informe a meta" })
+      .number({ required_error: "Informe a meta", invalid_type_error: "Informe a meta" })
       .positive("A meta precisa ser maior que zero")
       .max(1_000_000, "A meta máxima é 1.000.000"),
-    urgencia: z.number().int().min(1).max(3),
+    urgencia: z
+      .number({ required_error: "Escolha a urgência", invalid_type_error: "Escolha a urgência" })
+      .int("Escolha a urgência")
+      .min(1, "Escolha a urgência")
+      .max(3, "Escolha a urgência"),
     prazo: z.string().optional(),
     status: z.boolean().default(true),
   })

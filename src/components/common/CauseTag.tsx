@@ -11,10 +11,10 @@ import { cn } from "@/lib/utils";
  */
 
 const PALETA = [
-  { fundo: "var(--tinta-agua)", texto: "195 55% 28%" },
-  { fundo: "var(--tinta-areia)", texto: "28 60% 30%" },
-  { fundo: "var(--tinta-musgo)", texto: "155 45% 25%" },
-  { fundo: "var(--tinta-lavanda)", texto: "258 40% 38%" },
+  { fundo: "var(--tinta-azulpo)", texto: "214 45% 30%" },
+  { fundo: "var(--tinta-creme)", texto: "32 55% 30%" },
+  { fundo: "var(--tinta-salvia)", texto: "152 40% 26%" },
+  { fundo: "var(--tinta-pessego)", texto: "14 60% 34%" },
 ] as const;
 
 function indice(texto: string): number {
