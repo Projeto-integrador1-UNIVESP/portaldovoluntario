@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency, formatDateTime, formatQuantidade } from "@/lib/format";
 import { TERMOS, VAZIO } from "@/lib/copy";
+import { descreverDoacao, nomeDoDoador } from "@/lib/doacao";
 
 const num = (v: unknown) => Number(v ?? 0);
 
@@ -90,13 +91,10 @@ export default function OngDashboard() {
             status: d.status as "pendente" | "confirmada" | "cancelada",
             confirmadaEm: d.confirmada_em,
             data: d.data_doacao,
-            doador: d.anonima ? "Doador anônimo" : d.doador_nome || TERMOS.semIdentificacao,
+            doador: nomeDoDoador(d),
             projeto: d.id_projeto ? porProjeto.get(d.id_projeto) ?? VAZIO.semProjeto : "Doação geral",
             // Doação em dinheiro para uma necessidade de dinheiro não tem quantidade.
-            oQue:
-              necessidade && d.quantidade !== null
-                ? `${formatQuantidade(d.quantidade ?? 0, necessidade.unidade)} de ${necessidade.nome}`
-                : formatCurrency(num(d.valor)),
+            oQue: descreverDoacao({ ...d, necessidade }),
           };
         }),
       };

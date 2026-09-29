@@ -10,9 +10,10 @@ import { toast } from "sonner";
 import type { ZodError, ZodTypeAny, output } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { TERMOS, VAZIO } from "@/lib/copy";
-import { TIPOS_DE_DOACAO } from "@/lib/schemas/admin";
 import { ErroDeValidacao, mensagemAmigavel } from "@/lib/erros";
 import { exportToCsv } from "@/lib/exportCsv";
+
+export { descreverDoacao, nomeDoDoador, rotuloDoTipo, situacaoDaDoacao } from "@/lib/doacao";
 
 /** Tamanho de página das listas que podem crescer (doações, usuários, ...). */
 export const POR_PAGINA = 25;
@@ -301,22 +302,7 @@ export const doacoesComRelacionados = async (
   }));
 };
 
-/** Rótulo de situação de doação, do glossário. O CSV e as tabelas usam o mesmo. */
-export const situacaoDaDoacao = (status: string | null | undefined) =>
-  status === "confirmada"
-    ? TERMOS.confirmada
-    : status === "cancelada"
-      ? TERMOS.naoRecebida
-      : TERMOS.pendente;
-
-/** Nome de quem doou, respeitando anonimato e o glossário para quem não tem cadastro. */
-export const nomeDoDoador = (d: Pick<DoacaoDetalhada, "anonima" | "doador" | "doador_nome">) =>
-  d.anonima ? "Doador anônimo" : d.doador?.nome || d.doador_nome || TERMOS.semIdentificacao;
-
 /** Dias inteiros desde um instante. */
 export const diasDesde = (instante: string) =>
   Math.max(0, Math.floor((Date.now() - new Date(instante).getTime()) / 86_400_000));
 
-/** Rótulo da forma de doação ("Pix", "Cartão"); o valor cru do banco nunca vai para a tela. */
-export const rotuloDoTipo = (tipo: string | null | undefined) =>
-  TIPOS_DE_DOACAO.find((t) => t.valor === tipo)?.rotulo ?? (tipo === "item" ? "Item" : tipo || VAZIO.naoInformado);

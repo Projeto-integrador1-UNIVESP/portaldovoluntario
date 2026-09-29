@@ -26,6 +26,7 @@ import {
   DOACAO_VAZIA, TIPOS_DE_DOACAO, doacaoAdminSchema, type DoacaoAdminForm,
 } from "@/lib/schemas/admin";
 import { Campo, ExcluirLinha, Paginacao, TabelaAdmin, Vazio } from "./_shared";
+import { descreverDoacao } from "@/lib/doacao";
 import {
   COLUNAS_DA_DOACAO, POR_PAGINA, baixarCsv, doacoesComRelacionados, mensagemDeErro,
   nomeDoDoador, rotuloDoTipo, situacaoDaDoacao, useCorrigirPaginaVazia, useValidacao,
@@ -474,9 +475,7 @@ export default function AdminDoacoes() {
                 <Linha
                   rotulo="O que"
                   valor={
-                    detalhe.necessidade
-                      ? `${formatQuantidade(detalhe.quantidade ?? 0, detalhe.necessidade.unidade)} de ${detalhe.necessidade.nome}`
-                      : formatCurrency(detalhe.valor)
+                    descreverDoacao(detalhe)
                   }
                 />
                 <Linha rotulo="Forma" valor={rotuloDoTipo(detalhe.tipo_doacao)} />

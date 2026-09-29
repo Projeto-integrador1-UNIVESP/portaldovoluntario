@@ -14,6 +14,7 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TESE, TERMOS, VAZIO } from "@/lib/copy";
 import { formatCurrency, formatQuantidade } from "@/lib/format";
+import { descreverDoacao } from "@/lib/doacao";
 import {
   COLUNAS_DA_DOACAO, contarLinhas as contar, diasDesde, doacoesComRelacionados, nomeDoDoador,
 } from "./_shared-lib";
@@ -251,9 +252,7 @@ export default function AdminDashboard() {
                         <p className="truncate text-sm text-muted-foreground">
                           {d.ong?.nome ?? VAZIO.semOng}
                           {" · "}
-                          {d.necessidade
-                            ? `${formatQuantidade(d.quantidade ?? 0, d.necessidade.unidade)} de ${d.necessidade.nome}`
-                            : formatCurrency(d.valor)}
+                          {descreverDoacao(d)}
                         </p>
                       </div>
                       <p className={`numero text-sm ${dias > DIAS_ATE_DOACAO_TRAVAR ? "font-semibold text-destructive" : "text-muted-foreground"}`}>
