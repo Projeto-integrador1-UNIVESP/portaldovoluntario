@@ -1,9 +1,18 @@
 import "@testing-library/jest-dom";
+import { instalarMensagensPtBr } from "@/lib/zodPtBr";
 
+// O mesmo mapa de mensagens que o `main.tsx` instala: sem ele, um schema sem
+// mensagem própria mostraria "Required" em inglês nos testes e não no produto.
+instalarMensagensPtBr();
+
+// Os testes rodam como quem pediu menos movimento no sistema: o `Contador`
+// mostra o valor final na hora, o `MotionConfig` desliga transforms, e as
+// asserções de texto não dependem de uma animação terminar. É também o que o
+// e2e faz antes da varredura de acessibilidade.
 Object.defineProperty(window, "matchMedia", {
   writable: true,
   value: (query: string) => ({
-    matches: false,
+    matches: query.includes("prefers-reduced-motion"),
     media: query,
     onchange: null,
     addListener: () => {},
@@ -22,6 +31,25 @@ class ResizeObserverMock {
   disconnect() {}
 }
 globalThis.ResizeObserver ??= ResizeObserverMock as unknown as typeof ResizeObserver;
+
+// `useInView` e `whileInView` do motion criam um IntersectionObserver sem
+// checar se existe. Este responde "está em tela" na hora, para tudo.
+class IntersectionObserverMock {
+  constructor(private callback: IntersectionObserverCallback) {}
+  observe(alvo: Element) {
+    this.callback(
+      [{ isIntersecting: true, intersectionRatio: 1, target: alvo } as IntersectionObserverEntry],
+      this as unknown as IntersectionObserver,
+    );
+  }
+  unobserve() {}
+  disconnect() {}
+  takeRecords() { return []; }
+  root = null;
+  rootMargin = "";
+  thresholds = [];
+}
+globalThis.IntersectionObserver ??= IntersectionObserverMock as unknown as typeof IntersectionObserver;
 
 globalThis.DOMRect ??= class {
   constructor(

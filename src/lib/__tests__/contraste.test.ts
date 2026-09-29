@@ -65,8 +65,37 @@ describe("contraste dos tokens de cor", () => {
     ["primary", "background"],
     ["success", "background"],
     ["destructive", "background"],
+    ["warning", "background"],
+    ["cta", "background"],
+    ["foreground", "card"],
+    ["muted-foreground", "card"],
+    ["cta", "card"],
   ])("--%s sobre --%s passa em AA para texto normal", (frente, fundo) => {
     expect(razao(frente, fundo)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  // Texto sobre as tintas de superfície. Sem esta lista, um Callout de
+  // atenção sobre creme poderia reprovar sem nenhum teste acusar.
+  it.each([
+    ["foreground", "tinta-creme"],
+    ["foreground", "tinta-salvia"],
+    ["foreground", "tinta-azulpo"],
+    ["foreground", "tinta-pessego"],
+    ["muted-foreground", "tinta-creme"],
+    ["muted-foreground", "tinta-salvia"],
+    ["muted-foreground", "tinta-azulpo"],
+    ["muted-foreground", "tinta-pessego"],
+    ["primary", "tinta-azulpo"],
+    ["success", "tinta-salvia"],
+    ["warning", "tinta-creme"],
+    ["destructive", "tinta-pessego"],
+  ])("--%s sobre --%s passa em AA para texto normal", (frente, fundo) => {
+    expect(razao(frente, fundo)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  // Texto sobre o painel lateral escuro.
+  it("--sidebar-foreground sobre --sidebar-background passa em AA", () => {
+    expect(razao("sidebar-foreground", "sidebar-background")).toBeGreaterThanOrEqual(4.5);
   });
 
   // Estes são cor de texto sobre o próprio preenchimento: botão sólido, selo.
@@ -75,6 +104,7 @@ describe("contraste dos tokens de cor", () => {
     ["success-foreground", "success"],
     ["destructive-foreground", "destructive"],
     ["cta-foreground", "cta"],
+    ["warning-foreground", "warning"],
   ])("--%s sobre --%s passa em AA para texto normal", (frente, fundo) => {
     expect(razao(frente, fundo)).toBeGreaterThanOrEqual(4.5);
   });
