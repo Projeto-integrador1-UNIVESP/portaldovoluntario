@@ -21,7 +21,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { CTA, TERMOS, VAZIO } from "@/lib/copy";
-import { formatCurrency, formatDateTime, maskCurrency, parseCurrency } from "@/lib/format";
+import { formatCurrency, formatDateTime, maskCurrency, parseCurrency, formatQuantidade } from "@/lib/format";
 import {
   DOACAO_VAZIA, TIPOS_DE_DOACAO, doacaoAdminSchema, type DoacaoAdminForm,
 } from "@/lib/schemas/admin";
@@ -302,7 +302,7 @@ export default function AdminDoacoes() {
                 <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
                   <Package className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                   <span className="numero">
-                    {d.quantidade} {d.necessidade.unidade ?? ""}
+                    {formatQuantidade(d.quantidade ?? 0, d.necessidade.unidade)}
                   </span>
                   <span className="text-muted-foreground">de {d.necessidade.nome}</span>
                 </span>
@@ -475,7 +475,7 @@ export default function AdminDoacoes() {
                   rotulo="O que"
                   valor={
                     detalhe.necessidade
-                      ? `${detalhe.quantidade ?? 0} ${detalhe.necessidade.unidade ?? ""} de ${detalhe.necessidade.nome}`
+                      ? `${formatQuantidade(detalhe.quantidade ?? 0, detalhe.necessidade.unidade)} de ${detalhe.necessidade.nome}`
                       : formatCurrency(detalhe.valor)
                   }
                 />

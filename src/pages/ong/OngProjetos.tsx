@@ -399,7 +399,7 @@ export default function OngProjetos() {
         titulo={`Excluir o projeto ${aExcluir?.nome ?? ""}?`}
         descricao="A página pública do projeto deixa de existir. Se a ideia é só tirar do site por um tempo, oculte em vez de excluir."
         rotuloConfirmar={CTA.excluir("projeto")}
-        onConfirmar={() => (aExcluir ? excluir.mutateAsync(aExcluir.id).catch(() => {}) : undefined)}
+        onConfirmar={() => (aExcluir ? excluir.mutateAsync(aExcluir.id) : undefined)}
         bloqueio={
           aExcluir && vinculosDoExcluir > 0
             ? {
@@ -414,8 +414,7 @@ export default function OngProjetos() {
                       onClick: () =>
                         alternarStatus
                           .mutateAsync({ id: aExcluir.id, status: false })
-                          .then(() => setAExcluir(null))
-                          .catch(() => {}),
+                          .then(() => setAExcluir(null)),
                     }
                   : undefined,
               }

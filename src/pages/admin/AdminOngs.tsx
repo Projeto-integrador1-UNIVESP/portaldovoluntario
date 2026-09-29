@@ -830,13 +830,6 @@ function ExcluirOng({
   });
 
   /* O onError da mutation já mostra o toast; aqui só se evita a rejeição solta. */
-  const engolir = (acao: () => Promise<unknown>) => async () => {
-    try {
-      await acao();
-    } catch {
-      /* já avisado */
-    }
-  };
 
   const conferido = !isPending && !isError && vinculos;
   const temDoacoes = Boolean(conferido) && vinculos!.doacoes > 0;
@@ -874,7 +867,7 @@ function ExcluirOng({
               </>
             ),
             alternativa: ong.status
-              ? { rotulo: "Desativar a ONG", onClick: engolir(aoDesativar) }
+              ? { rotulo: "Desativar a ONG", onClick: aoDesativar }
               : undefined,
           }
         : undefined;
@@ -904,7 +897,7 @@ function ExcluirOng({
       titulo={temDoacoes ? "Esta ONG tem doações registradas" : `Excluir ${ong.nome}?`}
       descricao={descricao || undefined}
       rotuloConfirmar={CTA.excluir("ONG")}
-      onConfirmar={engolir(aoExcluir)}
+      onConfirmar={aoExcluir}
       bloqueio={bloqueio}
     >
       <Button

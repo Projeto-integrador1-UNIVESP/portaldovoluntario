@@ -22,6 +22,8 @@ type ConfirmarExclusaoProps = {
   /** Rótulo do botão que confirma. Sempre com o objeto: "Excluir projeto". */
   rotuloConfirmar: string;
   rotuloCancelar?: string;
+  /** Texto do botão enquanto a ação roda. Padrão: "Excluindo…". */
+  rotuloCarregando?: string;
   /** Executa a ação. Pode ser assíncrona: o botão mostra carregamento. */
   onConfirmar: () => void | Promise<unknown>;
   /** `destrutivo` (vermelho) para excluir; `atencao` para reverter, marcar como não recebido. */
@@ -47,6 +49,7 @@ export function ConfirmarExclusao({
   descricao,
   rotuloConfirmar,
   rotuloCancelar = CTA.cancelar,
+  rotuloCarregando = CTA.excluindo,
   onConfirmar,
   tom = "destrutivo",
   bloqueio,
@@ -58,18 +61,25 @@ export function ConfirmarExclusao({
   const [abertoInterno, setAbertoInterno] = useState(false);
   const controlado = open !== undefined;
   const aberto = controlado ? open : abertoInterno;
-  const mudar = (v: boolean) => {
-    if (carregando) return;
+  const definirAberto = (v: boolean) => {
     if (!controlado) setAbertoInterno(v);
     onOpenChange?.(v);
+  };
+  // Enquanto a ação roda, Esc e clique fora não fecham o diálogo.
+  const mudar = (v: boolean) => {
+    if (carregando) return;
+    definirAberto(v);
   };
 
   const executar = async (acao: () => void | Promise<unknown>) => {
     setCarregando(true);
     try {
       await acao();
-      mudar(false);
-    } finally {
+      setCarregando(false);
+      definirAberto(false);
+    } catch {
+      // Quem chama já mostrou o erro (toast). O diálogo fica aberto para a
+      // pessoa tentar de novo ou cancelar, em vez de fechar como se tivesse dado certo.
       setCarregando(false);
     }
   };
@@ -111,7 +121,7 @@ export function ConfirmarExclusao({
               )}
             >
               {carregando && <Loader2 className="animate-spin" aria-hidden="true" />}
-              {carregando ? CTA.excluindo : rotuloConfirmar}
+              {carregando ? rotuloCarregando : rotuloConfirmar}
             </AlertDialogAction>
           ) : null}
         </AlertDialogFooter>

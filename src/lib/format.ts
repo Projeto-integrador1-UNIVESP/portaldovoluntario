@@ -145,7 +145,8 @@ export const unidadeFlexionada = (unidade: string | null | undefined, quantidade
 };
 
 /** "26 caixas", "1 caixa", "70 un", "12,5 kg". Sem unidade, só o número. */
-export const formatQuantidade = (quantidade: number, unidade?: string | null) => {
-  const u = unidadeFlexionada(unidade, quantidade);
-  return `${quantidade.toLocaleString("pt-BR")}${u ? ` ${u}` : ""}`;
+export const formatQuantidade = (quantidade: number | string | null | undefined, unidade?: string | null) => {
+  const n = Number(quantidade ?? 0) || 0;
+  const u = unidadeFlexionada(unidade, n);
+  return `${n.toLocaleString("pt-BR")}${u ? ` ${u}` : ""}`;
 };

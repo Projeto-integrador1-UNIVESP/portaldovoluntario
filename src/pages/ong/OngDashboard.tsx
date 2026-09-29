@@ -12,7 +12,7 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { ErrorState } from "@/components/common/ErrorState";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatCurrency, formatDateTime } from "@/lib/format";
+import { formatCurrency, formatDateTime, formatQuantidade } from "@/lib/format";
 import { TERMOS, VAZIO } from "@/lib/copy";
 
 const num = (v: unknown) => Number(v ?? 0);
@@ -95,7 +95,7 @@ export default function OngDashboard() {
             // Doação em dinheiro para uma necessidade de dinheiro não tem quantidade.
             oQue:
               necessidade && d.quantidade !== null
-                ? `${num(d.quantidade)} ${necessidade.unidade ?? ""} de ${necessidade.nome}`.replace(/\s+/g, " ")
+                ? `${formatQuantidade(d.quantidade ?? 0, necessidade.unidade)} de ${necessidade.nome}`
                 : formatCurrency(num(d.valor)),
           };
         }),

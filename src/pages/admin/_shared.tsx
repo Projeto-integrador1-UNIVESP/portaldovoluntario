@@ -160,13 +160,7 @@ export function ExcluirLinha({
       descricao={descricao}
       rotuloConfirmar={rotuloConfirmar}
       tom={tom}
-      onConfirmar={async () => {
-        try {
-          await aoConfirmar();
-        } catch {
-          /* o onError da mutation já avisou */
-        }
-      }}
+      onConfirmar={aoConfirmar}
     >
       <Button
         size="icon"

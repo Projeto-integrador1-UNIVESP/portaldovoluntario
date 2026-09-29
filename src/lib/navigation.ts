@@ -8,10 +8,8 @@ export type NavItem = { label: string; href: string; icon: LucideIcon };
 /**
  * Fonte única de navegação dos painéis.
  *
- * Antes existiam três listas paralelas, em PublicHeader, DashboardLayout e
- * RolePanelSidebar, e as três já estavam dessincronizadas entre si (o header
- * não tinha Auditoria nem Códigos; a sidebar não tinha Códigos). Todas passam
- * a ler daqui.
+ * O header público (menu da conta) e a barra lateral do painel leem daqui,
+ * para os dois nunca divergirem.
  *
  * O primeiro item de cada lista é a raiz do painel: o layout usa isso para o
  * rótulo do breadcrumb e para o link de "Início".

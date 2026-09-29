@@ -76,6 +76,7 @@ export const CTA = {
   criando: "Criando…",
   excluindo: "Excluindo…",
   enviando: "Enviando…",
+  registrando: "Registrando…",
   tentarDeNovo: "Tentar novamente",
   exportarCsv: "Exportar CSV",
 } as const;

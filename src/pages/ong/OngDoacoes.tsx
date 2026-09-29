@@ -23,7 +23,7 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { ErrorState } from "@/components/common/ErrorState";
 import { TERMOS } from "@/lib/copy";
 import { ErroAmigavel, mensagemAmigavel } from "@/lib/erros";
-import { formatCurrency, formatDateTime } from "@/lib/format";
+import { formatCurrency, formatDateTime, formatQuantidade } from "@/lib/format";
 
 type StatusDoacao = "pendente" | "confirmada" | "cancelada";
 
@@ -276,7 +276,7 @@ export default function OngDoacoes() {
                           <TableCell>
                             {d.necessidade && d.quantidade !== null ? (
                               <span className="numero font-medium">
-                                {`${d.quantidade} ${d.necessidade.unidade ?? ""} de ${d.necessidade.nome}`.replace(/\s+/g, " ")}
+                                {`${formatQuantidade(d.quantidade ?? 0, d.necessidade.unidade)} de ${d.necessidade.nome}`}
                               </span>
                             ) : (
                               <span className="numero font-medium">{formatCurrency(d.valor)}</span>
@@ -318,8 +318,9 @@ export default function OngDoacoes() {
                                   titulo={`Marcar a doação de ${nome} como não recebida?`}
                                   descricao="Ela sai da fila e não conta no progresso do projeto. Se chegar depois, dá para voltar."
                                   rotuloConfirmar="Marcar como não recebida"
+                                  rotuloCarregando="Marcando…"
                                   onConfirmar={() =>
-                                    alterarStatus.mutate({ id: d.id, status: "cancelada" })
+                                    alterarStatus.mutateAsync({ id: d.id, status: "cancelada" })
                                   }
                                 >
                                   <Button size="sm" variant="outline" disabled={alterarStatus.isPending}>
@@ -345,8 +346,9 @@ export default function OngDoacoes() {
                                   titulo="Voltar esta doação para a fila?"
                                   descricao="Ela deixa de contar no progresso até você confirmar de novo."
                                   rotuloConfirmar="Voltar para pendente"
+                                  rotuloCarregando="Voltando…"
                                   onConfirmar={() =>
-                                    alterarStatus.mutate({ id: d.id, status: "pendente" })
+                                    alterarStatus.mutateAsync({ id: d.id, status: "pendente" })
                                   }
                                 >
                                   <Button size="sm" variant="ghost" disabled={alterarStatus.isPending}>

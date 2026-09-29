@@ -327,7 +327,7 @@ export default function OngVoluntarios() {
                                 titulo={`Remover a inscrição de ${nome}?`}
                                 descricao="A pessoa sai da lista e perde o histórico desta inscrição. Se você só não quer contar com ela nesta ação, recuse em vez de remover."
                                 rotuloConfirmar={CTA.remover("inscrição")}
-                                onConfirmar={() => remover.mutateAsync(v.id).catch(() => {})}
+                                onConfirmar={() => remover.mutateAsync(v.id)}
                               >
                                 <Button
                                   size="sm"
