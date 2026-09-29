@@ -1,4 +1,5 @@
 import { z } from "zod";
+import "@/lib/zodPtBr";
 import { emailSchema, senhaSchema } from "@/lib/schemas/auth";
 import { SIGLAS_UF } from "@/lib/constants/ufs";
 import { onlyDigits } from "@/lib/validators";

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import "@/lib/zodPtBr";
 import { MENSAGENS } from "@/lib/copy";
 import { parseCurrency } from "@/lib/format";
 import { chavePixPareceValida } from "@/lib/pix";

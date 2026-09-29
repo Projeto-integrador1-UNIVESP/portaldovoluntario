@@ -1,4 +1,5 @@
 import { z } from "zod";
+import "@/lib/zodPtBr";
 import { MENSAGENS } from "@/lib/copy";
 import { formatCurrency, parseCurrency } from "@/lib/format";
 import { onlyDigits } from "@/lib/validators";
