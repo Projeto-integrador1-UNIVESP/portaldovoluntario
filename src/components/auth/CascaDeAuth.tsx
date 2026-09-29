@@ -91,7 +91,7 @@ export function CascaDeAuth({
                 id="titulo-auth"
                 ref={tituloRef}
                 tabIndex={-1}
-                className="font-display text-2xl-fluido font-bold outline-none"
+                className="font-display text-2xl-fluido font-bold outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
               >
                 {titulo}
               </h1>
