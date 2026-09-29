@@ -38,12 +38,8 @@ export function Footer({ className }: { className?: string }) {
       <div className="container py-14 md:py-16">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr]">
           <div>
-            {/* A marca fixa a cor do símbolo e do nome; sobre marinho os dois
-                sumiriam. O wrapper força creme até a variante mono herdar a cor. */}
-            <Logo
-              monocromatico
-              className="text-primary-foreground [&_span]:text-primary-foreground [&_svg]:text-primary-foreground"
-            />
+            {/* Monocromático herda a cor do texto: creme sobre marinho. */}
+            <Logo monocromatico className="text-primary-foreground" />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-primary-foreground/80">
               Pedidos de ONGs verificadas, com quantidade e prazo. Você doa direto
               para elas, sem taxa.
