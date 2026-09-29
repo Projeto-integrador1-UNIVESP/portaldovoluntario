@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Logo } from "@/components/brand/Logo";
+import { cn } from "@/lib/utils";
 
 const colunas = [
   {
@@ -28,12 +29,12 @@ const colunas = [
 ];
 
 /**
- * Rodapé em tinta marinho, com grão. Sem margem superior própria: a seção
- * anterior de cada página já respira, e o bloco de cor cheia marca o fim.
+ * Rodapé em tinta marinho, com grão. A margem superior é o padrão das
+ * páginas de conteúdo; quem termina num bloco de cor cheia (a home) a zera.
  */
-export function Footer() {
+export function Footer({ className }: { className?: string }) {
   return (
-    <footer className="grao bg-primary text-primary-foreground">
+    <footer className={cn("grao mt-16 bg-primary text-primary-foreground", className)}>
       <div className="container py-14 md:py-16">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr]">
           <div>
@@ -57,7 +58,7 @@ export function Footer() {
                   <li key={link.to}>
                     <Link
                       to={link.to}
-                      className="text-sm text-primary-foreground/85 underline-offset-4 transition-colors hover:text-primary-foreground hover:underline"
+                      className="rounded-sm text-sm text-primary-foreground/85 underline-offset-4 transition-colors hover:text-primary-foreground hover:underline focus-visible:ring-primary-foreground focus-visible:ring-offset-primary"
                     >
                       {link.label}
                     </Link>
