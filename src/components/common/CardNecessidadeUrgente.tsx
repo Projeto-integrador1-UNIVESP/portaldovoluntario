@@ -3,7 +3,7 @@ import { ArrowRight, Flame } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Capa } from "@/components/common/Capa";
 import { ProgressBar } from "@/components/common/ProgressBar";
-import { formatPrazo, formatCurrency } from "@/lib/format";
+import { formatPrazo, formatCurrency, formatQuantidade } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { NecessidadeUrgente } from "@/hooks/queries/useHome";
 
@@ -12,7 +12,7 @@ export function quantoFalta(n: NecessidadeUrgente) {
   const falta = Math.max(0, n.meta - n.arrecadado);
   return n.tipo === "dinheiro"
     ? formatCurrency(falta)
-    : `${falta.toLocaleString("pt-BR")} ${n.unidade ?? ""}`.trim();
+    : formatQuantidade(falta, n.unidade);
 }
 
 /** Rota de doação já apontando para este pedido. */

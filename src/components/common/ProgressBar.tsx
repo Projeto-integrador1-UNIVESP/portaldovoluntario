@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { formatCurrency, progressoPercent } from "@/lib/format";
+import { formatCurrency, progressoPercent, formatQuantidade } from "@/lib/format";
 
 type ProgressBarProps = {
   /** Já confirmado pela ONG. É o número que conta. */
@@ -55,7 +55,7 @@ export function ProgressBar({
   const formatar = (valor: number) =>
     tipo === "dinheiro"
       ? formatCurrency(valor)
-      : `${valor.toLocaleString("pt-BR")}${unidade ? ` ${unidade}` : ""}`;
+      : formatQuantidade(valor, unidade);
 
   const descricao = atingida
     ? `Meta atingida: ${formatar(arrecadado)} confirmados`

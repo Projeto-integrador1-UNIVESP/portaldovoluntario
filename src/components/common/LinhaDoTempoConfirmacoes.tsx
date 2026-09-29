@@ -1,6 +1,6 @@
 import { BadgeCheck, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatCurrency, formatDateTime } from "@/lib/format";
+import { formatCurrency, formatDateTime, formatQuantidade } from "@/lib/format";
 import { TERMOS } from "@/lib/copy";
 
 /**
@@ -26,8 +26,7 @@ export type Confirmacao = {
 
 function descrever(c: Confirmacao) {
   if (c.quantidade && c.necessidadeNome) {
-    const unidade = c.unidade ? ` ${c.unidade}` : "";
-    return `${c.quantidade.toLocaleString("pt-BR")}${unidade} de ${c.necessidadeNome}`;
+    return `${formatQuantidade(c.quantidade, c.unidade)} de ${c.necessidadeNome}`;
   }
   return formatCurrency(c.valor);
 }

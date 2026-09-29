@@ -144,3 +144,19 @@ describe("progressoPercent", () => {
     expect(progressoPercent(10, 0)).toBe(0);
   });
 });
+
+describe("formatQuantidade", () => {
+  it("flexiona as unidades que são palavra", async () => {
+    const { formatQuantidade } = await import("@/lib/format");
+    expect(formatQuantidade(26, "caixa")).toBe("26 caixas");
+    expect(formatQuantidade(1, "caixa")).toBe("1 caixa");
+    expect(formatQuantidade(3, "par")).toBe("3 pares");
+    expect(formatQuantidade(2, "pacote")).toBe("2 pacotes");
+  });
+  it("mantém as abreviações e aceita ausência de unidade", async () => {
+    const { formatQuantidade } = await import("@/lib/format");
+    expect(formatQuantidade(70, "un")).toBe("70 un");
+    expect(formatQuantidade(1200, "kg")).toBe("1.200 kg");
+    expect(formatQuantidade(5, null)).toBe("5");
+  });
+});

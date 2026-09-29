@@ -17,7 +17,7 @@ import { SeloConfirmacao } from "@/components/common/SeloConfirmacao";
 import { CopyField } from "@/components/common/CopyField";
 import { Button } from "@/components/ui/button";
 import { useProjeto } from "@/hooks/queries/useProjeto";
-import { formatCurrency, formatDateTime } from "@/lib/format";
+import { formatCurrency, formatDateTime, formatQuantidade } from "@/lib/format";
 import { A_MARCA, CTA } from "@/lib/copy";
 import { cn } from "@/lib/utils";
 
@@ -186,7 +186,7 @@ export default function ObrigadoPage() {
             <p className="rotulo-caps">{ehItem ? "Você registrou" : "Você doou"}</p>
             <p className="numero mt-1 font-display text-2xl font-semibold leading-tight">
               {ehItem
-                ? `${quantidade.toLocaleString("pt-BR")} ${doacao.necessidade_unidade ?? ""} de ${doacao.necessidade_nome}`.replace(/\s+/g, " ")
+                ? `${formatQuantidade(quantidade, doacao.necessidade_unidade)} de ${doacao.necessidade_nome}`
                 : formatCurrency(valor)}
             </p>
 
