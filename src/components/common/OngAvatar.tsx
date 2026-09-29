@@ -58,12 +58,14 @@ export function OngAvatar({
   const src = logoUrl || imgUrl || undefined;
 
   return (
-    <Avatar className={cn(caixa, "border bg-card shadow-sutil", className)}>
+    // Borda tintada com o marinho, não cinza: o avatar senta sobre papel e
+    // sobre foto, e a tinta é o que o separa dos dois sem parecer sujo.
+    <Avatar className={cn(caixa, "border border-primary/15 bg-card shadow-sutil", className)}>
       {src && <AvatarImage src={src} alt="" loading="lazy" decoding="async" />}
       <AvatarFallback
         aria-hidden="true"
         className={cn(
-          "bg-primary/10 font-display font-bold tracking-tight text-primary",
+          "bg-tinta-azulpo font-display font-semibold tracking-tight text-primary",
           texto,
         )}
       >

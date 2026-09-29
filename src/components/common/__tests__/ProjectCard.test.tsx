@@ -3,29 +3,31 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { ProjectCard, type ProjetoCardData } from "@/components/common/ProjectCard";
 
-const renderizar = (projeto: ProjetoCardData) =>
+const renderizar = (projeto: ProjetoCardData, variante?: "padrao" | "largo") =>
   render(
     <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <ProjectCard projeto={projeto} />
+      <ProjectCard projeto={projeto} variante={variante} />
     </MemoryRouter>,
   );
 
+const campanha: ProjetoCardData = {
+  id: "p1",
+  slug: "campanha-do-agasalho",
+  nome_projeto: "Campanha do Agasalho",
+  descricao: "Cobertores para o inverno.",
+  img_url: null,
+  data_fim: null,
+  cidade: "Cajamar",
+  causa: "Assistência social",
+  ongNome: "Sítio Agar",
+  ongVerificada: true,
+  totalNecessidades: 3,
+  progressoMedio: 25,
+};
+
 describe("ProjectCard", () => {
   it("mostra ONG verificada, prazo e quanto falta a ONG confirmar", () => {
-    renderizar({
-      id: "p1",
-      slug: "campanha-do-agasalho",
-      nome_projeto: "Campanha do Agasalho",
-      descricao: "Cobertores para o inverno.",
-      img_url: null,
-      data_fim: null,
-      cidade: "Cajamar",
-      causa: "Assistência social",
-      ongNome: "Sítio Agar",
-      ongVerificada: true,
-      totalNecessidades: 3,
-      progressoMedio: 25,
-    });
+    renderizar(campanha);
 
     expect(screen.getByRole("link")).toHaveAttribute("href", "/projetos/campanha-do-agasalho");
     expect(screen.getByText("ONG verificada")).toBeInTheDocument();
@@ -34,6 +36,24 @@ describe("ProjectCard", () => {
     expect(screen.getByText("75%")).toBeInTheDocument();
     expect(screen.getByText("ainda falta confirmar")).toBeInTheDocument();
     expect(screen.getByText("25% já confirmado pela ONG")).toBeInTheDocument();
+    // A barra é o componente compartilhado, com o `aria` dele.
+    expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "25");
+  });
+
+  /**
+   * O primeiro item da listagem vira um card largo. Ele muda só o arranjo:
+   * título em `h3`, resumo, número e ação continuam os mesmos, porque a
+   * página ordena e conta pelos `h3` e o leitor de tela não deve notar
+   * diferença entre o largo e o padrão.
+   */
+  it("a variante larga mantém título, resumo, número e ação", () => {
+    renderizar(campanha, "largo");
+
+    expect(screen.getByRole("heading", { level: 3 })).toHaveTextContent("Campanha do Agasalho");
+    expect(screen.getByText("Cobertores para o inverno.")).toBeInTheDocument();
+    expect(screen.getByText("75%")).toBeInTheDocument();
+    expect(screen.getByText("Ver o que falta")).toBeInTheDocument();
+    expect(screen.getByRole("link")).toHaveAttribute("href", "/projetos/campanha-do-agasalho");
   });
 
   /**
