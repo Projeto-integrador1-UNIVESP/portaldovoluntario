@@ -2,19 +2,19 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, MailCheck } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { PublicShell } from "@/components/layout/PublicShell";
-import { Seo } from "@/components/common/Seo";
+import { CascaDeAuth } from "@/components/auth/CascaDeAuth";
+import { Callout } from "@/components/common/Callout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { esqueciSenhaSchema, type EsqueciSenhaInput } from "@/lib/schemas/auth";
-import { toast } from "sonner";
+import { mensagemAmigavel } from "@/lib/erros";
+import { CTA } from "@/lib/copy";
 
 export default function EsqueciSenhaPage() {
-  const [enviado, setEnviado] = useState(false);
+  const [enviadoPara, setEnviadoPara] = useState<string | null>(null);
 
   const form = useForm<EsqueciSenhaInput>({
     resolver: zodResolver(esqueciSenhaSchema),
@@ -22,91 +22,103 @@ export default function EsqueciSenhaPage() {
   });
 
   const enviar = async ({ email }: EsqueciSenhaInput) => {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    const endereco = email.trim().toLowerCase();
+    const { error } = await supabase.auth.resetPasswordForEmail(endereco, {
       redirectTo: `${window.location.origin}/redefinir-senha`,
     });
 
     if (error) {
-      toast.error("Não foi possível enviar o e-mail. Tente novamente em instantes.");
+      form.setError("root", {
+        message: mensagemAmigavel(error.message, "Não foi possível enviar o e-mail agora. Tente de novo em instantes."),
+      });
       return;
     }
 
     // Confirmamos o envio sem revelar se o e-mail existe na base: dizer
     // "e-mail não cadastrado" permitiria descobrir quem tem conta aqui.
-    setEnviado(true);
+    setEnviadoPara(endereco);
   };
 
+  if (enviadoPara) {
+    return (
+      <CascaDeAuth
+        tituloDaPagina="Veja seu e-mail"
+        eyebrow="Recuperar acesso"
+        titulo="Veja seu e-mail"
+        descricao={
+          <>
+            Se existir uma conta com <strong className="text-foreground">{enviadoPara}</strong>, o
+            link para criar a nova senha já saiu. Ele vale por uma hora.
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <Callout tom="info">
+            Não chegou? Olhe a pasta de spam. Se ainda assim não aparecer, confira se digitou o
+            e-mail certo e peça de novo.
+          </Callout>
+          <Button variant="outline" className="pressionavel w-full" onClick={() => setEnviadoPara(null)}>
+            Pedir de novo com outro e-mail
+          </Button>
+          <Button variant="ghost" asChild className="w-full">
+            <Link to="/login">Voltar para o login</Link>
+          </Button>
+        </div>
+      </CascaDeAuth>
+    );
+  }
+
+  const enviando = form.formState.isSubmitting;
+
   return (
-    <PublicShell>
-      <Seo title="Esqueci minha senha" noIndex />
-      <div className="container flex min-h-[70vh] items-center justify-center py-14">
-        <Card className="w-full max-w-md rounded-xl shadow-sutil">
-          {enviado ? (
-            <>
-              <CardHeader>
-                <MailCheck className="h-10 w-10 text-success" aria-hidden="true" />
-                <h1 className="mt-2 font-display text-2xl font-bold">Verifique seu e-mail</h1>
-                <CardDescription>
-                  Se existir uma conta com esse endereço, o link para criar a nova senha já
-                  saiu. Ele vale por uma hora.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button variant="outline" asChild className="pressionavel w-full">
-                  <Link to="/login">Voltar para o login</Link>
-                </Button>
-              </CardContent>
-            </>
-          ) : (
-            <>
-              <CardHeader>
-                <h1 className="font-display text-2xl font-bold">Esqueci minha senha</h1>
-                <CardDescription>
-                  Informe o e-mail da sua conta. Enviamos um link para você criar uma nova senha.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(enviar)} noValidate className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>E-mail</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="email"
-                              autoComplete="email"
-                              placeholder="voce@exemplo.com"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button
-                      type="submit"
-                      size="lg"
-                      className="pressionavel w-full"
-                      disabled={form.formState.isSubmitting}
-                    >
-                      {form.formState.isSubmitting && (
-                        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                      )}
-                      {form.formState.isSubmitting ? "Enviando…" : "Enviar o link por e-mail"}
-                    </Button>
-                    <Button variant="ghost" asChild className="w-full">
-                      <Link to="/login">Voltar para o login</Link>
-                    </Button>
-                  </form>
-                </Form>
-              </CardContent>
-            </>
-          )}
-        </Card>
-      </div>
-    </PublicShell>
+    <CascaDeAuth
+      tituloDaPagina="Esqueci minha senha"
+      eyebrow="Recuperar acesso"
+      titulo="Esqueci minha senha"
+      descricao="Informe o e-mail da sua conta. Enviamos um link para você criar uma nova senha."
+      rodape={
+        <>
+          Lembrou?{" "}
+          <Link to="/login" className="link-vivo font-medium text-primary">
+            Voltar para o login
+          </Link>
+        </>
+      }
+    >
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(enviar)} noValidate className="space-y-5">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>E-mail</FormLabel>
+                <FormControl>
+                  <Input
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    placeholder="voce@exemplo.com"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <div className="space-y-3">
+            <Button type="submit" size="lg" className="pressionavel w-full" disabled={enviando}>
+              {enviando && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+              {enviando ? CTA.enviando : "Enviar o link por e-mail"}
+            </Button>
+            {form.formState.errors.root?.message && (
+              <p role="alert" className="rounded-controle bg-tinta-pessego px-4 py-3 text-sm text-foreground">
+                {form.formState.errors.root.message}
+              </p>
+            )}
+          </div>
+        </form>
+      </Form>
+    </CascaDeAuth>
   );
 }
