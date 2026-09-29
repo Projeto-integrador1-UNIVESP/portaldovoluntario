@@ -22,7 +22,7 @@ describe("cadastroDoadorSchema", () => {
   it("recusa e-mail sem domínio", () => {
     const r = cadastroDoadorSchema.safeParse({ ...doadorValido, email: "maria@" });
     expect(r.success).toBe(false);
-    expect(r.error?.issues[0].message).toBe("E-mail inválido");
+    expect(r.error?.issues[0].message).toBe("Informe um e-mail válido");
   });
 
   it("recusa senha que não atende às regras, dizendo qual falta", () => {
