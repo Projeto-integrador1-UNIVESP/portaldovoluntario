@@ -551,6 +551,7 @@ export type Database = {
           _cidade?: string
           _limit?: number
           _offset?: number
+          _ordem?: string
           _q?: string
         }
         Returns: {
@@ -561,6 +562,11 @@ export type Database = {
           descricao: string
           id: string
           img_url: string
+          necessidade_arrecadado: number
+          necessidade_meta: number
+          necessidade_nome: string
+          necessidade_tipo: string
+          necessidade_unidade: string
           nome_projeto: string
           ong_id: string
           ong_nome: string
@@ -570,11 +576,32 @@ export type Database = {
           slug: string
           total_encontrado: number
           total_necessidades: number
+          urgencia_maxima: number
         }[]
       }
       count_project_voluntarios: {
         Args: { _project_id: string }
         Returns: number
+      }
+      get_comprovante_doacao: {
+        Args: { _id: string }
+        Returns: {
+          anonima: boolean
+          confirmada_em: string
+          data_doacao: string
+          doador_nome: string
+          forma_entrega: string
+          id: string
+          necessidade_nome: string
+          necessidade_unidade: string
+          ong_nome: string
+          ong_slug: string
+          projeto_nome: string
+          projeto_slug: string
+          quantidade: number
+          status: string
+          valor: number
+        }[]
       }
       get_impacto_ong: {
         Args: { _ong_id: string }
@@ -598,6 +625,14 @@ export type Database = {
           voluntarios: number
         }[]
       }
+      get_taxa_confirmacao_ong: {
+        Args: { _ong_id: string }
+        Returns: {
+          confirmadas: number
+          dias_medio_para_confirmar: number
+          total: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -614,6 +649,13 @@ export type Database = {
         Returns: boolean
       }
       ong_id_do_caminho: { Args: { _name: string }; Returns: string }
+      opcoes_de_filtro_projetos: {
+        Args: never
+        Returns: {
+          causas: string[]
+          cidades: string[]
+        }[]
+      }
       recalcular_arrecadado: {
         Args: { _necessidade_id: string }
         Returns: undefined

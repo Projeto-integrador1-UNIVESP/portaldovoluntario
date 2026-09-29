@@ -18,10 +18,12 @@ export default {
         xs: ["0.75rem", { lineHeight: "1rem" }],
         sm: ["0.875rem", { lineHeight: "1.25rem" }],
         base: ["1rem", { lineHeight: "1.5rem" }],
-        lg: ["1.25rem", { lineHeight: "1.75rem" }],
-        xl: ["1.5rem", { lineHeight: "2rem" }],
-        "2xl": ["2rem", { lineHeight: "2.5rem" }],
-        "3xl": ["3rem", { lineHeight: "1.1" }],
+        lg: ["1.25rem", { lineHeight: "1.75rem", letterSpacing: "-0.01em" }],
+        xl: ["1.5rem", { lineHeight: "2rem", letterSpacing: "-0.012em" }],
+        "2xl": ["2rem", { lineHeight: "2.5rem", letterSpacing: "-0.018em" }],
+        // Quanto maior o texto, mais negativo o tracking: é o que faz um
+        // título parecer desenhado em vez de digitado.
+        "3xl": ["3rem", { lineHeight: "1.06", letterSpacing: "-0.028em" }],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -89,6 +91,7 @@ export default {
       },
       borderRadius: {
         xl: "calc(var(--radius) + 4px)",
+        controle: "var(--raio-controle)",
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",

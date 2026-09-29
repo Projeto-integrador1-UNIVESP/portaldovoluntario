@@ -2,13 +2,13 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Check, Eye, EyeOff, X } from "lucide-react";
+import { Check, Eye, EyeOff, Loader2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PublicShell } from "@/components/layout/PublicShell";
 import { Seo } from "@/components/common/Seo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { redefinirSenhaSchema, regrasDeSenha, type RedefinirSenhaInput } from "@/lib/schemas/auth";
 import { toast } from "sonner";
@@ -47,10 +47,10 @@ export default function RedefinirSenhaPage() {
   return (
     <PublicShell>
       <Seo title="Criar nova senha" noIndex />
-      <div className="container flex min-h-[70vh] items-center justify-center py-12">
-        <Card className="w-full max-w-md">
+      <div className="container flex min-h-[70vh] items-center justify-center py-14">
+        <Card className="w-full max-w-md rounded-xl shadow-sutil">
           <CardHeader>
-            <CardTitle>Criar nova senha</CardTitle>
+            <h1 className="font-display text-2xl font-bold">Criar nova senha</h1>
             <CardDescription>
               Escolha uma senha que você não use em outros sites.
             </CardDescription>
@@ -61,7 +61,7 @@ export default function RedefinirSenhaPage() {
                 <p className="text-sm text-muted-foreground">
                   Este link expirou ou já foi usado. Peça um novo para continuar.
                 </p>
-                <Button asChild className="w-full">
+                <Button asChild size="lg" className="pressionavel w-full">
                   <Link to="/esqueci-senha">Pedir um novo link</Link>
                 </Button>
               </div>
@@ -89,7 +89,11 @@ export default function RedefinirSenhaPage() {
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                             aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
                           >
-                            {mostrarSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            {mostrarSenha ? (
+                              <EyeOff className="h-4 w-4" aria-hidden="true" />
+                            ) : (
+                              <Eye className="h-4 w-4" aria-hidden="true" />
+                            )}
                           </button>
                         </div>
                         <FormMessage />
@@ -130,7 +134,15 @@ export default function RedefinirSenhaPage() {
                     )}
                   />
 
-                  <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+                  <Button
+                    type="submit"
+                    size="lg"
+                    className="pressionavel w-full"
+                    disabled={form.formState.isSubmitting}
+                  >
+                    {form.formState.isSubmitting && (
+                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                    )}
                     {form.formState.isSubmitting ? "Salvando…" : "Salvar nova senha"}
                   </Button>
                 </form>

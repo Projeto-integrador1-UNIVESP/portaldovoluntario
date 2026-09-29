@@ -3,7 +3,8 @@ import { CalendarClock, Flame } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/common/ProgressBar";
-import { formatPrazo } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import { formatCurrency, formatPrazo } from "@/lib/format";
 
 export type Necessidade = {
   id: string;
@@ -23,54 +24,82 @@ type NeedItemProps = {
   linkDoar?: string;
 };
 
-/** Uma linha da lista de necessidades de um projeto (F1). */
+/**
+ * Uma necessidade na visão de quem doa.
+ *
+ * O número que recebe peso visual é **o que falta**, não o que já chegou:
+ * "faltam 68 cobertores" é um pedido, "32 de 100" é um relatório. A barra
+ * continua na linha de baixo como contexto — ela é o recibo do que a ONG já
+ * confirmou ter recebido, e é isso que explica por que ela anda devagar.
+ */
 export function NeedItem({ necessidade, linkDoar }: NeedItemProps) {
   const prazo = formatPrazo(necessidade.prazo);
   const urgente = necessidade.urgencia >= 3;
-  const completa = necessidade.arrecadado >= necessidade.meta;
+  const falta = Math.max(0, necessidade.meta - necessidade.arrecadado);
+  const completa = falta === 0;
+  const emReais = necessidade.tipo === "dinheiro";
+
+  const quantidade = (valor: number) =>
+    emReais
+      ? formatCurrency(valor)
+      : `${valor.toLocaleString("pt-BR")}${necessidade.unidade ? ` ${necessidade.unidade}` : ""}`;
 
   return (
-    <li className="rounded-lg border p-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-semibold">{necessidade.nome}</h3>
-            {urgente && !completa && (
-              <Badge variant="destructive" className="gap-1">
-                <Flame className="h-3 w-3" aria-hidden="true" />
-                Urgente
-              </Badge>
-            )}
-            {completa && <Badge className="bg-success text-success-foreground">Meta atingida</Badge>}
-          </div>
+    <li className="rounded-xl border bg-card p-5 shadow-sutil">
+      <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
+        <h3 className="min-w-0 font-semibold">{necessidade.nome}</h3>
 
-          <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-            {necessidade.categoria && <span>{necessidade.categoria}</span>}
-            {prazo && (
-              <span className="inline-flex items-center gap-1">
-                <CalendarClock className="h-3 w-3" aria-hidden="true" />
-                {prazo}
-              </span>
-            )}
-          </div>
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          {urgente && !completa && (
+            <Badge variant="destructive" className="gap-1">
+              <Flame className="h-3 w-3" aria-hidden="true" />
+              Urgente
+            </Badge>
+          )}
+          {completa && (
+            <Badge className="bg-success text-success-foreground hover:bg-success">
+              Meta atingida
+            </Badge>
+          )}
         </div>
-
-        {linkDoar && !completa && (
-          <Button variant="cta" size="sm" asChild>
-            <Link to={linkDoar}>
-              {necessidade.tipo === "item" ? "Quero doar" : "Contribuir"}
-            </Link>
-          </Button>
-        )}
       </div>
 
+      <p
+        className={cn(
+          "mt-1 font-display text-xl font-bold leading-tight tracking-[-0.02em] tabular-nums",
+          completa && "text-success",
+        )}
+      >
+        {completa
+          ? `${quantidade(necessidade.arrecadado)} já recebidos`
+          : `Faltam ${quantidade(falta)}`}
+      </p>
+
+      {(necessidade.categoria || prazo) && (
+        <div className="mt-1.5 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+          {necessidade.categoria && <span>{necessidade.categoria}</span>}
+          {prazo && (
+            <span className="inline-flex items-center gap-1">
+              <CalendarClock className="h-3 w-3" aria-hidden="true" />
+              {prazo}
+            </span>
+          )}
+        </div>
+      )}
+
       <ProgressBar
-        className="mt-3"
+        className="mt-4"
         arrecadado={necessidade.arrecadado}
         meta={necessidade.meta}
         tipo={necessidade.tipo}
         unidade={necessidade.unidade}
       />
+
+      {linkDoar && !completa && (
+        <Button variant="cta" asChild className="pressionavel mt-4 w-full sm:w-auto">
+          <Link to={linkDoar}>{emReais ? "Contribuir" : "Quero doar"}</Link>
+        </Button>
+      )}
     </li>
   );
 }

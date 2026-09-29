@@ -1,4 +1,5 @@
 @import "./styles/motion.css";
+@import "./styles/acabamento.css";
 
 @tailwind base;
 @tailwind components;
@@ -39,7 +40,10 @@
     --border: 210 20% 90%;
     --input: 210 20% 90%;
     --ring: 200 80% 30%;
-    --radius: 0.5rem;
+    /* 0.5rem é o default do shadcn e entrega o template de longe. O par
+       card mais redondo / controle mais contido vira assinatura. */
+    --radius: 0.75rem;
+    --raio-controle: 0.625rem;
 
     --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;

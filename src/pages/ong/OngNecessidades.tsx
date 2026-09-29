@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ExternalLink, Package, Pencil, Plus, Trash2 } from "lucide-react";
+import { ExternalLink, Loader2, Package, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -27,6 +27,7 @@ import {
 import {
   Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage,
 } from "@/components/ui/form";
+import { Seo } from "@/components/common/Seo";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ErrorState } from "@/components/common/ErrorState";
 import { ProgressBar } from "@/components/common/ProgressBar";
@@ -64,14 +65,20 @@ export default function OngNecessidades() {
   });
   const tipo = form.watch("tipo");
 
-  const { data: projetos } = useQuery({
+  const {
+    data: projetos,
+    isPending: carregandoProjetos,
+    isError: erroProjetos,
+    refetch: recarregarProjetos,
+  } = useQuery({
     queryKey: ["ong-projetos-simples", ongId],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("projetos")
         .select("id, nome_projeto, slug")
         .eq("id_ong", ongId!)
         .order("created_at", { ascending: false });
+      if (error) throw error;
       return data ?? [];
     },
     enabled: Boolean(ongId),
@@ -158,10 +165,11 @@ export default function OngNecessidades() {
 
   return (
     <DashboardLayout type="ong">
+      <Seo title="Necessidades" noIndex />
       <PageHeader
         title="Necessidades"
         description="Diga o que está faltando. É isso que o doador vê primeiro."
-        icon={<Package className="h-6 w-6" />}
+        icon={<Package className="h-6 w-6" aria-hidden="true" />}
         action={
           <Button onClick={abrirNova} disabled={!idProjeto}>
             <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
@@ -170,8 +178,23 @@ export default function OngNecessidades() {
         }
       />
 
-      {(projetos?.length ?? 0) === 0 ? (
+      {/* Sem esta guarda a tela piscava "você ainda não tem projetos" enquanto a
+          lista de projetos carregava. */}
+      {erroProjetos ? (
+        <ErrorState
+          title="Não foi possível carregar seus projetos"
+          onRetry={() => recarregarProjetos()}
+        />
+      ) : carregandoProjetos ? (
+        <div className="space-y-3">
+          <Skeleton className="h-10 w-full max-w-sm" />
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-28 w-full rounded-xl" />
+          ))}
+        </div>
+      ) : projetos!.length === 0 ? (
         <EmptyState
+          icon={Package}
           title="Você ainda não tem projetos"
           description="As necessidades pertencem a um projeto. Crie um primeiro."
           action={{ label: "Criar projeto", to: "/ong/projetos" }}
@@ -212,7 +235,9 @@ export default function OngNecessidades() {
             <ErrorState title="Não foi possível carregar as necessidades" onRetry={() => refetch()} />
           ) : isPending ? (
             <div className="space-y-3">
-              {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-28 w-full" />)}
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-28 w-full rounded-xl" />
+              ))}
             </div>
           ) : necessidades!.length === 0 ? (
             <EmptyState
@@ -445,8 +470,11 @@ export default function OngNecessidades() {
                 <Button type="button" variant="outline" onClick={() => setAberto(false)}>
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={salvar.isPending}>
-                  {salvar.isPending ? "Salvando…" : editando ? "Salvar" : "Publicar"}
+                <Button type="submit" disabled={salvar.isPending} className="pressionavel">
+                  {salvar.isPending && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                  )}
+                  {editando ? "Salvar" : "Publicar"}
                 </Button>
               </div>
             </form>
@@ -466,7 +494,18 @@ export default function OngNecessidades() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => aRemover && remover.mutate(aRemover.id)}>
+            <AlertDialogAction
+              disabled={remover.isPending}
+              onClick={(e) => {
+                // O fechamento espera a resposta: se a remoção falhar, o aviso
+                // aparece com o diálogo ainda na tela.
+                e.preventDefault();
+                if (aRemover) remover.mutate(aRemover.id);
+              }}
+            >
+              {remover.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+              )}
               Remover
             </AlertDialogAction>
           </AlertDialogFooter>

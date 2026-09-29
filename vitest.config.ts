@@ -8,6 +8,10 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./src/test/setup.ts"],
+    // Render de página em jsdom leva ~2s; com 20 arquivos em paralelo o teto
+    // padrão de 5s falhava por lentidão da máquina, não por defeito do código.
+    testTimeout: 20_000,
+    hookTimeout: 20_000,
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
   },
   resolve: {
