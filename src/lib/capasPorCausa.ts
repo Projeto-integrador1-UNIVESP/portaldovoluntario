@@ -159,24 +159,27 @@ function resolverUma(texto: string): ChaveDeCapa | null {
  * Foto para uma causa.
  *
  * Aceita array porque `ongs.causas` é `TEXT[]`: vence a primeira entrada que
- * resolver. Causa nula, vazia ou desconhecida devolve a foto genérica, então
- * o retorno nunca é nulo e quem chama não precisa de guarda.
+ * resolver.
+ *
+ * Causa desconhecida devolve nulo, e não a foto genérica. A genérica ficou
+ * reservada para a categoria "Outros", que é uma escolha explícita de quem
+ * cadastrou. Quando várias organizações sem categoria aparecem lado a lado,
+ * a mesma foto repetida lê como defeito; o padrão gerado por identificador dá
+ * uma capa diferente para cada uma, que é o comportamento certo.
  */
-export function capaDaCausa(causa?: string | string[] | null): CapaDeCausa {
+export function capaDaCausa(causa?: string | string[] | null): CapaDeCausa | null {
   const candidatos = Array.isArray(causa) ? causa : [causa];
 
-  let chave: ChaveDeCapa = "generica";
   for (const c of candidatos) {
     if (typeof c !== "string") continue;
-    const achada = resolverUma(c);
-    if (achada) {
-      chave = achada;
-      break;
+    const chave = resolverUma(c);
+    if (chave) {
+      const { p640, p1280 } = ARQUIVOS[chave];
+      return { src: p640, srcSet: `${p640} 640w, ${p1280} 1280w`, chave };
     }
   }
 
-  const { p640, p1280 } = ARQUIVOS[chave];
-  return { src: p640, srcSet: `${p640} 640w, ${p1280} 1280w`, chave };
+  return null;
 }
 
 /**

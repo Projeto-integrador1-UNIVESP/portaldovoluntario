@@ -56,43 +56,48 @@ describe("Capa", () => {
     expect(container.querySelector("img")).toBeNull();
   });
 
-  it("causa desconhecida cai na foto genérica, não no padrão", () => {
+  it("causa desconhecida usa o padrão gerado, não uma foto repetida", () => {
+    // Várias organizações sem categoria aparecem lado a lado na listagem. Se
+    // todas caíssem na mesma foto genérica, leria como defeito; o padrão
+    // gerado varia por identificador.
     const { container } = render(<Capa alt="" id="p1" causa="Assistência social" />);
 
-    expect(container.querySelector("img")?.getAttribute("src")).toBe(capaDaCausa(null).src);
+    expect(container.querySelector("img")).toBeNull();
+    expect(container.querySelector("svg")).not.toBeNull();
   });
 });
 
 describe("capaDaCausa", () => {
   it("casa por radical, não por palavra exata", () => {
     // Todas vêm do texto livre que o admin digita em `projetos.causa`.
-    expect(capaDaCausa("Alimentos").chave).toBe("alimentos");
-    expect(capaDaCausa("alimentação").chave).toBe("alimentos");
-    expect(capaDaCausa("Segurança alimentar").chave).toBe("alimentos");
-    expect(capaDaCausa("Educação").chave).toBe("escolar");
-    expect(capaDaCausa("Material escolar").chave).toBe("escolar");
-    expect(capaDaCausa("Roupas e calçados").chave).toBe("roupas");
-    expect(capaDaCausa("Higiene e limpeza").chave).toBe("higiene");
-    expect(capaDaCausa("Saúde").chave).toBe("medicamentos");
-    expect(capaDaCausa("Moradia").chave).toBe("moveis");
+    expect(capaDaCausa("Alimentos")?.chave).toBe("alimentos");
+    expect(capaDaCausa("alimentação")?.chave).toBe("alimentos");
+    expect(capaDaCausa("Segurança alimentar")?.chave).toBe("alimentos");
+    expect(capaDaCausa("Educação")?.chave).toBe("escolar");
+    expect(capaDaCausa("Material escolar")?.chave).toBe("escolar");
+    expect(capaDaCausa("Roupas e calçados")?.chave).toBe("roupas");
+    expect(capaDaCausa("Higiene e limpeza")?.chave).toBe("higiene");
+    expect(capaDaCausa("Saúde")?.chave).toBe("medicamentos");
+    expect(capaDaCausa("Moradia")?.chave).toBe("moveis");
   });
 
   it("resolve todas as CATEGORIAS do formulário de necessidade", async () => {
     const { CATEGORIAS } = await import("@/lib/schemas/necessidade");
     for (const categoria of CATEGORIAS) {
-      expect(capaDaCausa(categoria).chave).not.toBe("generica");
+      expect(capaDaCausa(categoria)?.chave).toBeDefined();
     }
   });
 
   it("aceita array, porque ongs.causas é TEXT[]", () => {
-    expect(capaDaCausa(["Assistência social", "Inverno"]).chave).toBe("inverno");
-    expect(capaDaCausa([]).chave).toBe("generica");
+    expect(capaDaCausa(["Assistência social", "Inverno"])?.chave).toBe("inverno");
+    expect(capaDaCausa([])).toBeNull();
   });
 
-  it("nunca devolve nulo: causa ausente ou desconhecida vira a genérica", () => {
-    expect(capaDaCausa(null).chave).toBe("generica");
-    expect(capaDaCausa(undefined).chave).toBe("generica");
-    expect(capaDaCausa("cultura e lazer").chave).toBe("generica");
-    expect(capaDaCausa(null).srcSet).toContain("1280w");
+  it("devolve nulo quando a causa não resolve numa categoria", () => {
+    // A foto genérica ficou reservada para "Outros", que é escolha explícita
+    // de quem cadastrou, não um depósito de tudo que não casou.
+    expect(capaDaCausa(null)).toBeNull();
+    expect(capaDaCausa("causa que não existe")).toBeNull();
+    expect(capaDaCausa("Outros")?.chave).toBe("outros");
   });
 });

@@ -281,6 +281,7 @@ function CardOng({ ong }: { ong: Record<string, any> }) {
         id={ong.id}
         nome={ong.nome}
         className="w-28 shrink-0 sm:w-36"
+        causa={ong.causas}
       />
 
       <div className="min-w-0 flex-1 p-5">

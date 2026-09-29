@@ -74,7 +74,9 @@ function MarcaIlustrativa() {
         }}
         aria-hidden="true"
       />
-      <span className="pointer-events-none absolute bottom-1.5 left-1.5 rounded-md bg-black/35 px-1.5 py-0.5 text-[10px] font-medium leading-tight tracking-wide text-white/90 backdrop-blur-[2px]">
+      <span className="pointer-events-none absolute bottom-1.5 right-1.5 rounded-md bg-black/40 px-1.5 py-0.5 text-[10px] font-medium leading-tight tracking-wide text-white/90 backdrop-blur-[2px]"
+        /* À direita porque o avatar da ONG fica sobreposto no canto
+           inferior esquerdo da capa e os dois se atropelavam. */>
         Imagem ilustrativa
       </span>
     </>
@@ -138,12 +140,13 @@ export function Capa({
   // justamente para "Assistência social" e afins, e uma foto morna serve
   // melhor que um degradê. Sem causa nenhuma o padrão gerado é melhor, porque
   // ao menos é derivado deste registro.
-  const temCausa = (Array.isArray(causa) ? causa : [causa]).some(
-    (c) => typeof c === "string" && c.trim() !== "",
-  );
+  // Só entra na foto quando a causa resolve numa categoria de verdade.
+  // Antes, causa desconhecida caía na foto genérica, e várias organizações
+  // sem categoria apareciam lado a lado com a mesma imagem, o que lê como
+  // defeito. O padrão gerado varia por registro e resolve melhor.
+  const foto = capaDaCausa(causa);
 
-  if (temCausa) {
-    const foto = capaDaCausa(causa);
+  if (foto) {
     return (
       <div className={cn("relative overflow-hidden bg-secondary", className)}>
         <img

@@ -24,6 +24,7 @@ type OngDaLista = {
   capa_url: string | null;
   img_capa: string | null;
   verificada_em: string | null;
+  causas: string[] | null;
   /** Necessidades ativas com meta ainda não atingida. */
   necessidadesAbertas: number;
 };
@@ -37,7 +38,7 @@ async function buscarOngs(): Promise<OngDaLista[]> {
   const { data: ongs, error } = await supabase
     .from("ongs")
     .select(
-      "id, slug, nome, descricao, missao, cidade, estado, img_url, logo_url, img_capa, capa_url, verificada_em",
+      "id, slug, nome, descricao, missao, cidade, estado, img_url, logo_url, img_capa, capa_url, verificada_em, causas",
     )
     .eq("status", true)
     .order("verificada_em", { ascending: false, nullsFirst: false })
@@ -161,7 +162,8 @@ function CardOng({ ong }: { ong: OngDaLista }) {
       className="elevavel group flex h-full flex-col overflow-hidden rounded-xl border bg-card shadow-sutil focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       {/* `alt=""`: o nome da organização aparece logo abaixo. */}
-      <Capa src={capa} alt="" id={ong.id} className="h-28 w-full" />
+      <Capa src={capa} alt="" id={ong.id} className="h-28 w-full"
+        causa={ong.causas} />
 
       <div className="flex min-w-0 flex-1 flex-col p-5">
         <div className="flex min-w-0 items-start gap-3">
