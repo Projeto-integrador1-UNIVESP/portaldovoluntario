@@ -8,7 +8,10 @@
 --  3. `get_public_home_stats` contava projetos sem olhar se a ONG está ativa,
 --     divergindo da listagem, que filtra.
 
+-- Derruba a assinatura antiga (5 argumentos) e também a nova, para que
+-- reaplicar o arquivo não colida com a função que ele mesmo criou.
 DROP FUNCTION IF EXISTS public.buscar_projetos(TEXT, TEXT, TEXT, INT, INT);
+DROP FUNCTION IF EXISTS public.buscar_projetos(TEXT, TEXT, TEXT, TEXT, INT, INT);
 
 CREATE FUNCTION public.buscar_projetos(
   _q TEXT DEFAULT NULL,
