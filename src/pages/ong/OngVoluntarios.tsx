@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, Download, Loader2, Trash2, UserCheck, X } from "lucide-react";
+import { Check, Download, Loader2, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { CHAVE_PENDENCIAS, DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -14,23 +14,23 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Seo } from "@/components/common/Seo";
 import { Stat } from "@/components/common/Stat";
+import { ConfirmarExclusao } from "@/components/common/ConfirmarExclusao";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ErrorState } from "@/components/common/ErrorState";
+import { CTA, TERMOS, VAZIO } from "@/lib/copy";
+import { mensagemAmigavel } from "@/lib/erros";
 import { exportToCsv } from "@/lib/exportCsv";
 import { formatDate } from "@/lib/format";
 
 type StatusInscricao = "pendente" | "aprovado" | "rejeitado";
 
+/** Os mesmos nomes de estado que o admin usa. */
 const ROTULOS: Record<StatusInscricao, string> = {
-  pendente: "Pendente",
-  aprovado: "Aprovado",
-  rejeitado: "Rejeitado",
+  pendente: TERMOS.aguardando,
+  aprovado: TERMOS.aprovado,
+  rejeitado: TERMOS.recusado,
 };
 
 /**
@@ -38,13 +38,12 @@ const ROTULOS: Record<StatusInscricao, string> = {
  *
  * A lista antes puxava a tabela `profiles` inteira e cruzava no cliente, ou
  * seja, baixava o cadastro de todo mundo da plataforma para exibir os nomes de
- * meia dúzia de inscritos. Agora o filtro vai no banco.
+ * meia dúzia de inscritos. O filtro vai no banco.
  */
 export default function OngVoluntarios() {
   const { ongId } = useAuth();
   const queryClient = useQueryClient();
   const [aba, setAba] = useState<StatusInscricao>("pendente");
-  const [aRemover, setARemover] = useState<{ id: string; nome: string } | null>(null);
 
   const { data, isPending, isError, refetch } = useQuery({
     queryKey: ["ong-voluntarios", ongId],
@@ -84,7 +83,7 @@ export default function OngVoluntarios() {
         : { data: [] };
 
       const porUsuario = new Map((perfis.data ?? []).map((p) => [p.user_id, p]));
-      const porProjeto = new Map((projetos ?? []).map((p) => [p.id, p]));
+      const porProjeto = new Map(projetosLista.map((p) => [p.id, p]));
 
       return linhas.map((v) => ({
         ...v,
@@ -97,18 +96,22 @@ export default function OngVoluntarios() {
     staleTime: 30_000,
   });
 
+  const invalidar = () => {
+    queryClient.invalidateQueries({ queryKey: ["ong-voluntarios", ongId] });
+    queryClient.invalidateQueries({ queryKey: ["ong-resumo", ongId] });
+    queryClient.invalidateQueries({ queryKey: [...CHAVE_PENDENCIAS] });
+  };
+
   const alterarStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: StatusInscricao }) => {
       const { error } = await supabase.from("voluntariado").update({ status }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: (_r, { status }) => {
-      toast.success(
-        status === "aprovado" ? "Inscrição aprovada." : "Inscrição recusada.",
-      );
-      queryClient.invalidateQueries({ queryKey: ["ong-voluntarios", ongId] });
+      toast.success(status === "aprovado" ? "Inscrição aprovada" : "Inscrição recusada");
+      invalidar();
     },
-    onError: () => toast.error("Não foi possível atualizar a inscrição."),
+    onError: (erro) => toast.error(mensagemAmigavel(erro, "Não foi possível responder a inscrição.")),
   });
 
   const remover = useMutation({
@@ -117,11 +120,10 @@ export default function OngVoluntarios() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Inscrição removida.");
-      setARemover(null);
-      queryClient.invalidateQueries({ queryKey: ["ong-voluntarios", ongId] });
+      toast.success("Inscrição removida");
+      invalidar();
     },
-    onError: () => toast.error("Não foi possível remover a inscrição."),
+    onError: (erro) => toast.error(mensagemAmigavel(erro, "Não foi possível remover a inscrição.")),
   });
 
   const emAndamento = alterarStatus.isPending ? alterarStatus.variables?.id : null;
@@ -136,6 +138,7 @@ export default function OngVoluntarios() {
 
   const lista = porStatus[aba];
 
+  // Os rótulos das colunas alimentam o cabeçalho do arquivo: não mudar.
   const baixarCsv = () =>
     exportToCsv(
       "voluntarios.csv",
@@ -155,11 +158,10 @@ export default function OngVoluntarios() {
       <PageHeader
         title="Voluntários"
         description="Quem se inscreveu nos seus projetos e está esperando resposta."
-        icon={<UserCheck className="h-6 w-6" aria-hidden="true" />}
         action={
           <Button variant="outline" onClick={baixarCsv} disabled={!data?.length}>
-            <Download className="mr-2 h-4 w-4" aria-hidden="true" />
-            Exportar CSV
+            <Download aria-hidden="true" />
+            {CTA.exportarCsv}
           </Button>
         }
       />
@@ -170,10 +172,10 @@ export default function OngVoluntarios() {
         <>
           <div className="grid gap-4 sm:grid-cols-3">
             {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-24 w-full rounded-lg" />
+              <Skeleton key={i} className="h-28 w-full rounded-xl" />
             ))}
           </div>
-          <div className="mt-6 space-y-3">
+          <div className="mt-8 space-y-3">
             {Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} className="h-12 w-full" />
             ))}
@@ -181,7 +183,6 @@ export default function OngVoluntarios() {
         </>
       ) : data.length === 0 ? (
         <EmptyState
-          icon={UserCheck}
           title="Nenhuma inscrição de voluntário ainda"
           description="As inscrições chegam pela página pública do projeto. Projeto no ar, com necessidades publicadas, é o que traz voluntário."
           action={{ label: "Ver meus projetos", to: "/ong/projetos" }}
@@ -196,21 +197,25 @@ export default function OngVoluntarios() {
                   ? "inscrição esperando resposta"
                   : "inscrições esperando resposta"
               }
+              destaque={porStatus.pendente.length > 0}
             />
             <Stat
               valor={porStatus.aprovado.length}
               rotulo={porStatus.aprovado.length === 1 ? "voluntário aprovado" : "voluntários aprovados"}
             />
-            <Stat valor={porStatus.rejeitado.length} rotulo="inscrições recusadas" />
+            <Stat
+              valor={porStatus.rejeitado.length}
+              rotulo={porStatus.rejeitado.length === 1 ? "inscrição recusada" : "inscrições recusadas"}
+            />
           </div>
 
           <Tabs
             value={aba}
             onValueChange={(v) => setAba(v as StatusInscricao)}
-            className="mt-6"
+            className="mt-8"
           >
             <TabsList>
-              <TabsTrigger value="pendente">Pendentes ({porStatus.pendente.length})</TabsTrigger>
+              <TabsTrigger value="pendente">{TERMOS.aguardando} ({porStatus.pendente.length})</TabsTrigger>
               <TabsTrigger value="aprovado">Aprovados ({porStatus.aprovado.length})</TabsTrigger>
               <TabsTrigger value="rejeitado">Recusados ({porStatus.rejeitado.length})</TabsTrigger>
             </TabsList>
@@ -219,27 +224,26 @@ export default function OngVoluntarios() {
           <Card className="mt-4 overflow-hidden">
             <CardContent className="p-0">
               {lista.length === 0 ? (
-                <div className="p-6">
-                  <EmptyState
-                    icon={UserCheck}
-                    title={
-                      aba === "pendente"
-                        ? "Nenhuma inscrição esperando resposta"
-                        : aba === "aprovado"
-                          ? "Nenhum voluntário aprovado ainda"
-                          : "Nenhuma inscrição recusada"
-                    }
-                    description={
-                      aba === "pendente"
-                        ? "Tudo que chegou já foi respondido."
-                        : "As inscrições aparecem aqui conforme você responde cada uma."
-                    }
-                    action={{
-                      label: "Ver as pendentes",
-                      onClick: () => setAba("pendente"),
-                    }}
-                  />
-                </div>
+                <EmptyState
+                  className="m-4 border-0 bg-transparent"
+                  title={
+                    aba === "pendente"
+                      ? "Nenhuma inscrição esperando resposta"
+                      : aba === "aprovado"
+                        ? "Nenhum voluntário aprovado ainda"
+                        : "Nenhuma inscrição recusada"
+                  }
+                  description={
+                    aba === "pendente"
+                      ? "Tudo que chegou já foi respondido."
+                      : "As inscrições aparecem aqui conforme você responde cada uma."
+                  }
+                  action={
+                    aba === "pendente"
+                      ? { label: "Ver os aprovados", onClick: () => setAba("aprovado") }
+                      : { label: "Ver as pendentes", onClick: () => setAba("pendente") }
+                  }
+                />
               ) : (
                 <Table>
                   <TableHeader>
@@ -261,44 +265,44 @@ export default function OngVoluntarios() {
                           <TableCell>
                             <div className="font-medium">{nome}</div>
                             <div className="text-xs text-muted-foreground">
-                              {v.pessoa?.email || "Não informado"}
+                              {v.pessoa?.email || VAZIO.naoInformado}
                             </div>
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">
-                            {v.projeto?.nome_projeto ?? "Sem projeto"}
+                            {v.projeto?.nome_projeto ?? VAZIO.semProjeto}
                           </TableCell>
-                          <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                          <TableCell className="numero whitespace-nowrap text-sm text-muted-foreground">
                             {formatDate(v.data_inscricao)}
                           </TableCell>
                           <TableCell>
                             <Badge
                               variant={
                                 v.status === "aprovado"
-                                  ? "default"
+                                  ? "success"
                                   : v.status === "rejeitado"
-                                    ? "destructive"
-                                    : "secondary"
+                                    ? "neutro"
+                                    : "outline"
                               }
                             >
                               {ROTULOS[v.status]}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
-                            <div className="flex justify-end gap-1">
+                            <div className="flex flex-wrap justify-end gap-2">
                               {v.status !== "aprovado" && (
                                 <Button
                                   size="sm"
-                                  variant="outline"
                                   disabled={alterarStatus.isPending}
                                   onClick={() =>
                                     alterarStatus.mutate({ id: v.id, status: "aprovado" })
                                   }
                                 >
                                   {carregando ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                                    <Loader2 className="animate-spin" aria-hidden="true" />
                                   ) : (
-                                    <Check className="h-4 w-4 text-success" aria-hidden="true" />
+                                    <Check aria-hidden="true" />
                                   )}
+                                  <span aria-hidden="true">Aprovar</span>
                                   <span className="sr-only">Aprovar {nome}</span>
                                 </Button>
                               )}
@@ -312,21 +316,30 @@ export default function OngVoluntarios() {
                                   }
                                 >
                                   {carregando ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                                    <Loader2 className="animate-spin" aria-hidden="true" />
                                   ) : (
-                                    <X className="h-4 w-4" aria-hidden="true" />
+                                    <X aria-hidden="true" />
                                   )}
+                                  <span aria-hidden="true">Recusar</span>
                                   <span className="sr-only">Recusar inscrição de {nome}</span>
                                 </Button>
                               )}
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setARemover({ id: v.id, nome })}
+                              <ConfirmarExclusao
+                                titulo={`Remover a inscrição de ${nome}?`}
+                                descricao="A pessoa sai da lista e perde o histórico desta inscrição. Se você só não quer contar com ela nesta ação, recuse em vez de remover."
+                                rotuloConfirmar={CTA.remover("inscrição")}
+                                onConfirmar={() => remover.mutateAsync(v.id).catch(() => {})}
                               >
-                                <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
-                                <span className="sr-only">Remover inscrição de {nome}</span>
-                              </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-destructive hover:text-destructive"
+                                >
+                                  <Trash2 aria-hidden="true" />
+                                  <span aria-hidden="true">Remover</span>
+                                  <span className="sr-only">Remover inscrição de {nome}</span>
+                                </Button>
+                              </ConfirmarExclusao>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -339,35 +352,6 @@ export default function OngVoluntarios() {
           </Card>
         </>
       )}
-
-      <AlertDialog open={Boolean(aRemover)} onOpenChange={(v) => !v && setARemover(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remover a inscrição de {aRemover?.nome}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              A pessoa sai da lista e perde o histórico desta inscrição. Se você só não quer
-              contar com ela nesta ação, recuse a inscrição em vez de remover.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={remover.isPending}
-              onClick={(e) => {
-                // O AlertDialogAction fecha o diálogo por padrão; aqui o fechamento
-                // acontece quando a remoção volta, para o erro ter onde aparecer.
-                e.preventDefault();
-                if (aRemover) remover.mutate(aRemover.id);
-              }}
-            >
-              {remover.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
-              )}
-              Remover
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </DashboardLayout>
   );
 }
