@@ -1,6 +1,7 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import { LazyMotion, MotionConfig } from "motion/react";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -48,6 +49,28 @@ const OngDoacoes = lazy(() => import("./pages/ong/OngDoacoes"));
 const OngVoluntarios = lazy(() => import("./pages/ong/OngVoluntarios"));
 const OngAuditoria = lazy(() => import("./pages/ong/OngAuditoria"));
 
+/**
+ * Recursos de animação carregados sob demanda: o `m` (não `motion`) renderiza
+ * estático até o chunk chegar, e `strict` acusa em desenvolvimento quem usar
+ * `motion.div` por engano, o que traria a biblioteca inteira para o bundle
+ * inicial. `domMax` inclui layout e drag, que o stepper de doação usa.
+ */
+const carregarMotion = () => import("motion/react").then((mod) => mod.domMax);
+
+/**
+ * Cada navegação nasce num contêiner novo (chave = rota), e `@starting-style`
+ * no CSS faz a página entrar deslizando de leve. Sem JavaScript de transição
+ * e sem esconder conteúdo: quem pediu menos movimento vê a troca seca.
+ */
+function EntradaDeRota({ children }: { children: ReactNode }) {
+  const { pathname } = useLocation();
+  return (
+    <div key={pathname} className="entrada-rota">
+      {children}
+    </div>
+  );
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -63,12 +86,15 @@ const queryClient = new QueryClient({
 const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
+      <LazyMotion features={carregarMotion} strict>
+      <MotionConfig reducedMotion="user">
       <TooltipProvider>
         <Sonner />
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <AuthProvider>
             <ErrorBoundary>
               <Suspense fallback={<PageSkeleton />}>
+                <EntradaDeRota>
                 <Routes>
                   {/* Público */}
                   <Route path="/" element={<HomePage />} />
@@ -116,11 +142,14 @@ const App = () => (
 
                   <Route path="*" element={<NotFound />} />
                 </Routes>
+                </EntradaDeRota>
               </Suspense>
             </ErrorBoundary>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
+      </MotionConfig>
+      </LazyMotion>
     </QueryClientProvider>
   </HelmetProvider>
 );
