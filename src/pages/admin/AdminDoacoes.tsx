@@ -23,7 +23,10 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import { exportToCsv } from "@/lib/exportCsv";
 import { formatCurrency, formatDateTime, maskCurrency, parseCurrency } from "@/lib/format";
 import { Campo, ExcluirLinha, Paginacao, TabelaAdmin } from "./_shared";
-import { POR_PAGINA, mensagemDeErro, useCorrigirPaginaVazia } from "./_shared-lib";
+import {
+  COLUNAS_DA_DOACAO, POR_PAGINA, doacoesComRelacionados, mensagemDeErro,
+  useCorrigirPaginaVazia, type DoacaoDetalhada,
+} from "./_shared-lib";
 
 type Filtro = "todas" | "pendente" | "confirmada" | "cancelada";
 
@@ -46,64 +49,7 @@ const COLUNAS = [
   { rotulo: "Ações", className: "text-right" },
 ];
 
-const SELECAO =
-  "id, valor, quantidade, status, tipo_doacao, data_doacao, confirmada_em, doador_nome, doador_email, anonima, forma_entrega, id_usuario, id_ong, id_projeto, id_necessidade";
-
-type LinhaDoacao = {
-  id: string;
-  valor: number;
-  quantidade: number | null;
-  status: string;
-  tipo_doacao: string | null;
-  data_doacao: string;
-  confirmada_em: string | null;
-  anonima: boolean;
-  forma_entrega: string | null;
-  doador_nome: string | null;
-  doador_email: string | null;
-  ong: { nome: string } | null;
-  doador: { nome: string; email: string; telefone: string | null; cidade: string | null; estado: string | null } | null;
-  necessidade: { nome: string; unidade: string | null } | null;
-};
-
-/** Junta as doações com ONG, perfil e necessidade sem depender de embed/RLS. */
-async function comRelacionados(linhas: Record<string, unknown>[]): Promise<LinhaDoacao[]> {
-  const ids = (chave: string) =>
-    [...new Set(linhas.map((l) => l[chave]).filter(Boolean))] as string[];
-
-  const idsOngs = ids("id_ong");
-  const idsUsuarios = ids("id_usuario");
-  const idsNecessidades = ids("id_necessidade");
-
-  const [ongs, perfis, necessidades] = await Promise.all([
-    idsOngs.length
-      ? supabase.from("ongs").select("id, nome").in("id", idsOngs)
-      : Promise.resolve({ data: [] }),
-    idsUsuarios.length
-      ? supabase
-          .from("profiles")
-          .select("user_id, nome, email, telefone, cidade, estado")
-          .in("user_id", idsUsuarios)
-      : Promise.resolve({ data: [] }),
-    idsNecessidades.length
-      ? supabase.from("necessidades").select("id, nome, unidade").in("id", idsNecessidades)
-      : Promise.resolve({ data: [] }),
-  ]);
-
-  const porOng = new Map((ongs.data ?? []).map((o) => [o.id, o]));
-  const porUsuario = new Map((perfis.data ?? []).map((p) => [p.user_id, p]));
-  const porNecessidade = new Map((necessidades.data ?? []).map((n) => [n.id, n]));
-
-  return linhas.map((l) => ({
-    ...(l as unknown as LinhaDoacao),
-    valor: Number(l.valor ?? 0),
-    ong: porOng.get(l.id_ong as string) ?? null,
-    doador: l.id_usuario ? porUsuario.get(l.id_usuario as string) ?? null : null,
-    necessidade: l.id_necessidade ? porNecessidade.get(l.id_necessidade as string) ?? null : null,
-  }));
-}
-
-const nomeDoDoador = (d: LinhaDoacao) =>
+const nomeDoDoador = (d: DoacaoDetalhada) =>
   d.anonima ? "Doador anônimo" : d.doador?.nome || d.doador_nome || "Sem identificação";
 
 /**
@@ -123,7 +69,7 @@ export default function AdminDoacoes() {
   const filtro = (parametros.get("status") as Filtro | null) ?? "todas";
   const [pagina, setPagina] = useState(0);
   const [criando, setCriando] = useState(false);
-  const [detalhe, setDetalhe] = useState<LinhaDoacao | null>(null);
+  const [detalhe, setDetalhe] = useState<DoacaoDetalhada | null>(null);
   const [exportando, setExportando] = useState(false);
   const [form, setForm] = useState({
     id_ong: "", valor: "", tipo_doacao: "pix", doador_nome: "", doador_email: "",
@@ -134,7 +80,7 @@ export default function AdminDoacoes() {
     queryFn: async () => {
       let consulta = supabase
         .from("doacoes")
-        .select(SELECAO, { count: "exact" })
+        .select(COLUNAS_DA_DOACAO, { count: "exact" })
         // `id` como segunda chave: com só a data, linhas de mesmo instante
         // saem em ordem indefinida e uma delas pode aparecer em duas páginas.
         .order("data_doacao", { ascending: false })
@@ -147,7 +93,7 @@ export default function AdminDoacoes() {
       if (error) throw error;
 
       return {
-        linhas: await comRelacionados(linhas ?? []),
+        linhas: await doacoesComRelacionados(linhas ?? []),
         total: count ?? 0,
       };
     },
@@ -224,7 +170,7 @@ export default function AdminDoacoes() {
     try {
       let consulta = supabase
         .from("doacoes")
-        .select(SELECAO)
+        .select(COLUNAS_DA_DOACAO)
         .order("data_doacao", { ascending: false })
         .order("id")
         .limit(TETO_DO_CSV);
@@ -233,7 +179,7 @@ export default function AdminDoacoes() {
       const { data: linhas, error } = await consulta;
       if (error) throw error;
 
-      const completas = await comRelacionados(linhas ?? []);
+      const completas = await doacoesComRelacionados(linhas ?? []);
       exportToCsv(
         `doacoes-${filtro}.csv`,
         completas.map((d) => ({

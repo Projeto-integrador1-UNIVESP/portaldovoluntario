@@ -5,6 +5,7 @@
  * funções perde o fast refresh do Vite (`react-refresh/only-export-components`).
  */
 import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 /** Tamanho de página das listas que podem crescer (doações, usuários, ...). */
 export const POR_PAGINA = 25;
@@ -132,4 +133,68 @@ export const deCampoDeDataHora = (valor: string) => {
   const data = new Date(valor);
   if (Number.isNaN(data.getTime())) throw new Error("Informe uma data e hora válidas.");
   return data.toISOString();
+};
+
+/** Colunas que as telas de doação precisam, iguais nas duas. */
+export const COLUNAS_DA_DOACAO =
+  "id, valor, quantidade, status, tipo_doacao, data_doacao, confirmada_em, doador_nome, doador_email, anonima, forma_entrega, id_usuario, id_ong, id_projeto, id_necessidade";
+
+export type DoacaoDetalhada = {
+  id: string;
+  valor: number;
+  quantidade: number | null;
+  status: string;
+  tipo_doacao: string | null;
+  data_doacao: string;
+  confirmada_em: string | null;
+  anonima: boolean;
+  forma_entrega: string | null;
+  doador_nome: string | null;
+  doador_email: string | null;
+  ong: { nome: string } | null;
+  doador: { nome: string; email: string; telefone: string | null; cidade: string | null; estado: string | null } | null;
+  necessidade: { nome: string; unidade: string | null } | null;
+};
+
+/**
+ * Junta as doações com ONG, perfil e necessidade em três consultas por id, em
+ * vez do embed do PostgREST — que devolve `null` silenciosamente quando a RLS
+ * não alcança a tabela relacionada.
+ */
+export const doacoesComRelacionados = async (
+  linhas: Record<string, unknown>[],
+): Promise<DoacaoDetalhada[]> => {
+  const ids = (chave: string) =>
+    [...new Set(linhas.map((l) => l[chave]).filter(Boolean))] as string[];
+
+  const idsOngs = ids("id_ong");
+  const idsUsuarios = ids("id_usuario");
+  const idsNecessidades = ids("id_necessidade");
+
+  const [ongs, perfis, necessidades] = await Promise.all([
+    idsOngs.length
+      ? supabase.from("ongs").select("id, nome").in("id", idsOngs)
+      : Promise.resolve({ data: [] }),
+    idsUsuarios.length
+      ? supabase
+          .from("profiles")
+          .select("user_id, nome, email, telefone, cidade, estado")
+          .in("user_id", idsUsuarios)
+      : Promise.resolve({ data: [] }),
+    idsNecessidades.length
+      ? supabase.from("necessidades").select("id, nome, unidade").in("id", idsNecessidades)
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  const porOng = new Map((ongs.data ?? []).map((o) => [o.id, o]));
+  const porUsuario = new Map((perfis.data ?? []).map((p) => [p.user_id, p]));
+  const porNecessidade = new Map((necessidades.data ?? []).map((n) => [n.id, n]));
+
+  return linhas.map((l) => ({
+    ...(l as unknown as DoacaoDetalhada),
+    valor: Number(l.valor ?? 0),
+    ong: porOng.get(l.id_ong as string) ?? null,
+    doador: l.id_usuario ? porUsuario.get(l.id_usuario as string) ?? null : null,
+    necessidade: l.id_necessidade ? porNecessidade.get(l.id_necessidade as string) ?? null : null,
+  }));
 };
