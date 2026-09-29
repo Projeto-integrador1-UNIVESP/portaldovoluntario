@@ -23,8 +23,15 @@ export class ErroDeValidacao extends ErroAmigavel {
   }
 }
 
-const textoDoErro = (erro: unknown) =>
-  (erro instanceof Error ? erro.message : typeof erro === "string" ? erro : "").toLowerCase();
+/** Aceita `Error`, texto e o objeto `{ message }` que o PostgREST devolve. */
+const textoDoErro = (erro: unknown) => {
+  if (erro instanceof Error) return erro.message.toLowerCase();
+  if (typeof erro === "string") return erro.toLowerCase();
+  if (erro && typeof erro === "object" && typeof (erro as { message?: unknown }).message === "string") {
+    return (erro as { message: string }).message.toLowerCase();
+  }
+  return "";
+};
 
 export function mensagemAmigavel(erro: unknown, padrao: string): string {
   if (erro instanceof ErroAmigavel) return erro.message;
