@@ -7,12 +7,12 @@ import { capaDaCausa, SIZES_PADRAO } from "@/lib/capasPorCausa";
  * Projeto e ONG frequentemente não têm foto, e o buraco cinza que sobrava era
  * o pior defeito visual do produto.
  *
- * 1. `src` — a foto do próprio registro. Manda em tudo.
- * 2. `causa` — fotografia da categoria, de `lib/capasPorCausa`. Aquece a
+ * 1. `src`: a foto do próprio registro. Manda em tudo.
+ * 2. `causa`: fotografia da categoria, de `lib/capasPorCausa`. Aquece a
  *    interface, que é o que as referências do setor fazem; fotografia ganha de
  *    ilustração quando o assunto é confiança. Mas é foto de banco, então vem
  *    sempre com véu e etiqueta "Imagem ilustrativa".
- * 3. Nada — o padrão gerado a partir do identificador, estável: a mesma ONG
+ * 3. Nada: o padrão gerado a partir do identificador, estável: a mesma ONG
  *    tem sempre a mesma capa. O monograma do nome vai por cima.
  *
  * O monograma importa: um padrão puramente abstrato parece gerado por
@@ -59,10 +59,10 @@ function monograma(nome: string): string {
  * mentira mais cara possível.
  *
  * A marcação não pode depender de `nome`: só um dos quatro pontos de uso passa
- * esse dado hoje, então um monograma sozinho deixaria o card de projeto — o
- * mais visto — com foto de banco e nenhum aviso. Daí a etiqueta escrita, que
- * aparece sempre. Ela é texto de verdade, não `aria-hidden`: quem usa leitor
- * de tela merece o mesmo aviso que todo mundo.
+ * esse dado hoje, então um monograma sozinho deixaria o card de projeto, o
+ * mais visto, com foto de banco e nenhum aviso. Daí a etiqueta escrita, que
+ * aparece sempre. Ela é texto legível pelo leitor de tela, não `aria-hidden`:
+ * quem usa leitor de tela merece o mesmo aviso que todo mundo.
  *
  * O véu é gradiente e não achatado: escurece o rodapé o bastante para a
  * etiqueta ter contraste, deixa o topo quase limpo e ainda baixa o contraste
@@ -144,7 +144,7 @@ export function Capa({
   const rotacao = 20 + (s % 140);
   const letras = nome ? monograma(nome) : null;
 
-  // Só entra na foto quando a causa resolve numa categoria de verdade.
+  // Só entra na foto quando a causa resolve numa categoria conhecida.
   // Causa desconhecida cai no padrão gerado: várias organizações sem
   // categoria lado a lado com a mesma foto leem como defeito, e o padrão
   // varia por registro.

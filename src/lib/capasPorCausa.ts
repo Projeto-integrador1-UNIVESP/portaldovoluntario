@@ -18,18 +18,22 @@ import outros640 from "@/assets/capas/outros-640.webp";
 import outros1280 from "@/assets/capas/outros-1280.webp";
 import generica640 from "@/assets/capas/generica-640.webp";
 import generica1280 from "@/assets/capas/generica-1280.webp";
+import animais640 from "@/assets/capas/animais-640.webp";
+import animais1280 from "@/assets/capas/animais-1280.webp";
+import idosos640 from "@/assets/capas/idosos-640.webp";
+import idosos1280 from "@/assets/capas/idosos-1280.webp";
 
 /**
  * Fotografia de capa por causa.
  *
  * O produto não tinha nenhuma foto própria, e as referências do setor (Unibes,
- * Amigos do Bem, Porquinho) são todas fotográficas — fotografia ganha de
+ * Amigos do Bem, Porquinho) são todas fotográficas: fotografia ganha de
  * ilustração quando o assunto é confiança. As fotos daqui são de banco, com
  * licença livre; os créditos e o critério de curadoria estão em
  * `src/assets/capas/CREDITOS.md`.
  *
  * Elas são ILUSTRATIVAS. Nenhuma é foto da ONG que está na tela, e a `Capa`
- * marca isso visualmente — ver `Capa.tsx`.
+ * marca isso visualmente (ver `Capa.tsx`).
  */
 
 export type ChaveDeCapa =
@@ -65,14 +69,12 @@ const ARQUIVOS: Record<ChaveDeCapa, { p640: string; p1280: string }> = {
   medicamentos: { p640: medicamentos640, p1280: medicamentos1280 },
   outros: { p640: outros640, p1280: outros1280 },
   generica: { p640: generica640, p1280: generica1280 },
-  // TROCAR: animais-640.webp e animais-1280.webp quando a frente 1 entregar.
-  animais: { p640: generica640, p1280: generica1280 },
-  // TROCAR: idosos-640.webp e idosos-1280.webp quando a frente 1 entregar.
-  idosos: { p640: generica640, p1280: generica1280 },
+  animais: { p640: animais640, p1280: animais1280 },
+  idosos: { p640: idosos640, p1280: idosos1280 },
 };
 
 /**
- * Descrição da foto, para o dia em que alguém precisar de um `alt` de verdade.
+ * Descrição da foto, para o dia em que alguém precisar de um `alt` descritivo.
  * A `Capa` não usa: lá a foto é decorativa e o `alt` fica vazio.
  */
 export const DESCRICOES: Record<ChaveDeCapa, string> = {
@@ -86,9 +88,8 @@ export const DESCRICOES: Record<ChaveDeCapa, string> = {
   medicamentos: "Estojo de primeiros socorros aberto, com medicamentos organizados",
   outros: "Caixotes de madeira cheios de itens doados",
   generica: "Sacolas de papel preparadas para distribuição",
-  // TROCAR: descrever as fotos novas quando a frente 1 entregar.
-  animais: "Sacolas de papel preparadas para distribuição",
-  idosos: "Sacolas de papel preparadas para distribuição",
+  animais: "Filhote de cachorro olhando para cima enquanto recebe carinho",
+  idosos: "Mãos de uma pessoa idosa em repouso sobre um tecido azul",
 };
 
 /**
@@ -219,7 +220,7 @@ export function capaDaCausa(causa?: string | string[] | null): CapaDeCausa | nul
  * `sizes` padrão das capas.
  *
  * Declara menos do que a capa costuma ocupar, de propósito. A foto é
- * decorativa e fica atrás de um véu escuro, então meia resolução não aparece —
+ * decorativa e fica atrás de um véu escuro, então meia resolução não aparece,
  * e num celular em 4G isso é a diferença entre baixar o arquivo de 43 KB e o
  * de 75 KB por card. Quem usar a capa como herói de página inteira e quiser a
  * versão grande passa o próprio `sizes` para a `Capa`.

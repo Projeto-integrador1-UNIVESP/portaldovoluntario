@@ -33,7 +33,7 @@ describe("Capa", () => {
   /**
    * A foto é de banco e nunca é daquela ONG. O `alt` que a página passa
    * descreve o registro, então reaproveitá-lo aqui seria mentir para quem usa
-   * leitor de tela: a foto vira decorativa e o aviso vira texto de verdade.
+   * leitor de tela: a foto vira decorativa e o aviso vira texto legível.
    */
   it("marca a foto de categoria como ilustrativa e não herda o alt do registro", () => {
     const { container } = render(<Capa alt="Sede da Casa de Apoio" id="p1" causa="Brinquedos" />);
@@ -110,14 +110,17 @@ describe("capaDaCausa", () => {
    * As dez causas da lista fechada (`constants/causas.ts`) resolvem todas em
    * foto: nenhum chip de filtro fica sem miniatura e nenhuma capa de projeto
    * cai no padrão gerado só por causa da categoria. "Animais" e "Pessoas
-   * idosas" ganham chave própria, mesmo que a foto ainda seja a genérica até
-   * a frente de marca entregar os arquivos.
+   * idosas" têm fotografia própria, não a genérica.
    */
   it("cobre as dez causas da lista fechada", async () => {
     const { CAUSAS } = await import("@/lib/constants/causas");
     for (const causa of CAUSAS) {
       expect(capaDaCausa(causa)?.chave, causa).toBeDefined();
     }
+
+    const generica = capaDaCausa("Meio ambiente")?.src;
+    expect(capaDaCausa("Animais")?.src).not.toBe(generica);
+    expect(capaDaCausa("Pessoas idosas")?.src).not.toBe(generica);
 
     expect(capaDaCausa("Crianças e adolescentes")?.chave).toBe("brinquedos");
     expect(capaDaCausa("População em situação de rua")?.chave).toBe("inverno");
