@@ -79,6 +79,22 @@ describe("OngDoacoes: confirmação de recebimento", () => {
     expect(toastSuccess.mock.calls[0][0]).toMatch(/progresso do projeto já subiu/i);
   }, 20_000);
 
+  it("'Não chegou' só grava depois da confirmação no diálogo", async () => {
+    update.mockResolvedValue({ data: [{ id: "d1" }], error: null });
+    const usuario = userEvent.setup();
+    await renderizar();
+
+    await usuario.click(await screen.findByRole("button", { name: /Não chegou/ }));
+    // O diálogo abriu e nada foi gravado ainda.
+    expect(update).not.toHaveBeenCalled();
+
+    await usuario.click(await screen.findByRole("button", { name: "Marcar como não recebida" }));
+
+    await vi.waitFor(() => expect(update).toHaveBeenCalled());
+    await vi.waitFor(() => expect(toastSuccess).toHaveBeenCalled());
+    expect(toastSuccess.mock.calls[0][0]).toMatch(/não recebida/i);
+  }, 20_000);
+
   it("NÃO diz que deu certo quando a RLS bloqueia e o update afeta zero linhas", async () => {
     // O PostgREST devolve 200 com lista vazia quando a policy não alcança a
     // linha. Sem checar isso, a tela diria "confirmado" sem nada ter mudado.

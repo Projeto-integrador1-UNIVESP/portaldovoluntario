@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, Clock, DollarSign, Loader2, Package, Undo2, X } from "lucide-react";
+import { Check, Loader2, Undo2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { CHAVE_PENDENCIAS, DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -17,9 +17,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Seo } from "@/components/common/Seo";
 import { Stat } from "@/components/common/Stat";
 import { Callout } from "@/components/common/Callout";
+import { ConfirmarExclusao } from "@/components/common/ConfirmarExclusao";
 import { SeloConfirmacao } from "@/components/common/SeloConfirmacao";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ErrorState } from "@/components/common/ErrorState";
+import { TERMOS } from "@/lib/copy";
+import { ErroAmigavel, mensagemAmigavel } from "@/lib/erros";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 
 type StatusDoacao = "pendente" | "confirmada" | "cancelada";
@@ -31,13 +34,15 @@ const num = (v: unknown) => Number(v ?? 0);
  *
  * Esta tela é o que faz o progresso do projeto andar: o valor arrecadado de
  * uma necessidade soma apenas doações confirmadas. Enquanto a ONG não
- * registra o recebimento, a barra pública não se mexe: é isso que mantém os
- * números honestos para quem doou.
+ * registra o recebimento, a barra pública não se mexe.
  */
 export default function OngDoacoes() {
   const { ongId, user } = useAuth();
   const queryClient = useQueryClient();
   const [aba, setAba] = useState<StatusDoacao>("pendente");
+  // Quem acabou de ser confirmada fica na aba Aguardando, com o selo pulsando,
+  // até a pessoa trocar de aba: sumir da lista no clique esconde o efeito.
+  const [recemConfirmadas, setRecemConfirmadas] = useState<Set<string>>(() => new Set());
 
   const { data, isPending, isError, refetch } = useQuery({
     queryKey: ["ong-doacoes", ongId],
@@ -102,21 +107,31 @@ export default function OngDoacoes() {
       // Zero linhas com RLS significa que a permissão não alcançou o registro.
       // Sem esta checagem, a tela diria "confirmado" sem nada ter mudado.
       if (!alteradas || alteradas.length === 0) {
-        throw new Error("Sem permissão para alterar esta doação.");
+        throw new ErroAmigavel("Sem permissão para alterar esta doação.");
       }
     },
-    onSuccess: (_r, { status }) => {
-      toast.success(
-        status === "confirmada"
-          ? "Recebimento confirmado. O progresso do projeto já subiu."
-          : status === "cancelada"
-            ? "Doação marcada como não recebida."
-            : "Doação voltou para pendente.",
-      );
+    onSuccess: (_r, { id, status }) => {
+      if (status === "confirmada") {
+        setRecemConfirmadas((atual) => new Set(atual).add(id));
+        toast.success("Recebimento confirmado. O progresso do projeto já subiu.");
+      } else {
+        setRecemConfirmadas((atual) => {
+          if (!atual.has(id)) return atual;
+          const proximo = new Set(atual);
+          proximo.delete(id);
+          return proximo;
+        });
+        toast.success(
+          status === "cancelada" ? "Doação marcada como não recebida" : "Doação voltou para a fila",
+        );
+      }
       queryClient.invalidateQueries({ queryKey: ["ong-doacoes", ongId] });
+      queryClient.invalidateQueries({ queryKey: ["ong-resumo", ongId] });
+      queryClient.invalidateQueries({ queryKey: ["ong-auditoria", ongId] });
+      queryClient.invalidateQueries({ queryKey: [...CHAVE_PENDENCIAS] });
       queryClient.invalidateQueries({ queryKey: ["projeto"] });
     },
-    onError: (erro: Error) => toast.error(erro.message || "Não foi possível atualizar a doação."),
+    onError: (erro) => toast.error(mensagemAmigavel(erro, "Não foi possível atualizar a doação.")),
   });
 
   // Em ação que mexe com dinheiro, travar a tela inteira esconde qual linha está
@@ -124,8 +139,8 @@ export default function OngDoacoes() {
   const linhaEmAndamento = alterarStatus.isPending ? alterarStatus.variables?.id : null;
 
   const porStatus = useMemo(() => {
-    const vazio = { pendente: [], confirmada: [], cancelada: [] } as Record<StatusDoacao, typeof data>;
-    for (const d of data ?? []) (vazio[d.status as StatusDoacao] ??= []).push(d as never);
+    const vazio = { pendente: [], confirmada: [], cancelada: [] } as Record<StatusDoacao, NonNullable<typeof data>>;
+    for (const d of data ?? []) (vazio[d.status as StatusDoacao] ??= []).push(d);
     return vazio;
   }, [data]);
 
@@ -133,27 +148,35 @@ export default function OngDoacoes() {
   const totalPendente = (porStatus.pendente ?? []).reduce((s, d) => s + d.valor, 0);
   const qtdPendente = porStatus.pendente?.length ?? 0;
 
-  const lista = porStatus[aba] ?? [];
+  const lista = useMemo(
+    () =>
+      (data ?? []).filter(
+        (d) => d.status === aba || (aba === "pendente" && recemConfirmadas.has(d.id)),
+      ),
+    [data, aba, recemConfirmadas],
+  );
+
+  const trocarAba = (v: string) => {
+    setAba(v as StatusDoacao);
+    setRecemConfirmadas(new Set());
+  };
 
   return (
     <DashboardLayout type="ong">
       <Seo title="Doações" noIndex />
       <PageHeader
         title="Doações"
-        description="Confirme o que chegou. É a confirmação que move a barra de progresso no site."
-        icon={<DollarSign className="h-6 w-6" aria-hidden="true" />}
+        description="O que chegou, o que ainda não, e o que você já confirmou."
       />
 
       {isError ? (
         <ErrorState title="Não foi possível carregar as doações" onRetry={() => refetch()} />
       ) : (
         <>
-          {/* O resumo financeiro era a descrição cinza do cabeçalho, com o peso
-              visual de uma legenda. É o número que a gestora vem ver. */}
           {isPending ? (
             <div className="grid gap-4 sm:grid-cols-3">
               {Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} className="h-24 w-full rounded-lg" />
+                <Skeleton key={i} className="h-28 w-full rounded-xl" />
               ))}
             </div>
           ) : (
@@ -165,22 +188,14 @@ export default function OngDoacoes() {
                     ? "doação aguardando sua confirmação"
                     : "doações aguardando sua confirmação"
                 }
-                icone={Clock}
                 destaque={qtdPendente > 0}
               />
-              <Stat
-                valor={formatCurrency(totalPendente)}
-                rotulo="em dinheiro ainda não confirmado"
-              />
+              <Stat valor={formatCurrency(totalPendente)} rotulo="em dinheiro ainda não confirmado" />
               <Stat valor={formatCurrency(totalConfirmado)} rotulo="em dinheiro já confirmado" />
             </div>
           )}
 
-          <Tabs
-            value={aba}
-            onValueChange={(v) => setAba(v as StatusDoacao)}
-            className="mt-6"
-          >
+          <Tabs value={aba} onValueChange={trocarAba} className="mt-8">
             <TabsList>
               <TabsTrigger value="pendente">Aguardando ({qtdPendente})</TabsTrigger>
               <TabsTrigger value="confirmada">
@@ -194,9 +209,7 @@ export default function OngDoacoes() {
 
           {aba === "pendente" && qtdPendente > 0 && (
             <Callout tom="confianca" className="mt-4">
-              O progresso das necessidades só aumenta depois que você confirma o recebimento.
-              Confirme apenas o que chegou de verdade. É essa checagem que faz os números da
-              plataforma valerem algo.
+              A barra do projeto só sobe depois que você confirma. Confirme apenas o que chegou.
             </Callout>
           )}
 
@@ -205,32 +218,33 @@ export default function OngDoacoes() {
               {isPending ? (
                 <div className="space-y-3 p-6">
                   {Array.from({ length: 4 }).map((_, i) => (
-                    <Skeleton key={i} className="h-10 w-full" />
+                    <Skeleton key={i} className="h-12 w-full" />
                   ))}
                 </div>
               ) : lista.length === 0 ? (
-                <div className="p-6">
-                  <EmptyState
-                    icon={Clock}
-                    title={
-                      aba === "pendente"
-                        ? "Nenhuma doação aguardando confirmação"
-                        : aba === "confirmada"
-                          ? "Nenhuma doação confirmada ainda"
-                          : "Nenhuma doação marcada como não recebida"
-                    }
-                    description={
-                      aba === "pendente"
-                        ? "Quando alguém doar, a doação aparece aqui para você confirmar. Publicar o que está faltando é o que traz doação específica."
-                        : "Assim que você confirmar um recebimento, ele aparece nesta aba."
-                    }
-                    action={
-                      aba === "pendente"
-                        ? { label: "Publicar o que está faltando", to: "/ong/necessidades" }
-                        : { label: "Ver a fila de confirmação", onClick: () => setAba("pendente") }
-                    }
-                  />
-                </div>
+                <EmptyState
+                  className="m-4 border-0 bg-transparent"
+                  ilustracao={aba === "pendente" ? "caixa" : "vazio"}
+                  title={
+                    aba === "pendente"
+                      ? "Nenhuma doação aguardando confirmação"
+                      : aba === "confirmada"
+                        ? "Nenhuma doação confirmada ainda"
+                        : "Nenhuma doação marcada como não recebida"
+                  }
+                  description={
+                    aba === "pendente"
+                      ? "Quando alguém doar, a doação aparece aqui para você confirmar. Publicar o que está faltando é o que traz doação específica."
+                      : aba === "confirmada"
+                        ? "Assim que você confirmar um recebimento, ele aparece nesta aba."
+                        : "Doações que você marcou como não recebidas ficam aqui e não contam no progresso."
+                  }
+                  action={
+                    aba === "pendente"
+                      ? { label: "Publicar o que está faltando", to: "/ong/necessidades" }
+                      : { label: "Ver a fila de confirmação", onClick: () => trocarAba("pendente") }
+                  }
+                />
               ) : (
                 <Table>
                   <TableHeader>
@@ -239,40 +253,34 @@ export default function OngDoacoes() {
                       <TableHead>O que</TableHead>
                       <TableHead>Projeto</TableHead>
                       <TableHead>Data</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
+                      <TableHead className="text-right">Situação</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {lista.map((d) => {
                       const carregando = linhaEmAndamento === d.id;
+                      const nome = d.anonima
+                        ? "Doador anônimo"
+                        : d.doador?.nome || d.doador_nome || TERMOS.semIdentificacao;
 
                       return (
                         <TableRow key={d.id}>
                           <TableCell>
-                            {d.anonima ? (
-                              <span className="text-muted-foreground">Doador anônimo</span>
-                            ) : (
-                              <>
-                                <div className="font-medium">
-                                  {d.doador?.nome || d.doador_nome || "Não informado"}
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                  {d.doador?.email || d.doador_email || ""}
-                                </div>
-                              </>
+                            <div className={d.anonima ? "text-muted-foreground" : "font-medium"}>{nome}</div>
+                            {!d.anonima && (d.doador?.email || d.doador_email) && (
+                              <div className="text-xs text-muted-foreground">
+                                {d.doador?.email || d.doador_email}
+                              </div>
                             )}
                           </TableCell>
 
                           <TableCell>
                             {d.necessidade ? (
-                              <span className="inline-flex items-center gap-1.5">
-                                <Package className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                                {d.quantidade} {d.necessidade.unidade ?? ""} de {d.necessidade.nome}
+                              <span className="numero font-medium">
+                                {`${d.quantidade} ${d.necessidade.unidade ?? ""} de ${d.necessidade.nome}`.replace(/\s+/g, " ")}
                               </span>
                             ) : (
-                              <span className="font-medium tabular-nums">
-                                {formatCurrency(d.valor)}
-                              </span>
+                              <span className="numero font-medium">{formatCurrency(d.valor)}</span>
                             )}
                             {d.forma_entrega && (
                               <div className="text-xs text-muted-foreground">
@@ -285,72 +293,72 @@ export default function OngDoacoes() {
                             {d.projeto?.nome_projeto ?? "Doação geral"}
                           </TableCell>
 
-                          <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                          <TableCell className="numero whitespace-nowrap text-sm text-muted-foreground">
                             {formatDateTime(d.data_doacao)}
                           </TableCell>
 
                           <TableCell className="text-right">
                             {d.status === "pendente" ? (
-                              <div className="flex justify-end gap-2">
+                              <div className="flex flex-wrap justify-end gap-2">
                                 <Button
                                   size="sm"
-                                  className="pressionavel"
                                   disabled={alterarStatus.isPending}
                                   onClick={() =>
                                     alterarStatus.mutate({ id: d.id, status: "confirmada" })
                                   }
                                 >
                                   {carregando ? (
-                                    <Loader2 className="mr-1 h-4 w-4 animate-spin" aria-hidden="true" />
+                                    <Loader2 className="animate-spin" aria-hidden="true" />
                                   ) : (
-                                    <Check className="mr-1 h-4 w-4" aria-hidden="true" />
+                                    <Check aria-hidden="true" />
                                   )}
                                   Confirmar que recebi
                                 </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="pressionavel"
-                                  disabled={alterarStatus.isPending}
-                                  onClick={() =>
+                                <ConfirmarExclusao
+                                  tom="atencao"
+                                  titulo={`Marcar a doação de ${nome} como não recebida?`}
+                                  descricao="Ela sai da fila e não conta no progresso do projeto. Se chegar depois, dá para voltar."
+                                  rotuloConfirmar="Marcar como não recebida"
+                                  onConfirmar={() =>
                                     alterarStatus.mutate({ id: d.id, status: "cancelada" })
                                   }
                                 >
-                                  {carregando ? (
-                                    <Loader2 className="mr-1 h-4 w-4 animate-spin" aria-hidden="true" />
-                                  ) : (
-                                    <X className="mr-1 h-4 w-4" aria-hidden="true" />
-                                  )}
-                                  Não chegou
-                                </Button>
+                                  <Button size="sm" variant="outline" disabled={alterarStatus.isPending}>
+                                    <X aria-hidden="true" />
+                                    Não chegou
+                                  </Button>
+                                </ConfirmarExclusao>
                               </div>
                             ) : (
                               <div className="flex flex-wrap items-center justify-end gap-2">
-                                {d.status !== "confirmada" ? (
-                                  <Badge variant="secondary">Não recebida</Badge>
-                                ) : d.confirmada_em ? (
-                                  <SeloConfirmacao confirmadaEm={d.confirmada_em} />
-                                ) : (
+                                {d.status === "confirmada" && !d.confirmada_em ? (
                                   // Doação confirmada antes de existir a coluna de data.
-                                  <Badge className="bg-success text-success-foreground">
-                                    Confirmada
-                                  </Badge>
+                                  <Badge variant="success">Confirmada</Badge>
+                                ) : (
+                                  <SeloConfirmacao
+                                    confirmadaEm={d.confirmada_em}
+                                    cancelada={d.status === "cancelada"}
+                                    animar={recemConfirmadas.has(d.id)}
+                                  />
                                 )}
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  disabled={alterarStatus.isPending}
-                                  onClick={() =>
+                                <ConfirmarExclusao
+                                  tom="atencao"
+                                  titulo="Voltar esta doação para a fila?"
+                                  descricao="Ela deixa de contar no progresso até você confirmar de novo."
+                                  rotuloConfirmar="Voltar para pendente"
+                                  onConfirmar={() =>
                                     alterarStatus.mutate({ id: d.id, status: "pendente" })
                                   }
                                 >
-                                  {carregando ? (
-                                    <Loader2 className="mr-1 h-4 w-4 animate-spin" aria-hidden="true" />
-                                  ) : (
-                                    <Undo2 className="mr-1 h-4 w-4" aria-hidden="true" />
-                                  )}
-                                  Voltar para pendente
-                                </Button>
+                                  <Button size="sm" variant="ghost" disabled={alterarStatus.isPending}>
+                                    {carregando ? (
+                                      <Loader2 className="animate-spin" aria-hidden="true" />
+                                    ) : (
+                                      <Undo2 aria-hidden="true" />
+                                    )}
+                                    Voltar para pendente
+                                  </Button>
+                                </ConfirmarExclusao>
                               </div>
                             )}
                           </TableCell>
