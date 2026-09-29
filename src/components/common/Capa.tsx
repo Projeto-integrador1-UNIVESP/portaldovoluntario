@@ -110,6 +110,11 @@ type CapaProps = {
   className?: string;
   /** Conteúdo sobreposto, como um selo. */
   children?: React.ReactNode;
+  /**
+   * Imagem acima da dobra (hero das páginas de detalhe): carrega na hora e com
+   * prioridade alta, em vez de esperar o `lazy`. Ajuda o LCP.
+   */
+  prioridade?: boolean;
 };
 
 export function Capa({
@@ -121,7 +126,11 @@ export function Capa({
   sizes = SIZES_PADRAO,
   className,
   children,
+  prioridade = false,
 }: CapaProps) {
+  const carregamento = prioridade
+    ? ({ loading: "eager", fetchPriority: "high" } as const)
+    : ({ loading: "lazy" } as const);
   if (src) {
     return (
       <div className={cn("relative overflow-hidden bg-secondary", className)}>
@@ -129,7 +138,7 @@ export function Capa({
           src={src}
           alt={alt}
           className="h-full w-full object-cover"
-          loading="lazy"
+          {...carregamento}
           decoding="async"
         />
         {children}
@@ -159,7 +168,7 @@ export function Capa({
           sizes={sizes}
           alt=""
           className="h-full w-full object-cover"
-          loading="lazy"
+          {...carregamento}
           decoding="async"
         />
         <MarcaIlustrativa />

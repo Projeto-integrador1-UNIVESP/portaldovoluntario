@@ -157,6 +157,7 @@ export default function ProjetoPage() {
               <Capa
                 src={capa}
                 alt=""
+                prioridade
                 id={projeto.id}
                 nome={projeto.ong?.nome ?? projeto.nome_projeto}
                 causa={projeto.causa}
@@ -460,7 +461,7 @@ function PainelDoQueFalta({ necessidades, abertas, taxa, linkDoar }: PainelProps
               meta={100}
               tipo="item"
               unidade="%"
-              className="[&>div:nth-child(2)]:hidden"
+              legenda={false}
             />
           </div>
           <p className="mt-2 flex items-baseline justify-between gap-3 text-sm">

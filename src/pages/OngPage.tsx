@@ -246,6 +246,7 @@ export default function OngPage() {
           <Capa
             src={capa}
             alt=""
+            prioridade
             id={ong.id}
             nome={ong.nome}
             causa={causas}
