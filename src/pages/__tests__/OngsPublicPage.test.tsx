@@ -107,7 +107,8 @@ describe("OngsPublicPage", () => {
 
     expect(await screen.findByText("Casa de Apoio Esperança")).toBeInTheDocument();
     expect(screen.getByText(/São Paulo, SP/)).toBeInTheDocument();
-    expect(screen.getByText("Verificada")).toBeInTheDocument();
+    // Texto único do selo em todo o produto, via `SeloVerificada`.
+    expect(screen.getByText("ONG verificada")).toBeInTheDocument();
     expect(screen.getByText("2 pedidos abertos")).toBeInTheDocument();
   });
 
