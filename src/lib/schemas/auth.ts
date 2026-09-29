@@ -5,7 +5,7 @@ export const emailSchema = z
   .string()
   .trim()
   .min(1, MENSAGENS.obrigatorio("seu e-mail"))
-  .email("E-mail inválido");
+  .email(MENSAGENS.email);
 
 /**
  * Regras de senha exibidas como checklist no cadastro. Ficam aqui para que a

@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { PublicShell } from "@/components/layout/PublicShell";
 import { Seo } from "@/components/common/Seo";
 import { FOTOS } from "@/lib/fotos";
@@ -34,8 +34,14 @@ type CascaDeAuthProps = {
  * Casca comum de entrar, criar conta, esqueci e redefinir senha.
  *
  * Formulário à esquerda, em card de papel; à direita, só no desktop, a foto
- * editorial com as garantias por cima. No celular o formulário vem primeiro
- * e a foto some: as garantias sobem sozinhas, abaixo do card, em três linhas.
+ * editorial com as garantias por cima. No celular o formulário vem primeiro,
+ * a foto some e as garantias ficam abaixo do card, em três linhas. É um
+ * elemento só, reposicionado: nada renderiza duas vezes.
+ *
+ * Quando o título muda com a página aberta (formulário que vira "confira
+ * seu e-mail", link expirado), o foco vai para o novo h1: o botão que a
+ * pessoa acabou de acionar saiu do DOM e o leitor de tela precisa saber
+ * para onde a tela foi.
  */
 export function CascaDeAuth({
   tituloDaPagina,
@@ -46,24 +52,47 @@ export function CascaDeAuth({
   rodape,
   children,
 }: CascaDeAuthProps) {
+  const tituloRef = useRef<HTMLHeadingElement>(null);
+  const primeiroRender = useRef(true);
+
+  useEffect(() => {
+    if (primeiroRender.current) {
+      primeiroRender.current = false;
+      return;
+    }
+    tituloRef.current?.focus();
+  }, [titulo]);
+
   return (
     <PublicShell>
       <Seo title={tituloDaPagina} noIndex />
 
       <div
         className={cn(
-          "container grid items-start gap-10 py-10 md:py-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-14",
-          largura === "lg" && "lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]",
+          "container grid items-start gap-10 py-10 md:py-14 lg:gap-14",
+          largura === "lg"
+            ? "lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]"
+            : "lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]",
         )}
       >
-        <div className={cn("w-full justify-self-center lg:justify-self-start", largura === "lg" ? "max-w-2xl" : "max-w-md")}>
+        <div
+          className={cn(
+            "w-full justify-self-center lg:justify-self-start",
+            largura === "lg" ? "max-w-2xl" : "max-w-md",
+          )}
+        >
           <section
             aria-labelledby="titulo-auth"
             className="rounded-xl border bg-card p-6 shadow-sutil sm:p-8"
           >
             <header>
               {eyebrow && <p className="rotulo-caps mb-2">{eyebrow}</p>}
-              <h1 id="titulo-auth" className="font-display text-2xl-fluido font-bold">
+              <h1
+                id="titulo-auth"
+                ref={tituloRef}
+                tabIndex={-1}
+                className="font-display text-2xl-fluido font-bold outline-none"
+              >
                 {titulo}
               </h1>
               {descricao && <p className="mt-2 text-muted-foreground">{descricao}</p>}
@@ -73,12 +102,13 @@ export function CascaDeAuth({
           </section>
 
           {rodape && <div className="mt-5 text-center text-sm text-muted-foreground">{rodape}</div>}
-
-          <Garantias className="mt-10 lg:hidden" />
         </div>
 
-        <aside className="relative hidden self-stretch lg:block" aria-label={`O que ${A_MARCA} garante`}>
-          <div className="sticky top-24 overflow-hidden rounded-destaque bg-tinta-azulpo">
+        <aside
+          className="relative w-full max-w-md justify-self-center lg:max-w-none lg:self-stretch lg:justify-self-stretch"
+          aria-label={`O que ${A_MARCA} garante`}
+        >
+          <div className="lg:sticky lg:top-24 lg:overflow-hidden lg:rounded-destaque lg:bg-tinta-azulpo">
             <img
               src={FOTOS.auth.src}
               srcSet={FOTOS.auth.srcSet}
@@ -86,45 +116,37 @@ export function CascaDeAuth({
               alt={FOTOS.auth.alt}
               width={1280}
               height={Math.round(1280 / FOTOS.auth.proporcao)}
-              className="aspect-[4/5] h-auto w-full object-cover xl:aspect-[5/6]"
+              className="hidden aspect-[4/5] h-auto w-full object-cover lg:block xl:aspect-[5/6]"
             />
-            <div className="absolute inset-x-5 bottom-5 rounded-xl bg-tinta-creme/95 p-5 shadow-alta backdrop-blur-sm">
-              <Garantias />
+            <div className="rounded-xl border bg-tinta-creme/95 p-5 lg:absolute lg:inset-x-5 lg:bottom-5 lg:border-0 lg:shadow-alta lg:backdrop-blur-sm">
+              <p className="rotulo-caps">O que {A_MARCA} garante</p>
+              <ul className="mt-3 space-y-2.5">
+                {GARANTIAS.map((linha) => (
+                  <li key={linha} className="flex gap-3 text-sm leading-snug text-foreground">
+                    <svg
+                      viewBox="0 0 16 16"
+                      className="mt-0.5 h-4 w-4 shrink-0"
+                      aria-hidden="true"
+                      focusable="false"
+                    >
+                      <circle cx="8" cy="8" r="7" fill="hsl(var(--tinta-salvia))" stroke="currentColor" strokeWidth="1.2" />
+                      <path
+                        d="M4.6 8.2 L7 10.5 L11.4 5.8"
+                        fill="none"
+                        stroke="hsl(var(--cta))"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <span>{linha}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         </aside>
       </div>
     </PublicShell>
-  );
-}
-
-function Garantias({ className }: { className?: string }) {
-  return (
-    <div className={className}>
-      <p className="rotulo-caps">O que {A_MARCA} garante</p>
-      <ul className="mt-3 space-y-2.5">
-        {GARANTIAS.map((linha) => (
-          <li key={linha} className="flex gap-3 text-sm leading-snug text-foreground">
-            <svg
-              viewBox="0 0 16 16"
-              className="mt-0.5 h-4 w-4 shrink-0"
-              aria-hidden="true"
-              focusable="false"
-            >
-              <circle cx="8" cy="8" r="7" fill="hsl(var(--tinta-salvia))" stroke="currentColor" strokeWidth="1.2" />
-              <path
-                d="M4.6 8.2 L7 10.5 L11.4 5.8"
-                fill="none"
-                stroke="hsl(var(--cta))"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            <span>{linha}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
   );
 }
