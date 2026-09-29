@@ -132,3 +132,20 @@ export const progressoPercent = (arrecadado: number, meta: number) => {
   if (!meta || meta <= 0) return 0;
   return Math.min(100, Math.max(0, Math.round((arrecadado / meta) * 100)));
 };
+
+/**
+ * Plural das unidades que a ONG escolhe. "un", "kg" e "L" são abreviação e
+ * não flexionam; as palavras flexionam: "1 caixa", "26 caixas", "3 pares".
+ */
+const PLURAIS: Record<string, string> = { caixa: "caixas", pacote: "pacotes", par: "pares" };
+
+export const unidadeFlexionada = (unidade: string | null | undefined, quantidade: number) => {
+  if (!unidade) return "";
+  return Math.abs(quantidade) === 1 ? unidade : (PLURAIS[unidade] ?? unidade);
+};
+
+/** "26 caixas", "1 caixa", "70 un", "12,5 kg". Sem unidade, só o número. */
+export const formatQuantidade = (quantidade: number, unidade?: string | null) => {
+  const u = unidadeFlexionada(unidade, quantidade);
+  return `${quantidade.toLocaleString("pt-BR")}${u ? ` ${u}` : ""}`;
+};

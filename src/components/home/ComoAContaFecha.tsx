@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ProgressBar } from "@/components/common/ProgressBar";
 import { SeloConfirmacao } from "@/components/common/SeloConfirmacao";
 import { TESE } from "@/lib/copy";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { formatCurrency, formatDate, formatQuantidade } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { UltimaConfirmacao } from "@/hooks/queries/useHome";
 
@@ -29,8 +29,7 @@ const EXEMPLO: UltimaConfirmacao = {
 
 function descreverDoacao(c: UltimaConfirmacao) {
   if (c.quantidade && c.necessidadeNome) {
-    const unidade = c.unidade ? ` ${c.unidade}` : "";
-    return `${c.quantidade.toLocaleString("pt-BR")}${unidade} de ${c.necessidadeNome}`;
+    return `${formatQuantidade(c.quantidade, c.unidade)} de ${c.necessidadeNome}`;
   }
   return formatCurrency(c.valor);
 }

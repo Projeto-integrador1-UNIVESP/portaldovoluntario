@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { CauseTag } from "@/components/common/CauseTag";
 import { ProgressBar } from "@/components/common/ProgressBar";
 import { cn } from "@/lib/utils";
-import { formatCurrency, formatPrazo } from "@/lib/format";
+import { formatCurrency, formatPrazo, formatQuantidade } from "@/lib/format";
 
 export type Necessidade = {
   id: string;
@@ -51,7 +51,7 @@ export function NeedItem({ necessidade, linkDoar, destaque = false, contexto, cl
   const quantidade = (valor: number) =>
     emReais
       ? formatCurrency(valor)
-      : `${valor.toLocaleString("pt-BR")}${necessidade.unidade ? ` ${necessidade.unidade}` : ""}`;
+      : formatQuantidade(valor, necessidade.unidade);
 
   return (
     <li

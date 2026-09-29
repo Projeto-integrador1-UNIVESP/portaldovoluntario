@@ -30,7 +30,7 @@ import { useConfirmacoes } from "@/hooks/queries/useConfirmacoes";
 import { useTaxaConfirmacao } from "@/hooks/queries/useTaxaConfirmacao";
 import { mensagemAmigavel } from "@/lib/erros";
 import { MARCA } from "@/lib/copy";
-import { formatCurrency, formatDate, formatPrazo, progressoPercent } from "@/lib/format";
+import { formatCurrency, formatDate, formatPrazo, progressoPercent, formatQuantidade } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 /**
@@ -372,7 +372,7 @@ const quantoFalta = (n: Necessidade) => {
   const falta = Math.max(0, n.meta - n.arrecadado);
   return n.tipo === "dinheiro"
     ? formatCurrency(falta)
-    : `${falta.toLocaleString("pt-BR")}${n.unidade ? ` ${n.unidade}` : ""}`;
+    : formatQuantidade(falta, n.unidade);
 };
 
 /**
