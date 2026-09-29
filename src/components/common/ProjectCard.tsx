@@ -102,7 +102,14 @@ export function ProjectCard({ projeto, variante = "padrao", className }: Project
         )}
       </Capa>
 
-      <div className={cn("flex min-w-0 flex-1 flex-col", largo ? "p-6 md:p-8" : "p-5")}>
+      {/* No largo a coluna de texto é mais baixa que a foto: centrada, a
+          folga sobra em cima e embaixo em vez de abrir um vão no meio. */}
+      <div
+        className={cn(
+          "flex min-w-0 flex-1 flex-col",
+          largo ? "p-6 md:justify-center md:p-8" : "p-5",
+        )}
+      >
         {projeto.ongNome && (
           <p className="flex min-w-0 items-center gap-1.5 text-sm text-muted-foreground">
             <span className="truncate font-medium">{projeto.ongNome}</span>
@@ -135,14 +142,17 @@ export function ProjectCard({ projeto, variante = "padrao", className }: Project
           <p
             className={cn(
               "mt-2.5 text-muted-foreground",
-              largo ? "line-clamp-3 text-base" : "line-clamp-2 text-sm",
+              largo ? "line-clamp-4 text-base md:line-clamp-5" : "line-clamp-2 text-sm",
             )}
           >
             {projeto.descricao}
           </p>
         )}
 
-        <div className="mt-auto pt-5">
+        {/* No card padrão o bloco do que falta desce para o rodapé, para as
+            barras de uma mesma linha da grade ficarem alinhadas. No largo há
+            espaço de sobra e ele segue o resumo. */}
+        <div className={cn(largo ? "mt-6 flex flex-col gap-4" : "mt-auto pt-5")}>
           {temProgresso && pedidos > 0 && (
             <div>
               {/* O número grande é o que falta confirmar. O já confirmado fica
@@ -185,7 +195,12 @@ export function ProjectCard({ projeto, variante = "padrao", className }: Project
             <p className="text-sm text-muted-foreground">Nenhum pedido aberto agora.</p>
           )}
 
-          <span className="mt-4 flex items-center justify-between border-t border-border pt-3.5 text-sm font-semibold text-primary">
+          <span
+            className={cn(
+              "flex items-center justify-between border-t border-border pt-3.5 text-sm font-semibold text-primary",
+              !largo && "mt-4",
+            )}
+          >
             Ver o que falta
             <ArrowRight
               className="h-4 w-4 shrink-0 transition-transform duration-200 ease-suave group-hover:translate-x-1 motion-reduce:transition-none"
