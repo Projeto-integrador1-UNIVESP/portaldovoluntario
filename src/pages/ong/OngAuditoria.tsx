@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BadgeCheck, Clock, Download, ShieldCheck } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -17,23 +17,25 @@ import { Stat } from "@/components/common/Stat";
 import { Callout } from "@/components/common/Callout";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ErrorState } from "@/components/common/ErrorState";
+import { CTA, TERMOS } from "@/lib/copy";
 import { exportToCsv } from "@/lib/exportCsv";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/format";
 
 const num = (v: unknown) => Number(v ?? 0);
 
+/** Linhas por página do histórico. Vinte cabem numa tela sem rolar a página. */
+const POR_PAGINA = 20;
+
 /**
  * Histórico auditável das doações da ONG.
  *
- * Dois consertos de fundo aqui. O nome do doador vinha de um embed
- * `profiles:id_usuario(...)` que o PostgREST não resolve: `doacoes.id_usuario`
- * referencia `auth.users`, não `profiles`. E o erro era engolido, deixando a
- * tela inteira vazia. E o "total arrecadado" somava tudo, inclusive o que a ONG
- * nunca confirmou: o oposto da regra que a plataforma vende. Agora confirmado e
- * aguardando aparecem separados.
+ * O nome do doador não vem por embed (`doacoes.id_usuario` referencia
+ * `auth.users`, não `profiles`). E o "total arrecadado" separa confirmado de
+ * aguardando: somar tudo seria o oposto da regra que a plataforma vende.
  */
 export default function OngAuditoria() {
   const { ongId } = useAuth();
+  const [pagina, setPagina] = useState(1);
 
   const { data, isPending, isError, refetch } = useQuery({
     queryKey: ["ong-auditoria", ongId],
@@ -81,13 +83,13 @@ export default function OngAuditoria() {
     const pendentes = linhas.filter((d) => d.status === "pendente");
 
     // O ranking conta só o que a ONG confirmou: é a mesma regra da barra de
-    // progresso pública. Somar doação não confirmada aqui inflaria o histórico.
+    // progresso pública. Somar doação não confirmada inflaria o histórico.
     const porDoador = new Map<string, { nome: string; total: number; qtd: number }>();
     for (const d of confirmadas) {
       const chave = d.anonima ? `anon-${d.id}` : d.id_usuario || d.doador_email || `sem-id-${d.id}`;
       const nome = d.anonima
         ? "Doador anônimo"
-        : d.doador?.nome || d.doador_nome || "Doador sem cadastro";
+        : d.doador?.nome || d.doador_nome || TERMOS.semIdentificacao;
       const atual = porDoador.get(chave) ?? { nome, total: 0, qtd: 0 };
       atual.total += d.valor;
       atual.qtd += 1;
@@ -105,11 +107,19 @@ export default function OngAuditoria() {
     };
   }, [data]);
 
+  const totalDePaginas = Math.max(1, Math.ceil((data?.length ?? 0) / POR_PAGINA));
+  useEffect(() => {
+    if (pagina > totalDePaginas) setPagina(totalDePaginas);
+  }, [pagina, totalDePaginas]);
+  const inicio = (pagina - 1) * POR_PAGINA;
+  const paginaAtual = (data ?? []).slice(inicio, inicio + POR_PAGINA);
+
   const descreveDoacao = (d: NonNullable<typeof data>[number]) =>
     d.necessidade
       ? `${d.quantidade ?? 0} ${d.necessidade.unidade ?? ""} de ${d.necessidade.nome}`.replace(/\s+/g, " ")
       : formatCurrency(d.valor);
 
+  // Os rótulos das colunas alimentam o cabeçalho do arquivo: não mudar.
   const baixarCsv = () =>
     exportToCsv(
       "auditoria-ong.csv",
@@ -135,12 +145,11 @@ export default function OngAuditoria() {
       <Seo title="Auditoria de doações" noIndex />
       <PageHeader
         title="Auditoria de doações"
-        description="Tudo que foi registrado para a sua ONG, com quem doou, quando e se você confirmou."
-        icon={<ShieldCheck className="h-6 w-6" aria-hidden="true" />}
+        description="Tudo que foi registrado para a sua ONG: quem doou, quando e se você confirmou."
         action={
           <Button variant="outline" onClick={baixarCsv} disabled={!data?.length}>
-            <Download className="mr-2 h-4 w-4" aria-hidden="true" />
-            Exportar CSV
+            <Download aria-hidden="true" />
+            {CTA.exportarCsv}
           </Button>
         }
       />
@@ -151,10 +160,10 @@ export default function OngAuditoria() {
         <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-24 w-full rounded-lg" />
+              <Skeleton key={i} className="h-28 w-full rounded-xl" />
             ))}
           </div>
-          <div className="mt-6 space-y-3">
+          <div className="mt-8 space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
               <Skeleton key={i} className="h-12 w-full" />
             ))}
@@ -162,7 +171,7 @@ export default function OngAuditoria() {
         </>
       ) : data.length === 0 ? (
         <EmptyState
-          icon={ShieldCheck}
+          ilustracao="caixa"
           title="Nenhuma doação registrada ainda"
           description="Quando alguém doar para a sua ONG, a doação entra aqui, antes e depois de você confirmar o recebimento."
           action={{ label: "Publicar o que está faltando", to: "/ong/necessidades" }}
@@ -173,7 +182,7 @@ export default function OngAuditoria() {
             <Stat
               valor={formatCurrency(resumo.valorConfirmado)}
               rotulo="em dinheiro confirmado por você"
-              icone={BadgeCheck}
+              destaque
             />
             <Stat
               valor={resumo.confirmadas.length}
@@ -182,7 +191,6 @@ export default function OngAuditoria() {
                   ? "doação com recebimento confirmado"
                   : "doações com recebimento confirmado"
               }
-              icone={BadgeCheck}
             />
             <Stat
               valor={resumo.qtdPendente}
@@ -191,35 +199,38 @@ export default function OngAuditoria() {
                   ? "doação aguardando confirmação"
                   : "doações aguardando confirmação"
               }
-              icone={Clock}
               para="/ong/doacoes"
-              destaque={resumo.qtdPendente > 0}
             />
-            <Stat valor={resumo.ranking.length} rotulo="doadores com doação confirmada" />
+            <Stat
+              valor={resumo.ranking.length}
+              rotulo={
+                resumo.ranking.length === 1
+                  ? "doador com doação confirmada"
+                  : "doadores com doação confirmada"
+              }
+            />
           </div>
 
           <Callout tom="confianca" className="mt-6">
-            Os números acima separam o que foi confirmado do que ainda não foi porque é essa a
-            regra do site: o progresso de um projeto só sobe quando alguém da ONG atesta que
-            recebeu. {formatCurrency(resumo.valorPendente)} estão registrados e ainda não contam.
+            Os números separam o que foi confirmado do que ainda não foi: o progresso de um
+            projeto só sobe quando alguém da ONG atesta que recebeu.{" "}
+            <span className="numero">{formatCurrency(resumo.valorPendente)}</span> estão registrados
+            e ainda não contam.
           </Callout>
 
-          <Card className="mt-6 overflow-hidden">
+          <Card className="mt-8 overflow-hidden">
             <CardHeader>
-              <CardTitle className="font-display text-lg font-bold">
-                Quem mais doou (só confirmadas)
-              </CardTitle>
+              <CardTitle>Quem mais doou</CardTitle>
+              <p className="text-sm text-muted-foreground">Só doações confirmadas por você.</p>
             </CardHeader>
             <CardContent className="p-0">
               {resumo.ranking.length === 0 ? (
-                <div className="p-6">
-                  <EmptyState
-                    icon={Clock}
-                    title="Nenhum recebimento confirmado ainda"
-                    description="O ranking usa só as doações que você confirmou. É o mesmo número que o doador vê no site."
-                    action={{ label: "Ver a fila de confirmação", to: "/ong/doacoes" }}
-                  />
-                </div>
+                <EmptyState
+                  className="m-4 border-0 bg-transparent"
+                  title="Nenhum recebimento confirmado ainda"
+                  description="O ranking usa só as doações que você confirmou. É o mesmo número que o doador vê no site."
+                  action={{ label: "Ver a fila de confirmação", to: "/ong/doacoes" }}
+                />
               ) : (
                 <Table>
                   <TableHeader>
@@ -230,11 +241,11 @@ export default function OngAuditoria() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {resumo.ranking.map((p, i) => (
+                    {resumo.ranking.slice(0, 10).map((p, i) => (
                       <TableRow key={`${p.nome}-${i}`}>
                         <TableCell className="font-medium">{p.nome}</TableCell>
-                        <TableCell className="tabular-nums text-muted-foreground">{p.qtd}</TableCell>
-                        <TableCell className="text-right font-medium tabular-nums">
+                        <TableCell className="numero text-muted-foreground">{p.qtd}</TableCell>
+                        <TableCell className="numero text-right font-medium">
                           {formatCurrency(p.total)}
                         </TableCell>
                       </TableRow>
@@ -245,9 +256,12 @@ export default function OngAuditoria() {
             </CardContent>
           </Card>
 
-          <Card className="mt-6 overflow-hidden">
+          <Card className="mt-8 overflow-hidden">
             <CardHeader>
-              <CardTitle className="font-display text-lg font-bold">Histórico completo</CardTitle>
+              <CardTitle>Histórico completo</CardTitle>
+              <p className="numero text-sm text-muted-foreground">
+                {data.length === 1 ? "1 doação registrada" : `${data.length} doações registradas`}
+              </p>
             </CardHeader>
             <CardContent className="p-0">
               <Table>
@@ -260,16 +274,16 @@ export default function OngAuditoria() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data.map((d) => (
+                  {paginaAtual.map((d) => (
                     <TableRow key={d.id}>
-                      <TableCell className="whitespace-nowrap text-muted-foreground">
+                      <TableCell className="numero whitespace-nowrap text-muted-foreground">
                         {formatDateTime(d.data_doacao)}
                       </TableCell>
                       <TableCell>
                         <div className="font-medium">
                           {d.anonima
                             ? "Doador anônimo"
-                            : d.doador?.nome || d.doador_nome || "Doador sem cadastro"}
+                            : d.doador?.nome || d.doador_nome || TERMOS.semIdentificacao}
                         </div>
                         {!d.anonima && (d.doador?.email || d.doador_email) && (
                           <div className="text-xs text-muted-foreground">
@@ -277,16 +291,16 @@ export default function OngAuditoria() {
                           </div>
                         )}
                       </TableCell>
-                      <TableCell className="tabular-nums">{descreveDoacao(d)}</TableCell>
+                      <TableCell className="numero">{descreveDoacao(d)}</TableCell>
                       <TableCell>
                         {d.status === "confirmada" ? (
-                          <Badge className="bg-success text-success-foreground">
+                          <Badge variant="success">
                             {d.confirmada_em
                               ? `Confirmada em ${formatDate(d.confirmada_em)}`
                               : "Confirmada"}
                           </Badge>
                         ) : d.status === "cancelada" ? (
-                          <Badge variant="secondary">Não recebida</Badge>
+                          <Badge variant="neutro">{TERMOS.naoRecebida}</Badge>
                         ) : (
                           <Badge variant="outline">Aguardando você confirmar</Badge>
                         )}
@@ -295,6 +309,40 @@ export default function OngAuditoria() {
                   ))}
                 </TableBody>
               </Table>
+
+              {totalDePaginas > 1 && (
+                <nav
+                  aria-label="Páginas do histórico"
+                  className="flex flex-wrap items-center justify-between gap-3 border-t px-5 py-3 text-sm text-muted-foreground"
+                >
+                  <p className="numero">
+                    Mostrando {inicio + 1} a {Math.min(inicio + POR_PAGINA, data.length)} de {data.length}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={pagina === 1}
+                      onClick={() => setPagina((p) => p - 1)}
+                    >
+                      <ChevronLeft aria-hidden="true" />
+                      Anterior
+                    </Button>
+                    <span className="numero px-1">
+                      {pagina} de {totalDePaginas}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={pagina === totalDePaginas}
+                      onClick={() => setPagina((p) => p + 1)}
+                    >
+                      Próxima
+                      <ChevronRight aria-hidden="true" />
+                    </Button>
+                  </div>
+                </nav>
+              )}
             </CardContent>
           </Card>
         </>
