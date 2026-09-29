@@ -180,9 +180,8 @@ export default function LoginPage() {
             <Button
               type="submit"
               size="lg"
-              className="pressionavel w-full"
-              disabled={enviando}
-            >
+              className="w-full"
+              disabled={enviando}>
               {enviando && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
               {enviando ? "Entrando…" : "Entrar"}
             </Button>
@@ -202,15 +201,13 @@ export default function LoginPage() {
           <Button
             variant="outline"
             asChild
-            className="h-auto min-h-14 whitespace-normal py-3 text-center"
-          >
+            className="h-auto min-h-14 whitespace-normal py-3 text-center">
             <Link to="/cadastro?tipo=doador">Quero doar ou ser voluntário</Link>
           </Button>
           <Button
             variant="outline"
             asChild
-            className="h-auto min-h-14 whitespace-normal py-3 text-center"
-          >
+            className="h-auto min-h-14 whitespace-normal py-3 text-center">
             <Link to="/cadastro?tipo=ong">Sou ONG e tenho uma chave</Link>
           </Button>
         </div>

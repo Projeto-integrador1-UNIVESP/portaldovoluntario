@@ -5,7 +5,7 @@ import { FOTOS } from "@/lib/fotos";
 /**
  * Faixa de voluntariado: foto de ponta a ponta sob um véu marinho, título em
  * creme e uma ação de contorno. A seção já ocupa a largura toda, então não
- * precisa de `.sangria`; o véu a 80% garante o contraste sobre qualquer foto.
+ * precisa sangrar com 100dvw; o véu a 80% garante o contraste sobre qualquer foto.
  */
 export function FaixaVoluntariado() {
   return (
@@ -34,8 +34,7 @@ export function FaixaVoluntariado() {
           variant="outline"
           size="lg"
           asChild
-          className="pressionavel mt-8 border-primary-foreground/50 bg-transparent text-primary-foreground hover:border-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground focus-visible:ring-primary-foreground focus-visible:ring-offset-primary"
-        >
+          className="mt-8 border-primary-foreground/50 bg-transparent text-primary-foreground hover:border-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground focus-visible:ring-primary-foreground focus-visible:ring-offset-primary">
           <Link to="/projetos">Ver projetos com vagas</Link>
         </Button>
       </div>

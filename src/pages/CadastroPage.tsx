@@ -239,7 +239,7 @@ function FormularioDoador({ aoTrocarTipo }: { aoTrocarTipo: () => void }) {
           <Callout tom="info">
             Não achou? Olhe a pasta de spam. O remetente é a Voluntá.
           </Callout>
-          <Button asChild size="lg" className="pressionavel w-full">
+          <Button asChild size="lg" className="w-full">
             <Link to="/login">Já confirmei, quero entrar</Link>
           </Button>
           <Button asChild variant="ghost" className="w-full">
@@ -276,7 +276,7 @@ function FormularioDoador({ aoTrocarTipo }: { aoTrocarTipo: () => void }) {
           </Callout>
 
           <div className="space-y-3">
-            <Button type="submit" className="pressionavel w-full" size="lg" disabled={enviando}>
+            <Button type="submit" className="w-full" size="lg" disabled={enviando}>
               {enviando && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
               {enviando ? CTA.criando : "Criar conta"}
             </Button>
@@ -549,7 +549,7 @@ function FormularioOng({ aoTrocarTipo }: { aoTrocarTipo: () => void }) {
           <AceiteDosTermos form={form} />
 
           <div className="space-y-3">
-            <Button type="submit" className="pressionavel w-full" size="lg" disabled={enviando}>
+            <Button type="submit" className="w-full" size="lg" disabled={enviando}>
               {enviando && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
               {enviando ? CTA.criando : "Criar a conta da ONG"}
             </Button>
