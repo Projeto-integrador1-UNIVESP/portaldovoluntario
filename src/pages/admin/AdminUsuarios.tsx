@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Search, Shield, UserPlus, Users } from "lucide-react";
 import { toast } from "sonner";
@@ -20,15 +20,20 @@ import {
 } from "@/components/ui/select";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { UFS } from "@/lib/constants/ufs";
-import { senhaSchema } from "@/lib/schemas/auth";
-import { formatPhone } from "@/lib/format";
-import { isValidEmail, onlyDigits } from "@/lib/validators";
+import { CTA, SUCESSO } from "@/lib/copy";
+import { ErroAmigavel } from "@/lib/erros";
+import { formatDate, formatPhone } from "@/lib/format";
 import {
-  AlternarStatus, Campo, ExcluirLinha, Paginacao, TabelaAdmin,
+  novoUsuarioSchema, usuarioAdminSchema,
+  type NovoUsuarioForm, type Papel, type UsuarioAdminForm,
+} from "@/lib/schemas/admin";
+import { onlyDigits } from "@/lib/validators";
+import {
+  AlternarStatus, Campo, ExcluirLinha, Paginacao, TabelaAdmin, Vazio,
 } from "./_shared";
-import { POR_PAGINA, mensagemDeErro, useCorrigirPaginaVazia } from "./_shared-lib";
-
-type Papel = "admin" | "ong" | "user";
+import {
+  POR_PAGINA, erroDaFunction, mensagemDeErro, useCorrigirPaginaVazia, useValidacao,
+} from "./_shared-lib";
 
 const PAPEIS: { valor: Papel; rotulo: string }[] = [
   { valor: "user", rotulo: "Doador" },
@@ -45,8 +50,12 @@ const COLUNAS = [
   { rotulo: "Cidade" },
   { rotulo: "Papel" },
   { rotulo: "Cadastro" },
+  { rotulo: "Marcador" },
   { rotulo: "Ações", className: "text-right" },
 ];
+
+const FORM_VAZIO: UsuarioAdminForm = { nome: "", telefone: "", cidade: "", estado: "", papel: "user" };
+const NOVO_VAZIO: NovoUsuarioForm = { nome: "", email: "", senha: "", papel: "user" };
 
 /**
  * O termo entra num filtro `or` do PostgREST, onde vírgula e parêntese são
@@ -57,10 +66,9 @@ const limparBusca = (termo: string) => termo.replace(/[,()*%\\]/g, " ").trim();
 /**
  * Usuários da plataforma.
  *
- * Duas travas que faltavam: a tela buscava a tabela inteira de perfis (agora é
- * paginada e com busca no servidor) e deixava o administrador rebaixar ou
- * excluir a própria conta, o que tranca o acesso a `/admin` sem caminho de
- * volta pela interface, já que a rota exige o papel de admin.
+ * Duas travas: a lista é paginada e buscada no servidor, e o administrador não
+ * consegue rebaixar nem excluir a própria conta, o que trancaria o acesso a
+ * `/admin` sem caminho de volta pela interface.
  */
 export default function AdminUsuarios() {
   const queryClient = useQueryClient();
@@ -70,12 +78,12 @@ export default function AdminUsuarios() {
   const [editando, setEditando] = useState<{
     id: string; user_id: string; nome: string; papel: Papel;
   } | null>(null);
-  const [form, setForm] = useState({ nome: "", telefone: "", cidade: "", estado: "" });
-  const [papel, setPapel] = useState<Papel>("user");
+  const [form, setForm] = useState<UsuarioAdminForm>(FORM_VAZIO);
   const [criando, setCriando] = useState(false);
-  const [novo, setNovo] = useState({
-    nome: "", email: "", senha: "", papel: "user" as Papel,
-  });
+  const [novo, setNovo] = useState<NovoUsuarioForm>(NOVO_VAZIO);
+
+  const edicao = useValidacao(usuarioAdminSchema, "usuario");
+  const criacao = useValidacao(novoUsuarioSchema, "novo");
 
   const termo = limparBusca(busca);
 
@@ -134,22 +142,21 @@ export default function AdminUsuarios() {
   });
 
   const salvar = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (dados: UsuarioAdminForm) => {
       if (!editando) return;
-      if (!form.nome.trim()) throw new Error("Informe o nome.");
 
       const { error } = await supabase
         .from("profiles")
         .update({
-          nome: form.nome.trim(),
-          telefone: onlyDigits(form.telefone, 11) || null,
-          cidade: form.cidade.trim() || null,
-          estado: form.estado || null,
+          nome: dados.nome.trim(),
+          telefone: onlyDigits(dados.telefone, 11) || null,
+          cidade: dados.cidade.trim() || null,
+          estado: dados.estado || null,
         })
         .eq("id", editando.id);
       if (error) throw error;
 
-      if (papel === editando.papel) return;
+      if (dados.papel === editando.papel) return;
 
       // Trocar papel são duas operações sem transação do lado do cliente. A
       // ordem é apagar e então inserir: se a inserção falhar, a pessoa fica sem
@@ -163,19 +170,19 @@ export default function AdminUsuarios() {
 
       const { error: erroAoInserir } = await supabase
         .from("user_roles")
-        .insert({ user_id: editando.user_id, role: papel });
+        .insert({ user_id: editando.user_id, role: dados.papel });
       if (erroAoInserir) {
-        throw new Error(
+        throw new ErroAmigavel(
           "O papel anterior foi removido, mas o novo não foi aplicado. Edite esta pessoa de novo para definir o papel.",
         );
       }
     },
     onSuccess: () => {
-      toast.success("Cadastro atualizado.");
-      setEditando(null);
+      toast.success(SUCESSO.salvo("Cadastro"));
+      fecharEdicao();
       queryClient.invalidateQueries({ queryKey: ["admin-usuarios"] });
     },
-    onError: (erro) => toast.error(mensagemDeErro(erro, "Não foi possível salvar o cadastro.")),
+    onError: (erro) => edicao.erroDoServidor(erro, "Não foi possível salvar o cadastro."),
   });
 
   const alternarAtivo = useMutation({
@@ -185,39 +192,32 @@ export default function AdminUsuarios() {
       return ativo;
     },
     onSuccess: (ativo) => {
-      toast.success(ativo ? "Cadastro marcado como ativo." : "Cadastro marcado como inativo.");
+      toast.success(ativo ? "Cadastro marcado como ativo" : "Cadastro marcado como inativo");
       queryClient.invalidateQueries({ queryKey: ["admin-usuarios"] });
     },
     onError: (erro) => toast.error(mensagemDeErro(erro, "Não foi possível alterar o cadastro.")),
   });
 
   const criar = useMutation({
-    mutationFn: async () => {
-      if (!novo.nome.trim()) throw new Error("Informe o nome.");
-      if (!isValidEmail(novo.email)) throw new Error("Informe um e-mail válido.");
-      const senha = senhaSchema.safeParse(novo.senha);
-      if (!senha.success) throw new Error(senha.error.issues[0].message);
-
+    mutationFn: async (dados: NovoUsuarioForm) => {
       const { data: resposta, error } = await supabase.functions.invoke("admin-users", {
         body: {
           action: "create",
-          nome: novo.nome.trim(),
-          email: novo.email.trim(),
-          password: novo.senha,
-          role: novo.papel,
+          nome: dados.nome.trim(),
+          email: dados.email.trim(),
+          password: dados.senha,
+          role: dados.papel,
         },
       });
       const falha = (resposta as { error?: string } | null)?.error;
-      if (error || falha) throw new Error(falha || error?.message || "");
+      if (error || falha) throw await erroDaFunction(error, resposta);
     },
     onSuccess: () => {
-      toast.success("Usuário criado.");
-      setCriando(false);
-      setNovo({ nome: "", email: "", senha: "", papel: "user" });
+      toast.success(SUCESSO.criado("Usuário"));
+      fecharCriacao();
       queryClient.invalidateQueries({ queryKey: ["admin-usuarios"] });
     },
-    onError: (erro) =>
-      toast.error(mensagemDeErro(erro, "Não foi possível criar o usuário.")),
+    onError: (erro) => criacao.erroDoServidor(erro, "Não foi possível criar o usuário."),
   });
 
   const excluir = useMutation({
@@ -226,10 +226,10 @@ export default function AdminUsuarios() {
         body: { action: "delete", user_id: userId },
       });
       const falha = (resposta as { error?: string } | null)?.error;
-      if (error || falha) throw new Error(falha || error?.message || "");
+      if (error || falha) throw await erroDaFunction(error, resposta);
     },
     onSuccess: () => {
-      toast.success("Usuário removido.");
+      toast.success("Usuário removido");
       if (linhas.length === 1 && pagina > 0) setPagina(pagina - 1);
       queryClient.invalidateQueries({ queryKey: ["admin-usuarios"] });
     },
@@ -243,11 +243,36 @@ export default function AdminUsuarios() {
       telefone: onlyDigits(u.telefone ?? "", 11),
       cidade: u.cidade ?? "",
       estado: u.estado ?? "",
+      papel: u.papel,
     });
-    setPapel(u.papel);
+    edicao.limpar();
+  };
+
+  const fecharEdicao = () => {
+    setEditando(null);
+    edicao.limpar();
+  };
+
+  const fecharCriacao = () => {
+    setCriando(false);
+    setNovo(NOVO_VAZIO);
+    criacao.limpar();
+  };
+
+  const enviarEdicao = (evento: FormEvent) => {
+    evento.preventDefault();
+    const dados = edicao.validar(form);
+    if (dados) salvar.mutate(dados);
+  };
+
+  const enviarCriacao = (evento: FormEvent) => {
+    evento.preventDefault();
+    const dados = criacao.validar(novo);
+    if (dados) criar.mutate(dados);
   };
 
   const souEu = (userId: string) => Boolean(user) && userId === user!.id;
+  const editandoAMim = Boolean(editando && souEu(editando.user_id));
 
   return (
     <DashboardLayout type="admin">
@@ -258,7 +283,7 @@ export default function AdminUsuarios() {
         icon={<Users className="h-6 w-6" aria-hidden="true" />}
         action={
           <Button onClick={() => setCriando(true)}>
-            <UserPlus className="h-4 w-4" aria-hidden="true" />
+            <UserPlus aria-hidden="true" />
             Novo usuário
           </Button>
         }
@@ -272,6 +297,7 @@ export default function AdminUsuarios() {
           />
           <Input
             id="busca-usuarios"
+            name="busca"
             type="search"
             autoComplete="off"
             className="pl-9"
@@ -296,14 +322,13 @@ export default function AdminUsuarios() {
         vazio={
           termo ? (
             <EmptyState
-              icon={Search}
+              ilustracao="caixa"
               title="Nenhum usuário encontrado"
               description={`Nada corresponde a “${busca}”.`}
               action={{ label: "Limpar a busca", onClick: () => setBusca("") }}
             />
           ) : (
             <EmptyState
-              icon={Users}
               title="Nenhum usuário cadastrado"
               description="Quem se cadastra pelo site aparece aqui. Você também pode criar uma conta direto."
               action={{ label: "Criar usuário", onClick: () => setCriando(true) }}
@@ -324,22 +349,24 @@ export default function AdminUsuarios() {
               <div className="break-all text-xs text-muted-foreground">{u.email}</div>
             </TableCell>
 
-            <TableCell className="text-muted-foreground">
-              {u.telefone ? formatPhone(u.telefone) : "Não informado"}
+            <TableCell className="numero text-muted-foreground">
+              {u.telefone ? formatPhone(u.telefone) : <Vazio />}
             </TableCell>
 
             <TableCell className="text-muted-foreground">
-              {u.cidade ? `${u.cidade}${u.estado ? `, ${u.estado}` : ""}` : "Não informada"}
+              {u.cidade ? `${u.cidade}${u.estado ? `, ${u.estado}` : ""}` : <Vazio />}
             </TableCell>
 
             <TableCell>
               <Badge
                 variant={u.papel === "admin" ? "default" : u.papel === "ong" ? "secondary" : "outline"}
               >
-                {u.papel === "admin" && <Shield className="mr-1 h-3 w-3" aria-hidden="true" />}
+                {u.papel === "admin" && <Shield aria-hidden="true" />}
                 {rotuloDoPapel(u.papel)}
               </Badge>
             </TableCell>
+
+            <TableCell className="numero text-muted-foreground">{formatDate(u.created_at)}</TableCell>
 
             <TableCell>
               <AlternarStatus
@@ -358,7 +385,7 @@ export default function AdminUsuarios() {
                   aria-label={`Editar ${u.nome}`}
                   onClick={() => abrirEdicao(u)}
                 >
-                  <Pencil className="h-4 w-4" aria-hidden="true" />
+                  <Pencil aria-hidden="true" />
                 </Button>
                 {souEu(u.user_id) ? (
                   // Excluir a própria conta tranca o acesso ao painel: a rota
@@ -370,16 +397,16 @@ export default function AdminUsuarios() {
                     aria-label="Você não pode remover a sua própria conta"
                     title="Você não pode remover a sua própria conta"
                   >
-                    <Shield className="h-4 w-4" aria-hidden="true" />
+                    <Shield aria-hidden="true" />
                   </Button>
                 ) : (
                   <ExcluirLinha
                     rotuloAcessivel={`Remover ${u.nome}`}
-                    titulo="Remover este usuário?"
-                    descricao={`${u.nome} (${u.email}) perde o acesso e o cadastro sai da plataforma. As doações já registradas continuam, sem o vínculo com a pessoa.`}
-                    rotuloConfirmar="Remover"
+                    titulo={`Remover ${u.nome} da plataforma?`}
+                    descricao={`${u.email} perde o acesso e o cadastro sai da plataforma. As doações já registradas continuam, sem o vínculo com a pessoa.`}
+                    rotuloConfirmar={CTA.remover("usuário")}
                     desabilitado={excluir.isPending}
-                    aoConfirmar={() => excluir.mutate(u.user_id)}
+                    aoConfirmar={() => excluir.mutateAsync(u.user_id)}
                   />
                 )}
               </div>
@@ -389,24 +416,25 @@ export default function AdminUsuarios() {
       </TabelaAdmin>
 
       <Callout tom="info" className="mt-4">
-        O marcador de cadastro ativo é informativo: hoje ele não bloqueia o login.
+        O marcador de cadastro ativo é só informativo: hoje ele não bloqueia o login.
         Para retirar o acesso de alguém, remova a conta.
       </Callout>
 
-      <Dialog open={Boolean(editando)} onOpenChange={(aberto) => !aberto && setEditando(null)}>
-        <DialogContent>
+      <Dialog open={Boolean(editando)} onOpenChange={(aberto) => !aberto && fecharEdicao()}>
+        <DialogContent className="rolagem-contida">
           <DialogHeader>
-            <DialogTitle>Editar cadastro</DialogTitle>
+            <DialogTitle className="font-display text-xl">Editar cadastro</DialogTitle>
             <DialogDescription>
               O papel define o que a pessoa vê ao entrar: doador, painel da ONG ou
               painel administrativo.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <Campo id="usuario-nome" rotulo="Nome" obrigatorio>
+          <form noValidate onSubmit={enviarEdicao} className="grid gap-4">
+            <Campo id="usuario-nome" rotulo="Nome" obrigatorio erro={edicao.erros.nome}>
               <Input
                 id="usuario-nome"
+                name="nome"
                 autoComplete="off"
                 maxLength={80}
                 value={form.nome}
@@ -415,18 +443,21 @@ export default function AdminUsuarios() {
             </Campo>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <Campo id="usuario-telefone" rotulo="Telefone">
+              <Campo id="usuario-telefone" rotulo="Telefone" erro={edicao.erros.telefone}>
                 <Input
                   id="usuario-telefone"
+                  name="telefone"
+                  type="tel"
                   inputMode="tel"
                   autoComplete="off"
                   value={formatPhone(form.telefone)}
                   onChange={(e) => setForm({ ...form, telefone: onlyDigits(e.target.value, 11) })}
                 />
               </Campo>
-              <Campo id="usuario-cidade" rotulo="Cidade">
+              <Campo id="usuario-cidade" rotulo="Cidade" erro={edicao.erros.cidade}>
                 <Input
                   id="usuario-cidade"
+                  name="cidade"
                   autoComplete="off"
                   maxLength={80}
                   value={form.cidade}
@@ -435,84 +466,93 @@ export default function AdminUsuarios() {
               </Campo>
             </div>
 
-            <Campo id="usuario-estado" rotulo="Estado">
-              <Select value={form.estado} onValueChange={(v) => setForm({ ...form, estado: v })}>
-                <SelectTrigger id="usuario-estado">
-                  <SelectValue placeholder="UF" />
-                </SelectTrigger>
-                <SelectContent>
-                  {UFS.map((uf) => (
-                    <SelectItem key={uf.sigla} value={uf.sigla}>
-                      {uf.sigla} ({uf.nome})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <Campo id="usuario-estado" rotulo="Estado" erro={edicao.erros.estado}>
+              {(a11y) => (
+                <Select value={form.estado} onValueChange={(v) => setForm({ ...form, estado: v })} name="estado">
+                  <SelectTrigger {...a11y}>
+                    <SelectValue placeholder="UF" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {UFS.map((uf) => (
+                      <SelectItem key={uf.sigla} value={uf.sigla}>
+                        {uf.sigla} ({uf.nome})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </Campo>
 
             <Campo
               id="usuario-papel"
               rotulo="Papel"
+              erro={edicao.erros.papel}
               dica={
-                editando && souEu(editando.user_id)
+                editandoAMim
                   ? "Você não pode mudar o seu próprio papel: rebaixar a si mesmo tranca o painel."
                   : undefined
               }
             >
-              <Select
-                value={papel}
-                onValueChange={(v) => setPapel(v as Papel)}
-                disabled={Boolean(editando && souEu(editando.user_id))}
-              >
-                <SelectTrigger id="usuario-papel">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PAPEIS.map((p) => (
-                    <SelectItem key={p.valor} value={p.valor}>
-                      {p.rotulo}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {(a11y) => (
+                <Select
+                  value={form.papel}
+                  onValueChange={(v) => setForm({ ...form, papel: v as Papel })}
+                  disabled={editandoAMim}
+                  name="papel"
+                >
+                  <SelectTrigger {...a11y}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PAPEIS.map((p) => (
+                      <SelectItem key={p.valor} value={p.valor}>
+                        {p.rotulo}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </Campo>
-          </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditando(null)}>
-              Cancelar
-            </Button>
-            <Button onClick={() => salvar.mutate()} disabled={salvar.isPending}>
-              {salvar.isPending ? "Salvando…" : "Salvar alterações"}
-            </Button>
-          </DialogFooter>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={fecharEdicao}>
+                {CTA.cancelar}
+              </Button>
+              <Button type="submit" disabled={salvar.isPending}>
+                {salvar.isPending ? CTA.salvando : CTA.salvar("cadastro")}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={criando} onOpenChange={setCriando}>
-        <DialogContent>
+      <Dialog open={criando} onOpenChange={(aberto) => (aberto ? setCriando(true) : fecharCriacao())}>
+        <DialogContent className="rolagem-contida">
           <DialogHeader>
-            <DialogTitle>Novo usuário</DialogTitle>
+            <DialogTitle className="font-display text-xl">Novo usuário</DialogTitle>
             <DialogDescription>
               A conta é criada já confirmada. Combine a senha com a pessoa e peça
               que ela troque depois.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <Campo id="novo-nome" rotulo="Nome" obrigatorio>
+          <form noValidate onSubmit={enviarCriacao} className="grid gap-4">
+            <Campo id="novo-nome" rotulo="Nome" obrigatorio erro={criacao.erros.nome}>
               <Input
                 id="novo-nome"
+                name="nome"
                 autoComplete="off"
                 maxLength={80}
                 value={novo.nome}
                 onChange={(e) => setNovo({ ...novo, nome: e.target.value })}
               />
             </Campo>
-            <Campo id="novo-email" rotulo="E-mail" obrigatorio>
+            <Campo id="novo-email" rotulo="E-mail" obrigatorio erro={criacao.erros.email}>
               <Input
                 id="novo-email"
+                name="email"
                 type="email"
+                inputMode="email"
                 autoComplete="off"
                 value={novo.email}
                 onChange={(e) => setNovo({ ...novo, email: e.target.value })}
@@ -522,43 +562,48 @@ export default function AdminUsuarios() {
               id="novo-senha"
               rotulo="Senha"
               obrigatorio
-              dica="Ao menos 8 caracteres, com maiúscula, minúscula e número."
+              dica="Ao menos 8 caracteres, com letra maiúscula, minúscula e número."
+              erro={criacao.erros.senha}
             >
               <Input
                 id="novo-senha"
+                name="senha"
                 type="password"
                 autoComplete="new-password"
                 value={novo.senha}
                 onChange={(e) => setNovo({ ...novo, senha: e.target.value })}
               />
             </Campo>
-            <Campo id="novo-papel" rotulo="Papel">
-              <Select
-                value={novo.papel}
-                onValueChange={(v) => setNovo({ ...novo, papel: v as Papel })}
-              >
-                <SelectTrigger id="novo-papel">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PAPEIS.map((p) => (
-                    <SelectItem key={p.valor} value={p.valor}>
-                      {p.rotulo}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <Campo id="novo-papel" rotulo="Papel" erro={criacao.erros.papel}>
+              {(a11y) => (
+                <Select
+                  value={novo.papel}
+                  onValueChange={(v) => setNovo({ ...novo, papel: v as Papel })}
+                  name="papel"
+                >
+                  <SelectTrigger {...a11y}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PAPEIS.map((p) => (
+                      <SelectItem key={p.valor} value={p.valor}>
+                        {p.rotulo}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </Campo>
-          </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCriando(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={() => criar.mutate()} disabled={criar.isPending}>
-              {criar.isPending ? "Criando…" : "Criar usuário"}
-            </Button>
-          </DialogFooter>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={fecharCriacao}>
+                {CTA.cancelar}
+              </Button>
+              <Button type="submit" disabled={criar.isPending}>
+                {criar.isPending ? CTA.criando : CTA.criar("usuário")}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </DashboardLayout>
