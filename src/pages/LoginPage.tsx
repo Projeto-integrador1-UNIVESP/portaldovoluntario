@@ -2,32 +2,19 @@ import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  BadgeCheck, Building2, Eye, EyeOff, HandHeart, Landmark, Loader2, ShieldCheck,
-} from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import type { LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { PublicShell } from "@/components/layout/PublicShell";
-import { Seo } from "@/components/common/Seo";
+import { CascaDeAuth } from "@/components/auth/CascaDeAuth";
+import { BotaoMostrarSenha } from "@/components/auth/CampoDeSenha";
 import { Callout } from "@/components/common/Callout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
 } from "@/components/ui/form";
 import { loginSchema, type LoginInput } from "@/lib/schemas/auth";
-
-/**
- * Entrar.
- *
- * A coluna ao lado do formulário já foi um carrossel de fotos com frases
- * genéricas. Saiu: era conteúdo de preenchimento que se movia sozinho, o que
- * ainda obrigava a oferecer pausa e respeitar `prefers-reduced-motion` (WCAG
- * 2.2.2) para não informar nada. No lugar ficam as garantias da plataforma,
- * que são o argumento para alguém criar conta aqui.
- */
+import { mensagemAmigavel } from "@/lib/erros";
 
 /**
  * Um `?redirect=` só pode levar para dentro do site.
@@ -63,6 +50,8 @@ function motivoDoRedirect(destino: string | null) {
   return "Entre para continuar de onde você parou.";
 }
 
+const CREDENCIAL_ERRADA = /invalid login|invalid credentials/i;
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
@@ -83,7 +72,17 @@ export default function LoginPage() {
     });
 
     if (error) {
-      toast.error('E-mail ou senha incorretos. Confira os dados ou use "Esqueci minha senha".');
+      // O erro fica na tela, embaixo do botão, e não num toast que some.
+      // Credencial errada marca os dois campos: não dá para saber qual falhou.
+      const credencialErrada = CREDENCIAL_ERRADA.test(error.message);
+      const mensagem = mensagemAmigavel(error.message, "Não foi possível entrar agora. Tente de novo em instantes.");
+      form.setError("root", {
+        message: credencialErrada ? `${mensagem} Confira os dados ou peça uma senha nova.` : mensagem,
+      });
+      if (credencialErrada) {
+        form.setError("email", { type: "server", message: "Confira o e-mail" });
+        form.setError("password", { type: "server", message: "Confira a senha" });
+      }
       return;
     }
 
@@ -94,7 +93,7 @@ export default function LoginPage() {
       return;
     }
 
-    // Sem destino explícito, cada papel cai no painel que usa de fato.
+    // Sem destino explícito, cada papel cai no painel que usa.
     const { data: papeis } = await supabase
       .from("user_roles")
       .select("role")
@@ -107,176 +106,115 @@ export default function LoginPage() {
   };
 
   const enviando = form.formState.isSubmitting;
+  const erroGeral = form.formState.errors.root?.message;
 
   return (
-    <PublicShell>
-      <Seo title="Entrar" noIndex />
+    <CascaDeAuth
+      tituloDaPagina="Entrar"
+      eyebrow="Sua conta"
+      titulo="Entrar"
+      descricao="Use o e-mail e a senha que você cadastrou."
+    >
+      {motivo && (
+        <Callout tom="info" titulo="Por que precisamos que você entre" className="mb-6">
+          {motivo}
+        </Callout>
+      )}
 
-      <div className="container grid items-start gap-8 py-14 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:gap-12">
-        <Card className="rounded-xl shadow-sutil">
-          <CardHeader>
-            <h1 className="font-display text-2xl font-bold">Entrar</h1>
-            <p className="text-sm text-muted-foreground">
-              Use o e-mail e a senha que você cadastrou.
-            </p>
-          </CardHeader>
-
-          <CardContent>
-            {motivo && (
-              <Callout tom="info" titulo="Por que precisamos que você entre" className="mb-6">
-                {motivo}
-              </Callout>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(entrar)} noValidate className="space-y-5">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>E-mail</FormLabel>
+                <FormControl>
+                  <Input
+                    type="email"
+                    autoComplete="email"
+                    inputMode="email"
+                    placeholder="voce@exemplo.com"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
+          />
 
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(entrar)} noValidate className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>E-mail</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="email"
-                          autoComplete="email"
-                          placeholder="voce@exemplo.com"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Senha</FormLabel>
-                      <div className="relative">
-                        <FormControl>
-                          <Input
-                            type={mostrarSenha ? "text" : "password"}
-                            autoComplete="current-password"
-                            className="pr-10"
-                            {...field}
-                          />
-                        </FormControl>
-                        <button
-                          type="button"
-                          onClick={() => setMostrarSenha((v) => !v)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                          aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
-                        >
-                          {mostrarSenha ? (
-                            <EyeOff className="h-4 w-4" aria-hidden="true" />
-                          ) : (
-                            <Eye className="h-4 w-4" aria-hidden="true" />
-                          )}
-                        </button>
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="flex justify-end">
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex items-baseline justify-between gap-3">
+                  <FormLabel>Senha</FormLabel>
                   <Link
                     to="/esqueci-senha"
-                    className="text-sm text-primary underline underline-offset-2"
+                    className="link-vivo text-sm text-primary"
                   >
                     Esqueci minha senha
                   </Link>
                 </div>
+                <div className="relative">
+                  <FormControl>
+                    <Input
+                      type={mostrarSenha ? "text" : "password"}
+                      autoComplete="current-password"
+                      className="pr-11"
+                      {...field}
+                    />
+                  </FormControl>
+                  <BotaoMostrarSenha
+                    visivel={mostrarSenha}
+                    aoAlternar={() => setMostrarSenha((v) => !v)}
+                  />
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-                <Button
-                  type="submit"
-                  size="lg"
-                  className="pressionavel w-full"
-                  disabled={enviando}
-                >
-                  {enviando && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
-                  {enviando ? "Entrando…" : "Entrar"}
-                </Button>
-              </form>
-            </Form>
+          <div className="space-y-3 pt-1">
+            <Button
+              type="submit"
+              size="lg"
+              className="pressionavel w-full"
+              disabled={enviando}
+            >
+              {enviando && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+              {enviando ? "Entrando…" : "Entrar"}
+            </Button>
 
-            <div className="mt-6 border-t pt-6">
-              <p className="text-sm text-muted-foreground">
-                Ainda não tem conta? Escolha por onde você entra:
+            {erroGeral && (
+              <p role="alert" className="rounded-controle bg-tinta-pessego px-4 py-3 text-sm text-foreground">
+                {erroGeral}
               </p>
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <Button
-                  variant="outline"
-                  asChild
-                  className="h-auto min-h-20 flex-col gap-2 whitespace-normal py-3 text-center"
-                >
-                  <Link to="/cadastro?tipo=doador">
-                    <HandHeart className="h-5 w-5 text-primary" aria-hidden="true" />
-                    <span>Quero doar ou ser voluntário</span>
-                  </Link>
-                </Button>
-                <Button
-                  variant="outline"
-                  asChild
-                  className="h-auto min-h-20 flex-col gap-2 whitespace-normal py-3 text-center"
-                >
-                  <Link to="/cadastro?tipo=ong">
-                    <Building2 className="h-5 w-5 text-primary" aria-hidden="true" />
-                    <span>Sou ONG e tenho uma chave</span>
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            )}
+          </div>
+        </form>
+      </Form>
 
-        <aside
-          className="rounded-xl border bg-secondary/50 p-6"
-          aria-labelledby="titulo-garantias"
-        >
-          <h2 id="titulo-garantias" className="font-display text-lg font-bold">
-            O que esta plataforma garante
-          </h2>
-          <ul className="mt-6 space-y-6">
-            <Garantia
-              icone={BadgeCheck}
-              titulo="A barra de progresso é um recibo, não uma promessa"
-              texto="Ela só sobe quando alguém da organização confirma que o item ou o valor chegou. Anda mais devagar por isso, e é por isso que ela vale como informação."
-            />
-            <Garantia
-              icone={Landmark}
-              titulo="O Pix cai direto na conta da ONG"
-              texto="A plataforma não retém o dinheiro em nenhum momento e não cobra taxa de ninguém: nem de você, nem da organização."
-            />
-            <Garantia
-              icone={ShieldCheck}
-              titulo="Pedimos o mínimo de dados"
-              texto="Nome, e-mail e senha. Telefone e endereço só quando forem necessários, por exemplo para agendar a coleta de uma doação."
-            />
-          </ul>
-        </aside>
+      <div className="mt-8 border-t pt-6">
+        <p className="text-sm text-muted-foreground">Primeira vez aqui? Escolha por onde você entra:</p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <Button
+            variant="outline"
+            asChild
+            className="h-auto min-h-14 whitespace-normal py-3 text-center"
+          >
+            <Link to="/cadastro?tipo=doador">Quero doar ou ser voluntário</Link>
+          </Button>
+          <Button
+            variant="outline"
+            asChild
+            className="h-auto min-h-14 whitespace-normal py-3 text-center"
+          >
+            <Link to="/cadastro?tipo=ong">Sou ONG e tenho uma chave</Link>
+          </Button>
+        </div>
       </div>
-    </PublicShell>
-  );
-}
-
-function Garantia({
-  icone: Icone, titulo, texto,
-}: {
-  icone: LucideIcon;
-  titulo: string;
-  texto: string;
-}) {
-  return (
-    <li className="flex items-start gap-3">
-      <Icone className="mt-0.5 h-5 w-5 shrink-0 text-success" aria-hidden="true" />
-      <div className="min-w-0">
-        <p className="font-semibold">{titulo}</p>
-        <p className="mt-1 text-sm text-muted-foreground">{texto}</p>
-      </div>
-    </li>
+    </CascaDeAuth>
   );
 }

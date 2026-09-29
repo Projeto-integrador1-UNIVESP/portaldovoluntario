@@ -85,4 +85,50 @@ describe("LoginPage", () => {
 
     await vi.waitFor(() => expect(navegar).toHaveBeenCalledWith("/doar/abc"));
   });
+
+  it("enviar vazio mostra a mensagem de cada campo e marca aria-invalid", async () => {
+    const usuario = userEvent.setup();
+    await renderizar("/login");
+
+    const formulario = (await screen.findByRole("button", { name: "Entrar" })).closest("form");
+    expect(formulario).toHaveAttribute("novalidate");
+
+    await usuario.click(screen.getByRole("button", { name: "Entrar" }));
+
+    expect(await screen.findByText("Informe seu e-mail")).toBeInTheDocument();
+    expect(screen.getByText("Informe sua senha")).toBeInTheDocument();
+    expect(screen.getByLabelText("E-mail")).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByLabelText("Senha")).toHaveAttribute("aria-invalid", "true");
+    expect(signInWithPassword).not.toHaveBeenCalled();
+  });
+
+  it("credencial errada aparece na tela, em português, e marca os dois campos", async () => {
+    signInWithPassword.mockResolvedValue({
+      data: { user: null },
+      error: { message: "Invalid login credentials" },
+    });
+    await renderizar("/login");
+    await entrar();
+
+    const alerta = await screen.findByRole("alert");
+    expect(alerta).toHaveTextContent("E-mail ou senha incorretos");
+    expect(alerta).not.toHaveTextContent(/invalid/i);
+    expect(screen.getByLabelText("E-mail")).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByLabelText("Senha")).toHaveAttribute("aria-invalid", "true");
+    expect(navegar).not.toHaveBeenCalled();
+  });
+
+  it("o botão de mostrar senha expõe o estado com aria-pressed", async () => {
+    const usuario = userEvent.setup();
+    await renderizar("/login");
+
+    const botao = await screen.findByRole("button", { name: "Mostrar senha" });
+    expect(botao).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByLabelText("Senha")).toHaveAttribute("type", "password");
+
+    await usuario.click(botao);
+
+    expect(botao).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByLabelText("Senha")).toHaveAttribute("type", "text");
+  });
 });
