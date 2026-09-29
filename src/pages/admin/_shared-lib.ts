@@ -4,8 +4,15 @@
  * Ficam fora do `_shared.tsx` porque um módulo que exporta componentes e também
  * funções perde o fast refresh do Vite (`react-refresh/only-export-components`).
  */
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { flushSync } from "react-dom";
+import { toast } from "sonner";
+import type { ZodError, ZodTypeAny, output } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import { TERMOS, VAZIO } from "@/lib/copy";
+import { TIPOS_DE_DOACAO } from "@/lib/schemas/admin";
+import { ErroDeValidacao, mensagemAmigavel } from "@/lib/erros";
+import { exportToCsv } from "@/lib/exportCsv";
 
 /** Tamanho de página das listas que podem crescer (doações, usuários, ...). */
 export const POR_PAGINA = 25;
@@ -46,28 +53,123 @@ export function useCorrigirPaginaVazia({
 /**
  * Mensagem de erro para quem está do outro lado da tela.
  *
- * O contrato proíbe mostrar o texto técnico do Supabase, que vem em inglês e
- * às vezes cita nome de constraint. Os casos que o painel realmente produz são
- * chave estrangeira e unicidade.
+ * Delega ao tradutor do produto: os casos do Supabase viram português e um
+ * `ErroAmigavel` (ou `ErroDeValidacao`) passa intacto. Antes esta função
+ * engolia a mensagem escrita para o usuário e devolvia o texto padrão.
  */
-export const mensagemDeErro = (erro: unknown, padrao: string) => {
-  const bruto = erro instanceof Error ? erro.message : String(erro ?? "");
-  const texto = bruto.toLowerCase();
+export const mensagemDeErro = (erro: unknown, padrao: string) => mensagemAmigavel(erro, padrao);
 
-  if (texto.includes("foreign key") || texto.includes("violates foreign key")) {
-    return "Há registros ligados a este item. Remova ou transfira esses registros antes de excluir.";
+/** Primeira mensagem de cada campo, na ordem em que o schema declara os campos. */
+export function errosPorCampo(erro: ZodError): Record<string, string> {
+  const erros: Record<string, string> = {};
+  for (const problema of erro.issues) {
+    const campo = String(problema.path[0] ?? "");
+    if (!(campo in erros)) erros[campo] = problema.message;
   }
-  if (texto.includes("duplicate key") || texto.includes("already exists") || texto.includes("unique")) {
-    return "Já existe um registro com esses dados.";
+  return erros;
+}
+
+/** Leva o foco a um campo. Chame depois de um `flushSync`, para o campo já estar visível. */
+export function focarCampo(id: string) {
+  document.getElementById(id)?.focus();
+}
+
+/**
+ * Validação de um formulário do painel: `safeParse` antes da mutation, erro
+ * por campo para o `Campo`, foco no primeiro campo com problema e o mesmo
+ * tratamento para um erro de campo vindo do servidor (`ErroDeValidacao`).
+ *
+ * Os ids dos controles seguem `${prefixo}-${campo}`.
+ */
+export function useValidacao<T extends ZodTypeAny>(
+  schema: T,
+  prefixo: string,
+  opcoes: { aoFalhar?: (primeiroCampo: string) => void } = {},
+) {
+  const [erros, setErros] = useState<Record<string, string>>({});
+  const { aoFalhar } = opcoes;
+
+  // `flushSync` aplica o estado (e a troca de aba, quando há) antes do foco:
+  // sem isso o campo ainda estaria escondido e o `focus()` seria ignorado.
+  const apontar = useCallback(
+    (novos: Record<string, string>) => {
+      const primeiro = Object.keys(novos)[0];
+      flushSync(() => {
+        setErros(novos);
+        if (primeiro) aoFalhar?.(primeiro);
+      });
+      if (primeiro) focarCampo(`${prefixo}-${primeiro}`);
+    },
+    [aoFalhar, prefixo],
+  );
+
+  const validar = useCallback(
+    (valores: unknown): output<T> | null => {
+      const resultado = schema.safeParse(valores);
+      if (resultado.success) {
+        setErros({});
+        return resultado.data as output<T>;
+      }
+      apontar(errosPorCampo(resultado.error));
+      return null;
+    },
+    [schema, apontar],
+  );
+
+  const erroDoServidor = useCallback(
+    (erro: unknown, padrao: string) => {
+      if (erro instanceof ErroDeValidacao && erro.campo) {
+        apontar({ [erro.campo]: erro.message });
+        return;
+      }
+      toast.error(mensagemDeErro(erro, padrao));
+    },
+    [apontar],
+  );
+
+  const limpar = useCallback(() => setErros({}), []);
+
+  return { erros, validar, erroDoServidor, limpar };
+}
+
+/**
+ * Erro de uma edge function. A função escreve o motivo no corpo da resposta e
+ * o supabase-js entrega só "Edge Function returned a non-2xx status code"; sem
+ * ler o corpo, um e-mail já cadastrado viraria "Não foi possível criar".
+ */
+export async function erroDaFunction(erro: unknown, resposta: unknown): Promise<Error> {
+  let texto = (resposta as { error?: string } | null)?.error ?? "";
+  if (!texto) {
+    const contexto = (erro as { context?: { json?: () => Promise<unknown> } } | null)?.context;
+    if (contexto && typeof contexto.json === "function") {
+      try {
+        texto = ((await contexto.json()) as { error?: string } | null)?.error ?? "";
+      } catch {
+        /* corpo não é JSON */
+      }
+    }
   }
-  if (texto.includes("row-level security") || texto.includes("permission")) {
-    return "Sua conta não tem permissão para esta operação.";
+  if (!texto && erro instanceof Error) texto = erro.message;
+  if (/already|registered|exists/i.test(texto)) {
+    return new ErroDeValidacao("Já existe uma conta com esse e-mail", "email");
   }
-  if (texto.includes("failed to fetch") || texto.includes("networkerror")) {
-    return "Sem conexão com o servidor. Verifique sua internet e tente de novo.";
+  return new Error(texto);
+}
+
+/**
+ * Baixa o CSV de uma consulta com teto. O `exportToCsv` já avisa que baixou;
+ * quando a consulta foi cortada pelo teto, o aviso é este, um só, dizendo
+ * quantas linhas saíram, para ninguém achar que o arquivo é o total.
+ */
+export function baixarCsv(nome: string, linhas: Record<string, unknown>[], total: number) {
+  const cortado = linhas.length < total;
+  exportToCsv(nome, linhas, { silencioso: cortado });
+  if (cortado) {
+    toast.success(
+      `Arquivo ${nome} baixado com as ${linhas.length.toLocaleString("pt-BR")} linhas mais recentes de ${total.toLocaleString("pt-BR")}`,
+    );
   }
-  return padrao;
-};
+}
 
 /** `true` quando o erro é violação de unicidade, o caso de colisão de código. */
 export const ehCodigoDuplicado = (erro: unknown) => {
@@ -198,3 +300,23 @@ export const doacoesComRelacionados = async (
     necessidade: l.id_necessidade ? porNecessidade.get(l.id_necessidade as string) ?? null : null,
   }));
 };
+
+/** Rótulo de situação de doação, do glossário. O CSV e as tabelas usam o mesmo. */
+export const situacaoDaDoacao = (status: string | null | undefined) =>
+  status === "confirmada"
+    ? TERMOS.confirmada
+    : status === "cancelada"
+      ? TERMOS.naoRecebida
+      : TERMOS.pendente;
+
+/** Nome de quem doou, respeitando anonimato e o glossário para quem não tem cadastro. */
+export const nomeDoDoador = (d: Pick<DoacaoDetalhada, "anonima" | "doador" | "doador_nome">) =>
+  d.anonima ? "Doador anônimo" : d.doador?.nome || d.doador_nome || TERMOS.semIdentificacao;
+
+/** Dias inteiros desde um instante. */
+export const diasDesde = (instante: string) =>
+  Math.max(0, Math.floor((Date.now() - new Date(instante).getTime()) / 86_400_000));
+
+/** Rótulo da forma de doação ("Pix", "Cartão"); o valor cru do banco nunca vai para a tela. */
+export const rotuloDoTipo = (tipo: string | null | undefined) =>
+  TIPOS_DE_DOACAO.find((t) => t.valor === tipo)?.rotulo ?? (tipo === "item" ? "Item" : tipo || VAZIO.naoInformado);

@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
+import { z } from "zod";
+import { ErroAmigavel, ErroDeValidacao } from "@/lib/erros";
 import {
   deCampoDeDataHora,
   ehCodigoDuplicado,
+  erroDaFunction,
+  errosPorCampo,
   fimDoDiaLocal,
   gerarCodigoDeAcesso,
   mensagemDeErro,
@@ -90,6 +94,41 @@ describe("mensagemDeErro", () => {
   it("cai no texto padrão quando não reconhece o erro", () => {
     expect(mensagemDeErro(new Error("algo muito específico"), "Não foi possível salvar."))
       .toBe("Não foi possível salvar.");
+  });
+
+  it("repassa intacta a mensagem escrita para o usuário", () => {
+    // Antes um `throw new Error("Informe o nome")` virava "Não foi possível salvar".
+    expect(mensagemDeErro(new ErroAmigavel("O papel anterior foi removido"), "padrão"))
+      .toBe("O papel anterior foi removido");
+    expect(mensagemDeErro(new ErroDeValidacao("Não existe conta com esse e-mail", "email"), "padrão"))
+      .toBe("Não existe conta com esse e-mail");
+  });
+});
+
+describe("errosPorCampo", () => {
+  it("guarda a primeira mensagem de cada campo, na ordem do schema", () => {
+    const schema = z.object({
+      nome: z.string().min(1, "Informe o nome").min(3, "Use pelo menos 3 caracteres"),
+      email: z.string().email("E-mail inválido"),
+    });
+    const r = schema.safeParse({ nome: "", email: "x" });
+    expect(errosPorCampo(r.error!)).toEqual({ nome: "Informe o nome", email: "E-mail inválido" });
+    expect(Object.keys(errosPorCampo(r.error!))[0]).toBe("nome");
+  });
+});
+
+describe("erroDaFunction", () => {
+  it("lê o motivo no corpo da resposta e aponta e-mail duplicado para o campo", async () => {
+    const contexto = { json: async () => ({ error: "A user with this email address has already been registered" }) };
+    const erro = await erroDaFunction({ context: contexto }, null);
+    expect(erro).toBeInstanceOf(ErroDeValidacao);
+    expect((erro as ErroDeValidacao).campo).toBe("email");
+  });
+
+  it("mantém o texto dos outros erros para o tradutor", async () => {
+    const erro = await erroDaFunction(new Error("Edge Function returned a non-2xx status code"), { error: "forbidden" });
+    expect(erro.message).toBe("forbidden");
+    expect(mensagemDeErro(new Error("permission denied"), "padrão")).toContain("permissão");
   });
 });
 
