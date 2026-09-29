@@ -55,8 +55,7 @@
   }
 
   /* Títulos não terminam com uma palavra órfã sozinha na última linha. */
-  h1, h2, h3,
-  .titulo-equilibrado {
+  h1, h2, h3 {
     text-wrap: balance;
   }
   p, li {

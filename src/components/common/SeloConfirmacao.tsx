@@ -1,6 +1,6 @@
 import { BadgeCheck, Clock, PackageX } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatDate } from "@/lib/format";
+import { formatDate, progressoPercent } from "@/lib/format";
 
 /**
  * O selo que diferencia esta plataforma.
@@ -123,7 +123,7 @@ export function TaxaDeConfirmacao({
   // "100% de 1 doação" parece reputação e não é.
   if (total < 5) return null;
 
-  const percentual = Math.round((confirmadas / total) * 100);
+  const percentual = progressoPercent(confirmadas, total);
   const boa = percentual >= 80;
 
   return (
