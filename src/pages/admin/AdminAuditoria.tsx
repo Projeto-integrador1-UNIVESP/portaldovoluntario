@@ -17,12 +17,12 @@ import {
 } from "@/components/ui/select";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
-import { exportToCsv } from "@/lib/exportCsv";
+import { CTA, TESE, VAZIO } from "@/lib/copy";
 import { formatCurrency, formatDateTime } from "@/lib/format";
-import { Paginacao, TabelaAdmin } from "./_shared";
+import { Paginacao, TabelaAdmin, Vazio } from "./_shared";
 import {
-  COLUNAS_DA_DOACAO, POR_PAGINA, doacoesComRelacionados, mensagemDeErro,
-  useCorrigirPaginaVazia,
+  COLUNAS_DA_DOACAO, POR_PAGINA, baixarCsv, doacoesComRelacionados, mensagemDeErro,
+  nomeDoDoador, rotuloDoTipo, situacaoDaDoacao, useCorrigirPaginaVazia,
 } from "./_shared-lib";
 
 const TETO_DO_CSV = 5_000;
@@ -40,15 +40,9 @@ const COLUNAS = [
 /**
  * Extrato de doações.
  *
- * A versão anterior baixava a tabela inteira e calculava, no navegador, "total
- * na plataforma", "total por ONG" e "top 10 doadores", somando pendentes e
- * canceladas junto com as confirmadas. Isso dava um número maior do que o
- * arrecadado que o site mostra, e a tela virava duas verdades sobre o mesmo
- * dado.
- *
- * Agora os agregados vêm do banco: o total da plataforma pela RPC que a home já
- * usa e os números por ONG pela `get_impacto_ong`. Nenhum deles é calculado em
- * cima de uma fatia da tabela.
+ * Os agregados vêm do banco: o total da plataforma pela RPC que a home usa e
+ * os números por ONG pela `get_impacto_ong`. Os dois somam só o que a ONG
+ * confirmou, então o número daqui é o mesmo do site.
  */
 export default function AdminAuditoria() {
   const [ongSelecionada, setOngSelecionada] = useState<string>(TODAS);
@@ -145,25 +139,22 @@ export default function AdminAuditoria() {
       if (error) throw error;
 
       const completas = await doacoesComRelacionados(todas ?? []);
-      exportToCsv("auditoria.csv", completas.map((d) => ({
-        data: formatDateTime(d.data_doacao),
-        doador: d.anonima ? "Anônimo" : d.doador?.nome || d.doador_nome || "",
-        email: d.anonima ? "" : d.doador?.email || d.doador_email || "",
-        anonima: d.anonima ? "sim" : "nao",
-        ong: d.ong?.nome ?? "",
-        item: d.necessidade?.nome ?? "",
-        quantidade: d.quantidade ?? "",
-        valor: d.valor,
-        tipo: d.tipo_doacao ?? "",
-        situacao: d.status,
-        confirmada_em: d.confirmada_em ? formatDateTime(d.confirmada_em) : "",
-      })));
-
-      const total = data?.total ?? completas.length;
-      toast.success(
-        completas.length < total
-          ? `${completas.length.toLocaleString("pt-BR")} de ${total.toLocaleString("pt-BR")} lançamentos exportados. O arquivo traz os mais recentes.`
-          : `${completas.length.toLocaleString("pt-BR")} ${completas.length === 1 ? "lançamento exportado" : "lançamentos exportados"}.`,
+      baixarCsv(
+        "auditoria.csv",
+        completas.map((d) => ({
+          data: formatDateTime(d.data_doacao),
+          doador: nomeDoDoador(d),
+          email: d.anonima ? "" : d.doador?.email || d.doador_email || "",
+          anonima: d.anonima ? "sim" : "não",
+          ong: d.ong?.nome ?? "",
+          item: d.necessidade?.nome ?? "",
+          quantidade: d.quantidade ?? "",
+          valor: d.valor,
+          tipo: d.tipo_doacao ?? "",
+          situacao: situacaoDaDoacao(d.status),
+          confirmada_em: d.confirmada_em ? formatDateTime(d.confirmada_em) : "",
+        })),
+        data?.total ?? completas.length,
       );
     } catch (erro) {
       toast.error(mensagemDeErro(erro, "Não foi possível gerar o arquivo."));
@@ -183,13 +174,13 @@ export default function AdminAuditoria() {
         icon={<ShieldCheck className="h-6 w-6" aria-hidden="true" />}
         action={
           <Button variant="outline" onClick={exportar} disabled={exportando}>
-            <Download className="h-4 w-4" aria-hidden="true" />
-            {exportando ? "Gerando…" : "Exportar CSV"}
+            <Download aria-hidden="true" />
+            {exportando ? "Gerando…" : CTA.exportarCsv}
           </Button>
         }
       />
 
-      <div className="mb-4 sm:max-w-sm">
+      <div className="mb-6 sm:max-w-sm">
         <Label htmlFor="auditoria-ong">Organização</Label>
         <Select
           value={ongSelecionada}
@@ -197,6 +188,7 @@ export default function AdminAuditoria() {
             setOngSelecionada(v);
             setPagina(0);
           }}
+          name="ong"
         >
           <SelectTrigger id="auditoria-ong" className="mt-1.5">
             <SelectValue />
@@ -215,13 +207,14 @@ export default function AdminAuditoria() {
       {totaisCarregando ? (
         <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 w-full rounded-lg" />
+            <Skeleton key={i} className="h-28 w-full rounded-xl" />
           ))}
         </div>
       ) : (
         totais && (
           <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Stat
+              destaque
               valor={formatCurrency(totais.confirmado)}
               rotulo={
                 ongSelecionada === TODAS
@@ -250,10 +243,10 @@ export default function AdminAuditoria() {
         )
       )}
 
-      <Callout tom="confianca" className="mb-4">
-        Os valores acima contam só o que a organização confirmou ter recebido. É o
-        mesmo número que sobe a barra de progresso no site. O extrato abaixo lista
-        todo lançamento, confirmado ou não.
+      <Callout tom="confianca" className="mb-6">
+        {TESE} Os valores acima contam só o que a organização confirmou ter
+        recebido, o mesmo número do site. O extrato abaixo lista todo lançamento,
+        confirmado ou não.
       </Callout>
 
       <TabelaAdmin
@@ -265,7 +258,6 @@ export default function AdminAuditoria() {
         vazia={linhas.length === 0}
         vazio={
           <EmptyState
-            icon={ShieldCheck}
             title={
               ongSelecionada === TODAS
                 ? "Nenhuma doação registrada"
@@ -283,41 +275,33 @@ export default function AdminAuditoria() {
       >
         {linhas.map((d) => (
           <TableRow key={d.id}>
-            <TableCell className="text-muted-foreground">{formatDateTime(d.data_doacao)}</TableCell>
+            <TableCell className="numero whitespace-nowrap text-muted-foreground">{formatDateTime(d.data_doacao)}</TableCell>
 
             <TableCell className="max-w-56">
-              {d.anonima ? (
-                <span className="text-muted-foreground">Doador anônimo</span>
-              ) : (
-                <>
-                  <div className="break-words font-medium">
-                    {d.doador?.nome || d.doador_nome || "Sem identificação"}
-                  </div>
-                  <div className="break-all text-xs text-muted-foreground">
-                    {d.doador?.email || d.doador_email || ""}
-                  </div>
-                </>
+              <div className="break-words font-medium">{nomeDoDoador(d)}</div>
+              {!d.anonima && (
+                <div className="break-all text-xs text-muted-foreground">
+                  {d.doador?.email || d.doador_email || ""}
+                </div>
               )}
             </TableCell>
 
-            <TableCell className="text-muted-foreground">{d.ong?.nome ?? "Sem ONG"}</TableCell>
+            <TableCell className="text-muted-foreground">
+              {d.ong?.nome ?? <Vazio texto={VAZIO.semOng} />}
+            </TableCell>
 
             <TableCell className="text-muted-foreground">
               {d.necessidade
                 ? `${d.quantidade ?? 0} ${d.necessidade.unidade ?? ""} de ${d.necessidade.nome}`
-                : (d.tipo_doacao ?? "Não informado")}
+                : rotuloDoTipo(d.tipo_doacao)}
             </TableCell>
 
             <TableCell>
-              {d.status === "cancelada" ? (
-                <span className="text-xs text-muted-foreground">Não recebida</span>
-              ) : (
-                <SeloConfirmacao confirmadaEm={d.confirmada_em} />
-              )}
+              <SeloConfirmacao confirmadaEm={d.confirmada_em} cancelada={d.status === "cancelada"} />
             </TableCell>
 
-            <TableCell className="text-right font-medium tabular-nums">
-              {formatCurrency(d.valor)}
+            <TableCell className="numero whitespace-nowrap text-right font-medium">
+              {d.necessidade && !d.valor ? <Vazio texto="Item" /> : formatCurrency(d.valor)}
             </TableCell>
           </TableRow>
         ))}
