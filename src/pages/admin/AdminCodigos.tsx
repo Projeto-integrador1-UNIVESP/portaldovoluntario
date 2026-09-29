@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Copy, KeyRound, Plus, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
@@ -15,18 +15,23 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { TableCell, TableRow } from "@/components/ui/table";
+import { CTA, SUCESSO, TERMOS, VAZIO } from "@/lib/copy";
 import { formatDate } from "@/lib/format";
-import { Campo, ExcluirLinha, Paginacao, TabelaAdmin } from "./_shared";
+import { CODIGO_VAZIO, codigoAdminSchema, type CodigoAdminForm } from "@/lib/schemas/admin";
+import { Campo, ExcluirLinha, Paginacao, TabelaAdmin, Vazio } from "./_shared";
 import {
   POR_PAGINA, ehCodigoDuplicado, fimDoDiaLocal, gerarCodigoDeAcesso, mensagemDeErro,
+  useValidacao,
 } from "./_shared-lib";
 
+const CHAVE = TERMOS.chave;
+
 const COLUNAS = [
-  { rotulo: "Código" },
-  { rotulo: "ONG sugerida" },
+  { rotulo: "Chave" },
+  { rotulo: "ONG convidada" },
   { rotulo: "Situação" },
   { rotulo: "Validade" },
-  { rotulo: "Gerado em" },
+  { rotulo: "Gerada em" },
   { rotulo: "Ações", className: "text-right" },
 ];
 
@@ -42,27 +47,26 @@ type Codigo = {
 };
 
 const situacao = (c: Codigo) => {
-  if (c.used) return { rotulo: "Utilizado", variante: "secondary" as const };
+  if (c.used) return { rotulo: "Utilizada", variante: "neutro" as const };
   if (c.expires_at && new Date(c.expires_at) < new Date()) {
-    return { rotulo: "Expirado", variante: "destructive" as const };
+    return { rotulo: "Expirada", variante: "destructive" as const };
   }
-  return { rotulo: "Disponível", variante: "default" as const };
+  return { rotulo: "Disponível", variante: "success" as const };
 };
 
 /**
  * Chaves de acesso para cadastro de ONG.
  *
- * Cada código deixa uma organização criar conta e assumir o painel dela, então
+ * Cada chave deixa uma organização criar conta e assumir o painel dela, então
  * vale tratar como credencial: geração criptográfica, validade opcional e
- * remoção só enquanto não foi usado.
+ * remoção só enquanto não foi usada.
  */
 export default function AdminCodigos() {
   const queryClient = useQueryClient();
   const [pagina, setPagina] = useState(0);
   const [aberto, setAberto] = useState(false);
-  const [form, setForm] = useState({
-    code: "", nome_ong_sugerido: "", observacoes: "", expires_at: "",
-  });
+  const [form, setForm] = useState<CodigoAdminForm>(CODIGO_VAZIO);
+  const { erros, validar, erroDoServidor, limpar } = useValidacao(codigoAdminSchema, "codigo");
 
   const { data, isPending, isError, refetch } = useQuery({
     queryKey: ["admin-codigos", pagina],
@@ -84,24 +88,24 @@ export default function AdminCodigos() {
   const linhas = data?.linhas ?? [];
 
   const criar = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (dados: CodigoAdminForm) => {
       const { data: sessao } = await supabase.auth.getUser();
 
       const inserir = (code: string) =>
         supabase.from("ong_access_codes").insert({
           code,
-          nome_ong_sugerido: form.nome_ong_sugerido.trim() || null,
-          observacoes: form.observacoes.trim() || null,
-          expires_at: form.expires_at ? fimDoDiaLocal(form.expires_at) : null,
+          nome_ong_sugerido: dados.nome_ong_sugerido.trim() || null,
+          observacoes: dados.observacoes.trim() || null,
+          expires_at: dados.expires_at ? fimDoDiaLocal(dados.expires_at) : null,
           created_by: sessao.user?.id ?? null,
         });
 
-      const codigo = form.code.trim().toUpperCase();
+      const codigo = dados.code.trim().toUpperCase();
       const { error } = await inserir(codigo);
       if (!error) return codigo;
 
-      // `code` é UNIQUE. Numa colisão, ou num código digitado à mão que já
-      // existe, gerar outro resolve sem mandar o administrador tentar de novo.
+      // `code` é UNIQUE. Numa colisão, ou numa chave digitada à mão que já
+      // existe, gerar outra resolve sem mandar o administrador tentar de novo.
       if (!ehCodigoDuplicado(error)) throw error;
 
       const alternativo = gerarCodigoDeAcesso();
@@ -110,11 +114,11 @@ export default function AdminCodigos() {
       return alternativo;
     },
     onSuccess: (codigo) => {
-      toast.success(`Código ${codigo} gerado.`);
-      setAberto(false);
+      toast.success(SUCESSO.criada(`Chave ${codigo}`));
+      fechar();
       queryClient.invalidateQueries({ queryKey: ["admin-codigos"] });
     },
-    onError: (erro) => toast.error(mensagemDeErro(erro, "Não foi possível gerar o código.")),
+    onError: (erro) => erroDoServidor(erro, `Não foi possível gerar a ${CHAVE}.`),
   });
 
   const excluir = useMutation({
@@ -123,24 +127,37 @@ export default function AdminCodigos() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Código removido.");
+      toast.success(SUCESSO.excluida("Chave de acesso"));
       if (linhas.length === 1 && pagina > 0) setPagina(pagina - 1);
       queryClient.invalidateQueries({ queryKey: ["admin-codigos"] });
     },
-    onError: (erro) => toast.error(mensagemDeErro(erro, "Não foi possível remover o código.")),
+    onError: (erro) => toast.error(mensagemDeErro(erro, `Não foi possível remover a ${CHAVE}.`)),
   });
 
-  const abrirNovo = () => {
-    setForm({ code: gerarCodigoDeAcesso(), nome_ong_sugerido: "", observacoes: "", expires_at: "" });
+  const abrirNova = () => {
+    setForm({ ...CODIGO_VAZIO, code: gerarCodigoDeAcesso() });
+    limpar();
     setAberto(true);
+  };
+
+  const fechar = () => {
+    setAberto(false);
+    setForm(CODIGO_VAZIO);
+    limpar();
+  };
+
+  const enviar = (evento: FormEvent) => {
+    evento.preventDefault();
+    const dados = validar(form);
+    if (dados) criar.mutate(dados);
   };
 
   const copiar = async (code: string) => {
     try {
       await navigator.clipboard.writeText(code);
-      toast.success("Código copiado.");
+      toast.success(SUCESSO.copiado);
     } catch {
-      toast.error("O navegador não permitiu copiar. Selecione o código e copie à mão.");
+      toast.error("O navegador não permitiu copiar. Selecione a chave e copie à mão.");
     }
   };
 
@@ -152,9 +169,9 @@ export default function AdminCodigos() {
         description="Cada chave deixa uma organização criar a conta dela e assumir o painel"
         icon={<KeyRound className="h-6 w-6" aria-hidden="true" />}
         action={
-          <Button onClick={abrirNovo}>
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            Gerar chave
+          <Button onClick={abrirNova}>
+            <Plus aria-hidden="true" />
+            Gerar chave de acesso
           </Button>
         }
       />
@@ -174,10 +191,9 @@ export default function AdminCodigos() {
         vazia={linhas.length === 0}
         vazio={
           <EmptyState
-            icon={KeyRound}
             title="Nenhuma chave gerada ainda"
             description="Gere uma chave para convidar uma organização a se cadastrar."
-            action={{ label: "Gerar chave", onClick: abrirNovo }}
+            action={{ label: "Gerar chave de acesso", onClick: abrirNova }}
           />
         }
         rodape={<Paginacao pagina={pagina} total={data?.total ?? 0} aoMudar={setPagina} />}
@@ -187,7 +203,7 @@ export default function AdminCodigos() {
           return (
             <TableRow key={c.id}>
               <TableCell className="font-mono font-semibold">{c.code}</TableCell>
-              <TableCell>{c.nome_ong_sugerido || "Não informado"}</TableCell>
+              <TableCell>{c.nome_ong_sugerido || <Vazio />}</TableCell>
               <TableCell>
                 <Badge variant={estado.variante}>{estado.rotulo}</Badge>
                 {c.used && c.used_at && (
@@ -196,27 +212,27 @@ export default function AdminCodigos() {
                   </div>
                 )}
               </TableCell>
-              <TableCell className="text-muted-foreground">
-                {c.expires_at ? formatDate(c.expires_at) : "Sem prazo"}
+              <TableCell className="numero text-muted-foreground">
+                {c.expires_at ? formatDate(c.expires_at) : <Vazio texto={VAZIO.semPrazo} />}
               </TableCell>
-              <TableCell className="text-muted-foreground">{formatDate(c.created_at)}</TableCell>
+              <TableCell className="numero text-muted-foreground">{formatDate(c.created_at)}</TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-1">
                   <Button
                     size="icon"
                     variant="ghost"
-                    aria-label={`Copiar o código ${c.code}`}
+                    aria-label={`Copiar a chave ${c.code}`}
                     onClick={() => copiar(c.code)}
                   >
-                    <Copy className="h-4 w-4" aria-hidden="true" />
+                    <Copy aria-hidden="true" />
                   </Button>
                   {!c.used && (
                     <ExcluirLinha
-                      rotuloAcessivel={`Remover o código ${c.code}`}
-                      titulo="Remover esta chave?"
-                      descricao="A chave deixa de funcionar imediatamente. Quem a recebeu não conseguirá concluir o cadastro."
-                      rotuloConfirmar="Remover"
-                      aoConfirmar={() => excluir.mutate(c.id)}
+                      rotuloAcessivel={`Remover a chave ${c.code}`}
+                      titulo={`Remover a chave ${c.code}?`}
+                      descricao="A chave deixa de funcionar na hora. Quem a recebeu não conseguirá concluir o cadastro."
+                      rotuloConfirmar={CTA.remover(CHAVE)}
+                      aoConfirmar={() => excluir.mutateAsync(c.id)}
                     />
                   )}
                 </div>
@@ -226,53 +242,67 @@ export default function AdminCodigos() {
         })}
       </TabelaAdmin>
 
-      <Dialog open={aberto} onOpenChange={setAberto}>
-        <DialogContent>
+      <Dialog open={aberto} onOpenChange={(v) => (v ? setAberto(true) : fechar())}>
+        <DialogContent className="rolagem-contida">
           <DialogHeader>
-            <DialogTitle>Gerar chave de acesso</DialogTitle>
+            <DialogTitle className="font-display text-xl">Gerar chave de acesso</DialogTitle>
             <DialogDescription>
-              O código já vem sorteado. Os outros campos servem para você lembrar
-              a quem esta chave foi enviada.
+              A chave já vem sorteada. Os outros campos servem para você lembrar a
+              quem ela foi enviada.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <Campo id="codigo-chave" rotulo="Código" obrigatorio>
-              <div className="flex gap-2">
-                <Input
-                  id="codigo-chave"
-                  className="font-mono"
-                  autoComplete="off"
-                  value={form.code}
-                  onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setForm({ ...form, code: gerarCodigoDeAcesso() })}
-                >
-                  <RefreshCw className="h-4 w-4" aria-hidden="true" />
-                  Sortear outro
-                </Button>
-              </div>
+          <form noValidate onSubmit={enviar} className="grid gap-4">
+            <Campo
+              id="codigo-code"
+              rotulo="Chave"
+              obrigatorio
+              dica="Formato ONG-XXXX-XXXX. Pode editar, desde que mantenha o formato."
+              erro={erros.code}
+            >
+              {(a11y) => (
+                <div className="flex gap-2">
+                  <Input
+                    {...a11y}
+                    name="code"
+                    className="font-mono"
+                    autoComplete="off"
+                    autoCapitalize="characters"
+                    value={form.code}
+                    onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setForm({ ...form, code: gerarCodigoDeAcesso() })}
+                  >
+                    <RefreshCw aria-hidden="true" />
+                    Sortear outra
+                  </Button>
+                </div>
+              )}
             </Campo>
 
-            <Campo id="codigo-ong" rotulo="Nome da ONG convidada">
+            <Campo id="codigo-nome_ong_sugerido" rotulo="Nome da ONG convidada" erro={erros.nome_ong_sugerido}>
               <Input
-                id="codigo-ong"
+                id="codigo-nome_ong_sugerido"
+                name="nome_ong_sugerido"
                 autoComplete="off"
+                maxLength={80}
                 value={form.nome_ong_sugerido}
                 onChange={(e) => setForm({ ...form, nome_ong_sugerido: e.target.value })}
               />
             </Campo>
 
             <Campo
-              id="codigo-validade"
+              id="codigo-expires_at"
               rotulo="Validade"
               dica="A chave vale até o fim deste dia. Em branco, não expira."
+              erro={erros.expires_at}
             >
               <Input
-                id="codigo-validade"
+                id="codigo-expires_at"
+                name="expires_at"
                 type="date"
                 autoComplete="off"
                 min={new Date().toISOString().slice(0, 10)}
@@ -281,25 +311,27 @@ export default function AdminCodigos() {
               />
             </Campo>
 
-            <Campo id="codigo-observacoes" rotulo="Observações">
+            <Campo id="codigo-observacoes" rotulo="Observações" erro={erros.observacoes}>
               <Input
                 id="codigo-observacoes"
+                name="observacoes"
                 autoComplete="off"
-                placeholder="Para quem foi enviada, por qual canal…"
+                maxLength={200}
+                placeholder="Para quem foi enviada e por qual canal"
                 value={form.observacoes}
                 onChange={(e) => setForm({ ...form, observacoes: e.target.value })}
               />
             </Campo>
-          </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setAberto(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={() => criar.mutate()} disabled={criar.isPending || !form.code.trim()}>
-              {criar.isPending ? "Gerando…" : "Gerar chave"}
-            </Button>
-          </DialogFooter>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={fechar}>
+                {CTA.cancelar}
+              </Button>
+              <Button type="submit" disabled={criar.isPending}>
+                {criar.isPending ? "Gerando…" : "Gerar chave de acesso"}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </DashboardLayout>
