@@ -43,6 +43,16 @@ describe("Capa", () => {
     expect(screen.getByText("Imagem ilustrativa")).toBeInTheDocument();
   });
 
+  /**
+   * O monograma existe para o substituto gerado. Sobre a fotografia de
+   * categoria ele disputava espaço com a etiqueta "Imagem ilustrativa" e com
+   * os selos que os cards sobrepõem, e a foto já carrega identidade sozinha.
+   */
+  it("não desenha monograma por cima da foto de categoria", () => {
+    render(<Capa alt="" id="p1" nome="Casa de Apoio Esperança" causa="Alimentos" />);
+    expect(screen.queryByText("CA")).not.toBeInTheDocument();
+  });
+
   it("sem causa nenhuma, mantém o padrão gerado com monograma", () => {
     const { container } = render(<Capa alt="" id="o1" nome="Casa de Apoio Esperança" />);
 
@@ -79,6 +89,25 @@ describe("capaDaCausa", () => {
     expect(capaDaCausa("Higiene e limpeza")?.chave).toBe("higiene");
     expect(capaDaCausa("Saúde")?.chave).toBe("medicamentos");
     expect(capaDaCausa("Moradia")?.chave).toBe("moveis");
+  });
+
+  /**
+   * Estas oito são as causas que o cadastro de projeto usa hoje. Quatro delas
+   * não resolviam e caíam no padrão gerado, o que deixava metade da listagem
+   * sem foto. As que continuam sem foto estão aqui de propósito: não existe
+   * fotografia honesta para elas no acervo, e o substituto gerado é a resposta
+   * certa, não um buraco.
+   */
+  it("cobre as causas que o cadastro de projeto usa", () => {
+    expect(capaDaCausa("Crianças e adolescentes")?.chave).toBe("brinquedos");
+    expect(capaDaCausa("População em situação de rua")?.chave).toBe("inverno");
+    expect(capaDaCausa("Alimentação")?.chave).toBe("alimentos");
+    expect(capaDaCausa("Saúde")?.chave).toBe("medicamentos");
+    expect(capaDaCausa("Educação")?.chave).toBe("escolar");
+
+    expect(capaDaCausa("Animais")).toBeNull();
+    expect(capaDaCausa("Pessoas idosas")).toBeNull();
+    expect(capaDaCausa("Cultura")).toBeNull();
   });
 
   it("resolve todas as CATEGORIAS do formulário de necessidade", async () => {
