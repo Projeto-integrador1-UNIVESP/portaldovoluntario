@@ -51,7 +51,7 @@ export function PublicHeader() {
               className={cn(
                 "relative flex h-full items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground aria-[current=page]:text-foreground",
                 // A barra nasce com largura zero e cresce a partir do centro.
-                "after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:origin-center after:scale-x-0 after:rounded-full after:bg-cta after:transition-transform after:duration-200 after:ease-suave aria-[current=page]:after:scale-x-100",
+                "after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:origin-center after:scale-x-0 after:rounded-full after:bg-primary after:transition-transform after:duration-200 after:ease-suave aria-[current=page]:after:scale-x-100",
               )}
             >
               {item.label}

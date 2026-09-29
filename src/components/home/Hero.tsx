@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProgressBar } from "@/components/common/ProgressBar";
 import { SeloConfirmacao } from "@/components/common/SeloConfirmacao";
-import { TituloHero } from "@/components/home/TituloHero";
+import { RevelarTexto } from "@/components/common/RevelarTexto";
 import { FOTOS } from "@/lib/fotos";
 import { formatDate } from "@/lib/format";
 import type { NecessidadeUrgente, UltimaConfirmacao } from "@/hooks/queries/useHome";
@@ -28,7 +28,11 @@ export function Hero({ pedido, confirmacao, carregando }: HeroProps) {
       <div className="container grid gap-12 py-14 md:grid-cols-12 md:items-center md:gap-8 md:py-24 lg:gap-14">
         <div className="md:col-span-7">
           <p className="rotulo-caps">Doação com recibo</p>
-          <TituloHero className="mt-4" />
+          <RevelarTexto
+            texto="Do que as ONGs perto de você precisam hoje"
+            destaque="hoje"
+            className="texto-display mt-4 font-display text-3xl font-bold text-foreground"
+          />
           <p className="mt-6 max-w-xl text-lg text-muted-foreground">
             Cobertores, arroz, um sábado de manhã ou um Pix. A ONG publica a
             quantidade e o prazo; você escolhe o pedido e doa direto para ela, sem taxa.

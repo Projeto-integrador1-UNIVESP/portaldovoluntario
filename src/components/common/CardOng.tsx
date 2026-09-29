@@ -80,7 +80,7 @@ export function CardOng({ ong, layout = "vertical", pedidosAbertos, className }:
             <OngAvatar nome={ong.nome} logoUrl={ong.logo_url} imgUrl={ong.img_url} tamanho="sm" />
             <div className="min-w-0 flex-1">
               <h3 className="flex items-center gap-1.5 font-display text-lg font-semibold leading-tight">
-                <span className="truncate">{ong.nome}</span>
+                <span className="line-clamp-2">{ong.nome}</span>
                 <SeloVerificada verificadaEm={ong.verificada_em} variante="icone" />
               </h3>
               {local && (
