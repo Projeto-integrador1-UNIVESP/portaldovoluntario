@@ -1,33 +1,39 @@
-import { cloneElement, isValidElement, type ReactElement, type ReactNode } from "react";
-import { ChevronLeft, ChevronRight, ShieldCheck, Trash2 } from "lucide-react";
+import {
+  cloneElement, isValidElement, useState, type MouseEvent, type ReactElement, type ReactNode,
+} from "react";
+import { ChevronLeft, ChevronRight, Loader2, Trash2 } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { ConfirmarExclusao } from "@/components/common/ConfirmarExclusao";
 import { ErrorState } from "@/components/common/ErrorState";
-import { formatDate } from "@/lib/format";
+import { CTA, VAZIO } from "@/lib/copy";
 import { cn } from "@/lib/utils";
 import { POR_PAGINA } from "./_shared-lib";
 
 /**
  * Peças comuns às nove telas do painel administrativo.
  *
- * A auditoria apontou o mesmo CRUD reimplementado em cinco telas, `confirm()`
- * nativo em algumas e `AlertDialog` em outras, e lista nenhuma com skeleton,
- * vazio ou erro. Em vez de repetir a correção nove vezes, o padrão vive aqui.
+ * A auditoria apontou o mesmo CRUD reimplementado em cinco telas, quatro
+ * padrões de confirmação de exclusão e formulário nenhum com erro inline. O
+ * padrão vive aqui; as telas só o usam.
  *
  * Não é página: as rotas em `App.tsx` são declaradas uma a uma, então um módulo
  * nesta pasta não vira rota.
  */
+
+/** O selo é o mesmo do site: um componente, um texto. */
+export { SeloVerificada } from "@/components/common/SeloVerificada";
 
 export type ColunaAdmin = { rotulo: string; className?: string };
 
@@ -45,12 +51,15 @@ type TabelaAdminProps = {
   rodape?: ReactNode;
 };
 
+const CABECALHO = "rotulo-caps h-11 whitespace-nowrap px-4 font-semibold";
+
 /**
  * Tabela do painel com os três estados obrigatórios e rolagem própria.
  *
  * O `Table` do shadcn já embrulha a tabela num contêiner com `overflow-auto`,
  * então a rolagem horizontal fica dentro do card em vez de empurrar o layout
- * no celular.
+ * no celular. Cabeçalho em rótulo pequeno de caixa alta e linha com hover em
+ * tinta, como o resto do produto; nada anima aqui.
  */
 export function TabelaAdmin({
   colunas, carregando, erro, tituloErro, aoTentarDeNovo, vazia, vazio, children, rodape,
@@ -59,29 +68,33 @@ export function TabelaAdmin({
     return <ErrorState title={tituloErro} onRetry={aoTentarDeNovo} />;
   }
 
+  if (!carregando && vazia) {
+    return <div>{vazio}</div>;
+  }
+
   return (
-    <Card>
-      <CardContent className="p-0">
-        {carregando ? (
-          <EsqueletoDeTabela colunas={colunas} />
-        ) : vazia ? (
-          <div className="p-6">{vazio}</div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {colunas.map((c) => (
-                  <TableHead key={c.rotulo} className={c.className}>
-                    {c.rotulo}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>{children}</TableBody>
-          </Table>
-        )}
-      </CardContent>
-      {!carregando && !vazia && rodape}
+    <Card className="overflow-hidden">
+      {carregando ? (
+        <EsqueletoDeTabela colunas={colunas} />
+      ) : (
+        // Largura mínima: no celular a tabela rola dentro do card em vez de
+        // esmagar as colunas até quebrar palavra por letra.
+        <Table className="min-w-[760px]">
+          <TableHeader className="bg-tinta-creme/50">
+            <TableRow className="hover:bg-transparent">
+              {colunas.map((c) => (
+                <TableHead key={c.rotulo} className={cn(CABECALHO, c.className)}>
+                  {c.rotulo}
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody className="[&>tr]:transition-colors [&>tr:hover]:bg-tinta-creme/60">
+            {children}
+          </TableBody>
+        </Table>
+      )}
+      {!carregando && rodape}
     </Card>
   );
 }
@@ -91,11 +104,11 @@ function EsqueletoDeTabela({ colunas, linhas = 6 }: { colunas: ColunaAdmin[]; li
   return (
     <div role="status" aria-live="polite">
       <span className="sr-only">Carregando registros…</span>
-      <Table>
-        <TableHeader>
-          <TableRow>
+      <Table className="min-w-[760px]">
+        <TableHeader className="bg-tinta-creme/50">
+          <TableRow className="hover:bg-transparent">
             {colunas.map((c) => (
-              <TableHead key={c.rotulo} className={c.className}>
+              <TableHead key={c.rotulo} className={cn(CABECALHO, c.className)}>
                 {c.rotulo}
               </TableHead>
             ))}
@@ -103,7 +116,7 @@ function EsqueletoDeTabela({ colunas, linhas = 6 }: { colunas: ColunaAdmin[]; li
         </TableHeader>
         <TableBody>
           {Array.from({ length: linhas }).map((_, linha) => (
-            <TableRow key={linha}>
+            <TableRow key={linha} className="hover:bg-transparent">
               {colunas.map((c) => (
                 <TableCell key={c.rotulo}>
                   <Skeleton className={cn("h-4", linha % 2 ? "w-2/3" : "w-4/5")} />
@@ -117,79 +130,103 @@ function EsqueletoDeTabela({ colunas, linhas = 6 }: { colunas: ColunaAdmin[]; li
   );
 }
 
+/** Célula sem dado. Texto do glossário, em cor secundária; nunca travessão. */
+export function Vazio({ texto = VAZIO.naoInformado }: { texto?: string }) {
+  return <span className="text-muted-foreground">{texto}</span>;
+}
+
 /**
- * Exclusão com confirmação. Substitui o `confirm()` nativo, que não respeita o
- * tema, não é traduzível e em alguns navegadores pode ser suprimido pelo
- * usuário, apagando um registro sem perguntar nada.
+ * Exclusão de uma linha, com o botão de lixeira como gatilho. Por trás é o
+ * `ConfirmarExclusao` do produto: mesmo diálogo, mesmo carregamento, rótulo
+ * com o objeto. A rejeição da mutation é engolida aqui porque o `onError`
+ * dela já mostrou o toast; sem isso ficaria uma rejeição sem tratamento.
  */
 export function ExcluirLinha({
-  titulo, descricao, rotuloConfirmar = "Excluir", rotuloAcessivel, aoConfirmar, desabilitado,
+  titulo, descricao, rotuloConfirmar, rotuloAcessivel, aoConfirmar, desabilitado, tom,
 }: {
   titulo: string;
   descricao: ReactNode;
-  rotuloConfirmar?: string;
+  /** Sempre com o objeto: "Excluir projeto", "Remover voluntário". */
+  rotuloConfirmar: string;
   /** Nome do item, para o leitor de tela distinguir um botão de lixeira do outro. */
   rotuloAcessivel: string;
-  aoConfirmar: () => void;
+  aoConfirmar: () => void | Promise<unknown>;
   desabilitado?: boolean;
+  tom?: "destrutivo" | "atencao";
 }) {
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button
-          size="icon"
-          variant="ghost"
-          className="text-destructive hover:text-destructive"
-          aria-label={rotuloAcessivel}
-          disabled={desabilitado}
-        >
-          <Trash2 className="h-4 w-4" aria-hidden="true" />
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{titulo}</AlertDialogTitle>
-          <AlertDialogDescription>{descricao}</AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={aoConfirmar}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-          >
-            {rotuloConfirmar}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <ConfirmarExclusao
+      titulo={titulo}
+      descricao={descricao}
+      rotuloConfirmar={rotuloConfirmar}
+      tom={tom}
+      onConfirmar={async () => {
+        try {
+          await aoConfirmar();
+        } catch {
+          /* o onError da mutation já avisou */
+        }
+      }}
+    >
+      <Button
+        size="icon"
+        variant="ghost"
+        className="text-destructive hover:text-destructive"
+        aria-label={rotuloAcessivel}
+        disabled={desabilitado}
+      >
+        <Trash2 aria-hidden="true" />
+      </Button>
+    </ConfirmarExclusao>
   );
 }
 
-/** Confirmação para uma ação que não é exclusão, com gatilho próprio. */
+/**
+ * Confirmação de uma ação que não é exclusão (aplicar ou tirar o selo), com
+ * gatilho próprio. Espera a ação terminar antes de fechar.
+ */
 export function ConfirmarAcao({
   titulo, descricao, rotuloConfirmar, aoConfirmar, destrutivo, children,
 }: {
   titulo: string;
   descricao: ReactNode;
   rotuloConfirmar: string;
-  aoConfirmar: () => void;
+  aoConfirmar: () => void | Promise<unknown>;
   destrutivo?: boolean;
   children: ReactNode;
 }) {
+  const [aberto, setAberto] = useState(false);
+  const [carregando, setCarregando] = useState(false);
+
+  const confirmar = async (e: MouseEvent) => {
+    e.preventDefault();
+    setCarregando(true);
+    try {
+      await aoConfirmar();
+      setAberto(false);
+    } catch {
+      /* o onError da mutation já avisou */
+    } finally {
+      setCarregando(false);
+    }
+  };
+
   return (
-    <AlertDialog>
+    <AlertDialog open={aberto} onOpenChange={(v) => !carregando && setAberto(v)}>
       <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent className="rolagem-contida">
         <AlertDialogHeader>
-          <AlertDialogTitle>{titulo}</AlertDialogTitle>
+          <AlertDialogTitle className="font-display text-xl font-semibold">{titulo}</AlertDialogTitle>
           <AlertDialogDescription>{descricao}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel disabled={carregando}>{CTA.cancelar}</AlertDialogCancel>
           <AlertDialogAction
-            onClick={aoConfirmar}
-            className={destrutivo ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : undefined}
+            disabled={carregando}
+            onClick={confirmar}
+            className={destrutivo ? "bg-warning text-warning-foreground hover:brightness-90" : undefined}
           >
+            {carregando && <Loader2 className="animate-spin" aria-hidden="true" />}
             {rotuloConfirmar}
           </AlertDialogAction>
         </AlertDialogFooter>
@@ -204,29 +241,29 @@ export function ConfirmarAcao({
  * em `Badge` não era alcançável pelo teclado como controle de estado.
  */
 export function AlternarStatus({
-  ativo, aoAlternar, rotulo, ocupado,
+  ativo, aoAlternar, rotulo, ocupado, rotulos = ["Ativo", "Inativo"],
 }: {
   ativo: boolean;
   aoAlternar: () => void;
-  /** Identifica o que o controle liga, ex.: "Status de Casa do Caminho". */
+  /** Identifica o que o controle liga, ex.: "Visibilidade de Casa do Caminho no site". */
   rotulo: string;
   ocupado?: boolean;
+  /** Texto ao lado do controle: [ligado, desligado]. Use os `TERMOS`. */
+  rotulos?: readonly [string, string];
 }) {
   return (
     <div className="flex items-center gap-2">
       <Switch checked={ativo} onCheckedChange={aoAlternar} disabled={ocupado} aria-label={rotulo} />
-      <span className={cn("text-xs", ativo ? "text-foreground" : "text-muted-foreground")}>
-        {ativo ? "Ativo" : "Inativo"}
+      <span className={cn("whitespace-nowrap text-xs", ativo ? "text-foreground" : "text-muted-foreground")}>
+        {ativo ? rotulos[0] : rotulos[1]}
       </span>
     </div>
   );
 }
 
 /**
- * Paginação servidor-side. Nenhuma tela do painel tinha: todas faziam
- * `select("*")` da tabela inteira e travariam com alguns milhares de linhas.
- *
- * `pagina` começa em zero, como o `.range()` do Supabase.
+ * Paginação servidor-side. `pagina` começa em zero, como o `.range()` do
+ * Supabase.
  */
 export function Paginacao({
   pagina, total, aoMudar, porPagina = POR_PAGINA,
@@ -243,13 +280,16 @@ export function Paginacao({
   const ultimo = Math.min(total, (pagina + 1) * porPagina);
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-t p-3">
-      <p className="text-sm tabular-nums text-muted-foreground">
-        {primeiro}–{ultimo} de {total}
+    <nav
+      aria-label="Páginas da lista"
+      className="flex flex-wrap items-center justify-between gap-3 border-t bg-tinta-creme/30 px-4 py-3"
+    >
+      <p className="numero text-sm text-muted-foreground">
+        {primeiro} a {ultimo} de {total.toLocaleString("pt-BR")}
       </p>
       <div className="flex gap-2">
         <Button variant="outline" size="sm" disabled={pagina <= 0} onClick={() => aoMudar(pagina - 1)}>
-          <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+          <ChevronLeft aria-hidden="true" />
           Anterior
         </Button>
         <Button
@@ -259,34 +299,59 @@ export function Paginacao({
           onClick={() => aoMudar(pagina + 1)}
         >
           Próxima
-          <ChevronRight className="h-4 w-4" aria-hidden="true" />
+          <ChevronRight aria-hidden="true" />
         </Button>
       </div>
-    </div>
+    </nav>
   );
 }
 
-/** Campo de formulário com `Label` associado por `id`. */
+/** Atributos que o `Campo` entrega ao controle para ligar rótulo, dica e erro. */
+export type AtributosDoCampo = {
+  id: string;
+  "aria-invalid"?: true;
+  "aria-describedby"?: string;
+};
+
+/**
+ * Campo de formulário com `Label` associado por `id`, dica e erro inline.
+ *
+ * O erro chega ao leitor de tela por `aria-describedby` e pinta a borda por
+ * `aria-invalid` (o `Input` já responde a isso). O filho pode ser um elemento,
+ * que recebe os atributos por `cloneElement`, ou uma função, para os casos em
+ * que o controle que precisa deles não é o filho direto (o `Select` do Radix
+ * não repassa atributos ao gatilho).
+ */
 export function Campo({
-  id, rotulo, obrigatorio, dica, children, className,
+  id, rotulo, obrigatorio, dica, erro, children, className,
 }: {
   id: string;
   rotulo: string;
   obrigatorio?: boolean;
   dica?: ReactNode;
-  children: ReactNode;
+  erro?: string;
+  children: ReactNode | ((atributos: AtributosDoCampo) => ReactNode);
   className?: string;
 }) {
   const idDaDica = `${id}-dica`;
+  const idDoErro = `${id}-erro`;
+  const descritoPor = [erro ? idDoErro : null, dica ? idDaDica : null].filter(Boolean).join(" ");
 
-  // A dica precisa chegar ao leitor de tela, e quem passa o controle é a tela.
-  // Ligar aqui evita depender de cada chamada lembrar do `aria-describedby`.
+  const atributos: AtributosDoCampo = {
+    id,
+    ...(erro ? { "aria-invalid": true as const } : {}),
+    ...(descritoPor ? { "aria-describedby": descritoPor } : {}),
+  };
+
   const controle =
-    dica && isValidElement(children)
-      ? cloneElement(children as ReactElement<{ "aria-describedby"?: string }>, {
-          "aria-describedby": idDaDica,
-        })
-      : children;
+    typeof children === "function"
+      ? children(atributos)
+      : isValidElement(children)
+        ? cloneElement(children as ReactElement<Omit<AtributosDoCampo, "id">>, {
+            ...(erro ? { "aria-invalid": true as const } : {}),
+            ...(descritoPor ? { "aria-describedby": descritoPor } : {}),
+          })
+        : children;
 
   return (
     <div className={cn("space-y-1.5", className)}>
@@ -300,24 +365,16 @@ export function Campo({
         )}
       </Label>
       {controle}
+      {erro && (
+        <p id={idDoErro} role="alert" className="text-xs font-medium text-destructive">
+          {erro}
+        </p>
+      )}
       {dica && (
         <p id={idDaDica} className="text-xs text-muted-foreground">
           {dica}
         </p>
       )}
     </div>
-  );
-}
-
-/** Selo de ONG verificada pela administração, como o site público exibe. */
-export function SeloVerificada({ verificadaEm }: { verificadaEm: string | null }) {
-  if (!verificadaEm) {
-    return <span className="text-xs text-muted-foreground">Aguardando verificação</span>;
-  }
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-xs font-medium text-success">
-      <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-      Verificada em {formatDate(verificadaEm)}
-    </span>
   );
 }
