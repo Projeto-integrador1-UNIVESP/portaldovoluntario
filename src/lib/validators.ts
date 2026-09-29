@@ -15,7 +15,9 @@ export const isValidCep = (value: string) => onlyDigits(value).length === 8;
 
 export const isFutureDate = (value: string) => {
   if (!value) return false;
-  const today = new Date().toISOString().slice(0, 10);
+  const agora = new Date();
+  const dois = (n: number) => String(n).padStart(2, "0");
+  const today = `${agora.getFullYear()}-${dois(agora.getMonth() + 1)}-${dois(agora.getDate())}`;
   return value > today;
 };
 

@@ -24,7 +24,7 @@ import {
   type CadastroDoadorInput, type CadastroOngInput,
 } from "@/lib/schemas/cadastro";
 import { UFS } from "@/lib/constants/ufs";
-import { formatCep, formatPhone } from "@/lib/format";
+import { formatCep, formatPhone, hojeLocal } from "@/lib/format";
 import { buscarCep } from "@/lib/viacep";
 import { onlyDigits } from "@/lib/validators";
 import { mensagemAmigavel } from "@/lib/erros";
@@ -537,7 +537,7 @@ function FormularioOng({ aoTrocarTipo }: { aoTrocarTipo: () => void }) {
                   <FormItem>
                     <FormLabel>Data de nascimento</FormLabel>
                     <FormControl>
-                      <Input type="date" autoComplete="bday" max={new Date().toISOString().slice(0, 10)} {...field} />
+                      <Input type="date" autoComplete="bday" max={hojeLocal()} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

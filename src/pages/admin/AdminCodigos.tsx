@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { CTA, SUCESSO, TERMOS, VAZIO } from "@/lib/copy";
-import { formatDate } from "@/lib/format";
+import { formatDate, hojeLocal } from "@/lib/format";
 import { CODIGO_VAZIO, codigoAdminSchema, type CodigoAdminForm } from "@/lib/schemas/admin";
 import { Campo, ExcluirLinha, Paginacao, TabelaAdmin, Vazio } from "./_shared";
 import {
@@ -305,7 +305,7 @@ export default function AdminCodigos() {
                 name="expires_at"
                 type="date"
                 autoComplete="off"
-                min={new Date().toISOString().slice(0, 10)}
+                min={hojeLocal()}
                 value={form.expires_at}
                 onChange={(e) => setForm({ ...form, expires_at: e.target.value })}
               />

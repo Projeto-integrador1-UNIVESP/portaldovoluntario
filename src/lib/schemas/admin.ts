@@ -1,7 +1,7 @@
 import { z } from "zod";
 import "@/lib/zodPtBr";
 import { MENSAGENS } from "@/lib/copy";
-import { parseCurrency } from "@/lib/format";
+import { parseCurrency, hojeLocal } from "@/lib/format";
 import { chavePixPareceValida } from "@/lib/pix";
 import { emailSchema, senhaSchema } from "@/lib/schemas/auth";
 import {
@@ -210,12 +210,6 @@ export const VOLUNTARIO_VAZIO: VoluntarioAdminForm = {
 
 /** Mesmo alfabeto do gerador: sem O, I, 0 e 1, que se confundem ao ler em voz alta. */
 export const FORMATO_DA_CHAVE = /^ONG-[2-9A-HJ-NP-Z]{4}-[2-9A-HJ-NP-Z]{4}$/;
-
-const hojeLocal = () => {
-  const agora = new Date();
-  const dois = (n: number) => String(n).padStart(2, "0");
-  return `${agora.getFullYear()}-${dois(agora.getMonth() + 1)}-${dois(agora.getDate())}`;
-};
 
 export const codigoAdminSchema = z.object({
   code: texto
