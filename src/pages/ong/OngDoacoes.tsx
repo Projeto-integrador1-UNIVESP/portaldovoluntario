@@ -24,6 +24,7 @@ import { ErrorState } from "@/components/common/ErrorState";
 import { TERMOS } from "@/lib/copy";
 import { ErroAmigavel, mensagemAmigavel } from "@/lib/erros";
 import { formatCurrency, formatDateTime, formatQuantidade } from "@/lib/format";
+import { descreverDoacao, nomeDoDoador } from "@/lib/doacao";
 
 type StatusDoacao = "pendente" | "confirmada" | "cancelada";
 
@@ -258,9 +259,7 @@ export default function OngDoacoes() {
                   <TableBody>
                     {lista.map((d) => {
                       const carregando = linhaEmAndamento === d.id;
-                      const nome = d.anonima
-                        ? "Doador anônimo"
-                        : d.doador?.nome || d.doador_nome || TERMOS.semIdentificacao;
+                      const nome = nomeDoDoador(d);
 
                       return (
                         <TableRow key={d.id}>
@@ -276,7 +275,7 @@ export default function OngDoacoes() {
                           <TableCell>
                             {d.necessidade && d.quantidade !== null ? (
                               <span className="numero font-medium">
-                                {`${formatQuantidade(d.quantidade ?? 0, d.necessidade.unidade)} de ${d.necessidade.nome}`}
+                                {descreverDoacao(d)}
                               </span>
                             ) : (
                               <span className="numero font-medium">{formatCurrency(d.valor)}</span>

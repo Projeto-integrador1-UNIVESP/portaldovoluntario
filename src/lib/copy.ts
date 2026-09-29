@@ -32,6 +32,7 @@ export const TERMOS = {
   chave: "chave de acesso",
   /* Doador sem cadastro */
   semIdentificacao: "Doador sem cadastro",
+  anonimo: "Doador anônimo",
   /* Verificação */
   verificada: "ONG verificada",
   aguardandoVerificacao: "Aguardando verificação",

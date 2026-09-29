@@ -20,6 +20,7 @@ import { ErrorState } from "@/components/common/ErrorState";
 import { CTA, TERMOS } from "@/lib/copy";
 import { exportToCsv } from "@/lib/exportCsv";
 import { formatCurrency, formatDate, formatDateTime, formatQuantidade } from "@/lib/format";
+import { descreverDoacao, nomeDoDoador, rotuloDoTipo, situacaoDaDoacao } from "@/lib/doacao";
 
 const num = (v: unknown) => Number(v ?? 0);
 
@@ -87,9 +88,7 @@ export default function OngAuditoria() {
     const porDoador = new Map<string, { nome: string; total: number; qtd: number }>();
     for (const d of confirmadas) {
       const chave = d.anonima ? `anon-${d.id}` : d.id_usuario || d.doador_email || `sem-id-${d.id}`;
-      const nome = d.anonima
-        ? "Doador anônimo"
-        : d.doador?.nome || d.doador_nome || TERMOS.semIdentificacao;
+      const nome = nomeDoDoador(d);
       const atual = porDoador.get(chave) ?? { nome, total: 0, qtd: 0 };
       atual.total += d.valor;
       atual.qtd += 1;
@@ -114,28 +113,18 @@ export default function OngAuditoria() {
   const inicio = (pagina - 1) * POR_PAGINA;
   const paginaAtual = (data ?? []).slice(inicio, inicio + POR_PAGINA);
 
-  const descreveDoacao = (d: NonNullable<typeof data>[number]) =>
-    d.necessidade && d.quantidade !== null
-      ? `${formatQuantidade(d.quantidade ?? 0, d.necessidade.unidade)} de ${d.necessidade.nome}`
-      : formatCurrency(d.valor);
-
   // Os rótulos das colunas alimentam o cabeçalho do arquivo: não mudar.
   const baixarCsv = () =>
     exportToCsv(
       "auditoria-ong.csv",
       (data ?? []).map((d) => ({
         data: formatDateTime(d.data_doacao),
-        doador: d.anonima ? "Doador anônimo" : d.doador?.nome || d.doador_nome || "",
+        doador: nomeDoDoador(d),
         email: d.anonima ? "" : d.doador?.email || d.doador_email || "",
-        doacao: descreveDoacao(d),
+        doacao: descreverDoacao(d),
         valor: d.valor,
-        forma: d.tipo_doacao ?? "",
-        situacao:
-          d.status === "confirmada"
-            ? "Confirmada"
-            : d.status === "cancelada"
-              ? "Não recebida"
-              : "Aguardando confirmação",
+        forma: rotuloDoTipo(d.tipo_doacao),
+        situacao: situacaoDaDoacao(d.status),
         confirmada_em: d.confirmada_em ? formatDateTime(d.confirmada_em) : "",
       })),
     );
@@ -280,9 +269,7 @@ export default function OngAuditoria() {
                       </TableCell>
                       <TableCell>
                         <div className="font-medium">
-                          {d.anonima
-                            ? "Doador anônimo"
-                            : d.doador?.nome || d.doador_nome || TERMOS.semIdentificacao}
+                          {nomeDoDoador(d)}
                         </div>
                         {!d.anonima && (d.doador?.email || d.doador_email) && (
                           <div className="text-xs text-muted-foreground">
@@ -290,7 +277,7 @@ export default function OngAuditoria() {
                           </div>
                         )}
                       </TableCell>
-                      <TableCell className="numero">{descreveDoacao(d)}</TableCell>
+                      <TableCell className="numero">{descreverDoacao(d)}</TableCell>
                       <TableCell>
                         {d.status === "confirmada" ? (
                           <Badge variant="success">
