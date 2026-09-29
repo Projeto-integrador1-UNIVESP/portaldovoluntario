@@ -118,6 +118,23 @@ describe("LoginPage", () => {
     expect(navegar).not.toHaveBeenCalled();
   });
 
+  it("corrigir um campo tira o aviso de credencial dos dois", async () => {
+    signInWithPassword.mockResolvedValue({
+      data: { user: null },
+      error: { message: "Invalid login credentials" },
+    });
+    const usuario = userEvent.setup();
+    await renderizar("/login");
+    await entrar();
+    await screen.findByRole("alert");
+
+    await usuario.type(screen.getByLabelText("E-mail"), "x");
+
+    expect(screen.queryByText("Confira a senha")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Senha")).toHaveAttribute("aria-invalid", "false");
+    expect(screen.queryByText(/E-mail ou senha incorretos/)).not.toBeInTheDocument();
+  });
+
   it("o botão de mostrar senha expõe o estado com aria-pressed", async () => {
     const usuario = userEvent.setup();
     await renderizar("/login");

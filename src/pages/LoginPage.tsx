@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -64,6 +64,21 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
   });
+
+  // Credencial errada marca os dois campos. Assim que a pessoa mexe em
+  // qualquer um, os avisos do servidor saem dos dois: ficar "Confira a senha"
+  // depois de corrigir só o e-mail diria que a senha continua errada.
+  useEffect(() => {
+    const assinatura = form.watch((_, { type }) => {
+      if (type !== "change") return;
+      const { errors } = form.formState;
+      if (errors.root || errors.email?.type === "server" || errors.password?.type === "server") {
+        form.clearErrors("root");
+        form.clearErrors(["email", "password"]);
+      }
+    });
+    return () => assinatura.unsubscribe();
+  }, [form]);
 
   const entrar = async ({ email, password }: LoginInput) => {
     const { data, error } = await supabase.auth.signInWithPassword({
