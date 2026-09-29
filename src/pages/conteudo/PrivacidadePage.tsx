@@ -1,13 +1,17 @@
+import { Link } from "react-router-dom";
 import { PaginaDeConteudo } from "./PaginaDeConteudo";
+import { formatDate } from "@/lib/format";
 
 /** Versão do texto registrada junto com o aceite do usuário no cadastro. */
-export const VERSAO_PRIVACIDADE = "2026-09-28";
+export const VERSAO_PRIVACIDADE = "2026-09-29";
 
 export default function PrivacidadePage() {
   return (
     <PaginaDeConteudo
+      eyebrow="Legal"
       titulo="Política de Privacidade"
-      descricao={`Como tratamos seus dados pessoais, na versão de ${new Date(VERSAO_PRIVACIDADE).toLocaleDateString("pt-BR")}.`}
+      descricao={`Como tratamos seus dados pessoais. Versão de ${formatDate(VERSAO_PRIVACIDADE)}.`}
+      tipo="website"
     >
       <h2>1. Quais dados coletamos</h2>
       <p>
@@ -16,15 +20,15 @@ export default function PrivacidadePage() {
         de uma doação de itens.
       </p>
       <p>
-        Para ONGs, coletamos também os dados da organização (CNPJ, endereço, contatos e
-        dados bancários para recebimento de doações), que são de exibição pública por
-        natureza, já que servem para que o doador confie e consiga contribuir.
+        Para ONGs, coletamos também os dados da organização (CNPJ, endereço, contatos e chave
+        Pix para receber doações). Esses dados são públicos por natureza: servem para que o
+        doador confie e consiga contribuir.
       </p>
 
       <h2>2. Para que usamos</h2>
       <ul>
         <li>Manter sua conta e permitir que você doe ou se inscreva como voluntário.</li>
-        <li>Enviar confirmações e avisos relacionados às suas doações e inscrições.</li>
+        <li>Enviar confirmações e avisos sobre as suas doações e inscrições.</li>
         <li>Permitir que a ONG entre em contato sobre a doação ou o turno de voluntariado.</li>
       </ul>
       <p>Não vendemos seus dados e não os usamos para publicidade de terceiros.</p>
@@ -38,24 +42,23 @@ export default function PrivacidadePage() {
 
       <h2>4. Seus direitos (LGPD)</h2>
       <p>
-        Você pode, a qualquer momento, acessar, corrigir, baixar ou excluir seus dados.
-        As opções de <em>baixar meus dados</em> e <em>excluir minha conta</em> ficam na área
-        da sua conta. A exclusão remove seus dados pessoais; registros de doação já
-        confirmados são mantidos de forma anonimizada, para a prestação de contas da ONG.
+        Você pode pedir, a qualquer momento, para acessar, corrigir ou apagar seus dados.
+        Escreva para o contato indicado abaixo, usando o e-mail da sua conta. Registros de
+        doação já confirmados ficam guardados de forma anonimizada, para a prestação de
+        contas da ONG.
       </p>
 
       <h2>5. Segurança</h2>
       <p>
-        Os dados ficam armazenados em serviço de banco de dados com controle de acesso por
-        linha, de modo que cada usuário só alcança os registros a que tem direito. O acesso
-        é sempre por conexão criptografada.
+        Os dados ficam em um banco com controle de acesso por linha: cada pessoa só alcança
+        os registros a que tem direito. O acesso é sempre por conexão criptografada.
       </p>
 
       <h2>6. Contato</h2>
       <p>
-        Para exercer qualquer um desses direitos ou tirar dúvidas sobre o tratamento dos
-        seus dados, fale com a equipe responsável pela plataforma pelos canais indicados na
-        página <a href="/sobre">Sobre</a>.
+        Para exercer esses direitos ou tirar dúvidas sobre o tratamento dos seus dados,
+        escreva para a equipe da Voluntá pelo canal indicado em{" "}
+        <Link to="/sobre#contato">Fale com a gente</Link>, na página Sobre.
       </p>
     </PaginaDeConteudo>
   );
