@@ -1,9 +1,12 @@
 import { onlyDigits } from "@/lib/validators";
 
+/** Um formatador só: `toLocaleString` com opções cria um novo a cada chamada, e o contador da home formata a cada quadro. */
+const REAL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+
 /** Formata um número como moeda brasileira: 1234.5 -> "R$ 1.234,50" */
 export const formatCurrency = (value: number | null | undefined) => {
   const numero = value === null || value === undefined || Number.isNaN(value) ? 0 : value;
-  return numero.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  return REAL.format(numero);
 };
 
 const SO_DATA = /^\d{4}-\d{2}-\d{2}$/;
