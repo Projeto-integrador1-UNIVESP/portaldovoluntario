@@ -70,10 +70,25 @@ describe("Capa", () => {
     // Várias organizações sem categoria aparecem lado a lado na listagem. Se
     // todas caíssem na mesma foto genérica, leria como defeito; o padrão
     // gerado varia por identificador.
-    const { container } = render(<Capa alt="" id="p1" causa="Assistência social" />);
+    const { container } = render(<Capa alt="" id="p1" causa="Causa que não existe" />);
 
     expect(container.querySelector("img")).toBeNull();
     expect(container.querySelector("svg")).not.toBeNull();
+  });
+
+  it("a etiqueta e o substituto usam tokens, não cor crua", () => {
+    const { container } = render(<Capa alt="" id="p1" nome="Casa de Apoio" causa="Alimentos" />);
+    expect(container.innerHTML).not.toMatch(/bg-black|text-white|#000|#fff/);
+
+    const gerado = render(<Capa alt="" id="o9" nome="Lar São José" />).container;
+    expect(gerado.innerHTML).not.toMatch(/bg-black|text-white|#000|#fff/);
+    // Matiz preso à faixa do marinho: nada de arco-íris por registro.
+    const matizes = [...gerado.innerHTML.matchAll(/hsl\((\d+) /g)].map((m) => Number(m[1]));
+    expect(matizes.length).toBeGreaterThan(0);
+    for (const h of matizes) {
+      expect(h).toBeGreaterThanOrEqual(190);
+      expect(h).toBeLessThanOrEqual(240);
+    }
   });
 });
 
@@ -92,22 +107,30 @@ describe("capaDaCausa", () => {
   });
 
   /**
-   * Estas oito são as causas que o cadastro de projeto usa hoje. Quatro delas
-   * não resolviam e caíam no padrão gerado, o que deixava metade da listagem
-   * sem foto. As que continuam sem foto estão aqui de propósito: não existe
-   * fotografia honesta para elas no acervo, e o substituto gerado é a resposta
-   * certa, não um buraco.
+   * As dez causas da lista fechada (`constants/causas.ts`) resolvem todas em
+   * foto: nenhum chip de filtro fica sem miniatura e nenhuma capa de projeto
+   * cai no padrão gerado só por causa da categoria. "Animais" e "Pessoas
+   * idosas" ganham chave própria, mesmo que a foto ainda seja a genérica até
+   * a frente de marca entregar os arquivos.
    */
-  it("cobre as causas que o cadastro de projeto usa", () => {
+  it("cobre as dez causas da lista fechada", async () => {
+    const { CAUSAS } = await import("@/lib/constants/causas");
+    for (const causa of CAUSAS) {
+      expect(capaDaCausa(causa)?.chave, causa).toBeDefined();
+    }
+
     expect(capaDaCausa("Crianças e adolescentes")?.chave).toBe("brinquedos");
     expect(capaDaCausa("População em situação de rua")?.chave).toBe("inverno");
     expect(capaDaCausa("Alimentação")?.chave).toBe("alimentos");
     expect(capaDaCausa("Saúde")?.chave).toBe("medicamentos");
     expect(capaDaCausa("Educação")?.chave).toBe("escolar");
-
-    expect(capaDaCausa("Animais")).toBeNull();
-    expect(capaDaCausa("Pessoas idosas")).toBeNull();
-    expect(capaDaCausa("Cultura")).toBeNull();
+    expect(capaDaCausa("Cultura")?.chave).toBe("escolar");
+    expect(capaDaCausa("Animais")?.chave).toBe("animais");
+    expect(capaDaCausa("Proteção animal")?.chave).toBe("animais");
+    expect(capaDaCausa("Pessoas idosas")?.chave).toBe("idosos");
+    expect(capaDaCausa("Terceira idade")?.chave).toBe("idosos");
+    expect(capaDaCausa("Assistência social")?.chave).toBe("generica");
+    expect(capaDaCausa("Meio ambiente")?.chave).toBe("generica");
   });
 
   it("resolve todas as CATEGORIAS do formulário de necessidade", async () => {
@@ -118,13 +141,14 @@ describe("capaDaCausa", () => {
   });
 
   it("aceita array, porque ongs.causas é TEXT[]", () => {
-    expect(capaDaCausa(["Assistência social", "Inverno"])?.chave).toBe("inverno");
+    // Vence a primeira entrada que resolve.
+    expect(capaDaCausa(["Causa que não existe", "Inverno"])?.chave).toBe("inverno");
+    expect(capaDaCausa(["Assistência social", "Inverno"])?.chave).toBe("generica");
     expect(capaDaCausa([])).toBeNull();
   });
 
   it("devolve nulo quando a causa não resolve numa categoria", () => {
-    // A foto genérica ficou reservada para "Outros", que é escolha explícita
-    // de quem cadastrou, não um depósito de tudo que não casou.
+    // Causa desconhecida não é depósito da genérica: cai no padrão gerado.
     expect(capaDaCausa(null)).toBeNull();
     expect(capaDaCausa("causa que não existe")).toBeNull();
     expect(capaDaCausa("Outros")?.chave).toBe("outros");
