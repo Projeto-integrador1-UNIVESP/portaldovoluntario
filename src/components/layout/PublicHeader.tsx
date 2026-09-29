@@ -60,7 +60,7 @@ export function PublicHeader() {
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <Button size="sm" asChild className="pressionavel">
+          <Button size="sm" asChild>
             <Link to="/projetos">Doar</Link>
           </Button>
 
@@ -142,7 +142,7 @@ export function PublicHeader() {
                     to={item.href}
                     onClick={() => setMenuAberto(false)}
                     aria-current={estaEm(pathname, item.href) ? "page" : undefined}
-                    className="relative rounded-controle px-3 py-2.5 font-display text-lg font-semibold hover:bg-accent aria-[current=page]:bg-accent before:absolute before:bottom-2.5 before:left-0 before:top-2.5 before:w-0.5 before:rounded-full before:bg-cta before:opacity-0 aria-[current=page]:before:opacity-100"
+                    className="relative rounded-controle px-3 py-2.5 font-display text-lg font-semibold hover:bg-accent aria-[current=page]:bg-accent before:absolute before:bottom-2.5 before:left-0 before:top-2.5 before:w-0.5 before:rounded-full before:bg-primary before:opacity-0 aria-[current=page]:before:opacity-100"
                   >
                     {item.label}
                   </Link>

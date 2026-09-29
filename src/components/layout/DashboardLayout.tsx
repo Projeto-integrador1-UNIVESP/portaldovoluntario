@@ -131,7 +131,7 @@ function ConteudoDaBarra({
         {/* A mesma marca do site, herdando a cor da tinta. */}
         <Link
           to="/"
-          className="inline-flex text-sidebar-foreground [&_*]:text-inherit"
+          className="inline-flex text-sidebar-foreground"
           aria-label="Voluntá, ir ao site"
         >
           <Logo monocromatico />
@@ -154,7 +154,7 @@ function ConteudoDaBarra({
               className={cn(
                 "relative flex min-h-11 items-center gap-3 rounded-controle px-3 py-2 text-sm font-medium transition-colors duration-150",
                 ativo
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground before:absolute before:bottom-2 before:left-0 before:top-2 before:w-0.5 before:rounded-full before:bg-cta"
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground before:absolute before:bottom-2 before:left-0 before:top-2 before:w-0.5 before:rounded-full before:bg-sidebar-primary"
                   : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
               )}
             >
@@ -180,8 +180,7 @@ function ConteudoDaBarra({
         <Button
           variant="ghost"
           className="w-full justify-start text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
-          asChild
-        >
+          asChild>
           <Link to="/" onClick={aoNavegar}>
             <ExternalLink aria-hidden="true" />
             Ver o site
@@ -190,8 +189,7 @@ function ConteudoDaBarra({
         <Button
           variant="ghost"
           className="w-full justify-start text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
-          onClick={signOut}
-        >
+          onClick={signOut}>
           <LogOut aria-hidden="true" />
           Sair
         </Button>
