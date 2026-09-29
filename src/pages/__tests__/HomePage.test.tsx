@@ -186,5 +186,7 @@ describe("HomePage", () => {
     // 23 kg de 100 hoje; antes desta doação de 10 kg eram 13%.
     expect(screen.getByText("13%")).toBeInTheDocument();
     expect(screen.getAllByText(/Recebimento confirmado/i).length).toBeGreaterThan(0);
+    // A confirmação é do mesmo projeto do pedido do hero: o card mostra o selo.
+    expect(screen.getByText(/Última confirmação em/)).toBeInTheDocument();
   });
 });

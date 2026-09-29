@@ -38,7 +38,7 @@ export function Hero({ pedido, confirmacao, carregando }: HeroProps) {
             quantidade e o prazo; você escolhe o pedido e doa direto para ela, sem taxa.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-x-7 gap-y-4">
-            <Button size="lg" variant="cta" asChild className="pressionavel">
+            <Button size="lg" variant="cta" asChild>
               <Link to="/projetos">
                 Ver o que está faltando
                 <ArrowRight aria-hidden="true" />
@@ -109,23 +109,15 @@ function CardFlutuante({
         tipo={pedido.tipo}
         unidade={pedido.unidade}
       />
-      {/* A confirmação chega numa consulta própria; a linha reserva o lugar
-          enquanto carrega, para o card não crescer na frente de quem lê. */}
-      {confirmacao !== null && (
-        <div className="mt-3 min-h-12 border-t pt-3">
-          {confirmacao ? (
-            <>
-              <SeloConfirmacao confirmadaEm={confirmacao.confirmadaEm} />
-              <p className="numero mt-1.5 text-xs text-muted-foreground">
-                Última confirmação em {formatDate(confirmacao.confirmadaEm)}
-              </p>
-            </>
-          ) : (
-            <>
-              <Skeleton className="h-6 w-40 rounded-full" />
-              <Skeleton className="mt-2 h-3 w-32" />
-            </>
-          )}
+      {/* O selo só aparece quando a última confirmação é deste mesmo projeto.
+          A confirmação vem da plataforma inteira; colar o selo de outra ONG
+          neste pedido seria afirmar um recebimento que não aconteceu. */}
+      {confirmacao && pedido.projeto && confirmacao.projeto.id === pedido.projeto.id && (
+        <div className="mt-3 border-t pt-3">
+          <SeloConfirmacao confirmadaEm={confirmacao.confirmadaEm} />
+          <p className="numero mt-1.5 text-xs text-muted-foreground">
+            Última confirmação em {formatDate(confirmacao.confirmadaEm)}
+          </p>
         </div>
       )}
     </Link>
