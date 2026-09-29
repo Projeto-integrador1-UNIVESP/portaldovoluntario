@@ -81,7 +81,7 @@ export default function OngMembros() {
         <>
           <Card className="overflow-hidden">
             <CardContent className="p-0">
-              <Table>
+              <Table className="min-w-[720px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nome</TableHead>

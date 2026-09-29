@@ -115,8 +115,8 @@ export default function OngAuditoria() {
   const paginaAtual = (data ?? []).slice(inicio, inicio + POR_PAGINA);
 
   const descreveDoacao = (d: NonNullable<typeof data>[number]) =>
-    d.necessidade
-      ? `${d.quantidade ?? 0} ${d.necessidade.unidade ?? ""} de ${d.necessidade.nome}`.replace(/\s+/g, " ")
+    d.necessidade && d.quantidade !== null
+      ? `${d.quantidade} ${d.necessidade.unidade ?? ""} de ${d.necessidade.nome}`.replace(/\s+/g, " ")
       : formatCurrency(d.valor);
 
   // Os rótulos das colunas alimentam o cabeçalho do arquivo: não mudar.
@@ -182,7 +182,6 @@ export default function OngAuditoria() {
             <Stat
               valor={formatCurrency(resumo.valorConfirmado)}
               rotulo="em dinheiro confirmado por você"
-              destaque
             />
             <Stat
               valor={resumo.confirmadas.length}
@@ -232,7 +231,7 @@ export default function OngAuditoria() {
                   action={{ label: "Ver a fila de confirmação", to: "/ong/doacoes" }}
                 />
               ) : (
-                <Table>
+                <Table className="min-w-[480px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Doador</TableHead>
@@ -246,7 +245,7 @@ export default function OngAuditoria() {
                         <TableCell className="font-medium">{p.nome}</TableCell>
                         <TableCell className="numero text-muted-foreground">{p.qtd}</TableCell>
                         <TableCell className="numero text-right font-medium">
-                          {formatCurrency(p.total)}
+                          {p.total > 0 ? formatCurrency(p.total) : <span className="font-normal text-muted-foreground">Só itens</span>}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -264,7 +263,7 @@ export default function OngAuditoria() {
               </p>
             </CardHeader>
             <CardContent className="p-0">
-              <Table>
+              <Table className="min-w-[720px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Data</TableHead>

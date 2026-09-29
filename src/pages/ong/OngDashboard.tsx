@@ -92,9 +92,11 @@ export default function OngDashboard() {
             data: d.data_doacao,
             doador: d.anonima ? "Doador anônimo" : d.doador_nome || TERMOS.semIdentificacao,
             projeto: d.id_projeto ? porProjeto.get(d.id_projeto) ?? VAZIO.semProjeto : "Doação geral",
-            oQue: necessidade
-              ? `${num(d.quantidade)} ${necessidade.unidade ?? ""} de ${necessidade.nome}`.replace(/\s+/g, " ")
-              : formatCurrency(num(d.valor)),
+            // Doação em dinheiro para uma necessidade de dinheiro não tem quantidade.
+            oQue:
+              necessidade && d.quantidade !== null
+                ? `${num(d.quantidade)} ${necessidade.unidade ?? ""} de ${necessidade.nome}`.replace(/\s+/g, " ")
+                : formatCurrency(num(d.valor)),
           };
         }),
       };
@@ -190,14 +192,15 @@ export default function OngDashboard() {
 
           <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-5">
             <Stat
-              valor={data.confirmadas}
-              rotulo={data.confirmadas === 1 ? "recebimento confirmado" : "recebimentos confirmados"}
-              para="/ong/doacoes"
-            />
-            <Stat
               valor={formatCurrency(data.valorConfirmado)}
               rotulo="em dinheiro confirmado"
               para="/ong/auditoria"
+              className="col-span-2 sm:col-span-1"
+            />
+            <Stat
+              valor={data.confirmadas}
+              rotulo={data.confirmadas === 1 ? "recebimento confirmado" : "recebimentos confirmados"}
+              para="/ong/doacoes"
             />
             <Stat
               valor={data.necessidadesAbertas}
@@ -261,12 +264,12 @@ export default function OngDashboard() {
                 {data.recentes.map((d) => (
                   <li
                     key={d.id}
-                    className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-5 py-4"
+                    className="flex flex-col gap-2 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6"
                   >
                     <div className="min-w-0 flex-1">
                       <p className="font-medium">
                         <span className="numero">{d.oQue}</span>
-                        <span className="text-muted-foreground"> de {d.doador}</span>
+                        <span className="text-muted-foreground"> · {d.doador}</span>
                       </p>
                       <p className="mt-0.5 text-sm text-muted-foreground">
                         {d.projeto} · <span className="numero">{formatDateTime(d.data)}</span>
