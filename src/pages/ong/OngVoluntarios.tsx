@@ -197,7 +197,6 @@ export default function OngVoluntarios() {
                   ? "inscrição esperando resposta"
                   : "inscrições esperando resposta"
               }
-              destaque={porStatus.pendente.length > 0}
             />
             <Stat
               valor={porStatus.aprovado.length}
@@ -245,7 +244,7 @@ export default function OngVoluntarios() {
                   }
                 />
               ) : (
-                <Table>
+                <Table className="min-w-[820px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Pessoa</TableHead>

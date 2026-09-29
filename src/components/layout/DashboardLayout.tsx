@@ -242,7 +242,7 @@ function Identidade({ type }: { type: TipoDePainel }) {
         className="border-sidebar-border"
       />
       <div className="min-w-0">
-        <p className="truncate font-display text-base font-semibold leading-tight">
+        <p className="line-clamp-2 font-display text-base font-semibold leading-tight">
           {ong?.nome ?? ROTULO.ong}
         </p>
         {ong && (

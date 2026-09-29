@@ -288,7 +288,7 @@ export default function OngProjetos() {
 
           <Card className="overflow-hidden">
             <CardContent className="p-0">
-              <Table>
+              <Table className="min-w-[760px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Projeto</TableHead>
@@ -302,12 +302,13 @@ export default function OngProjetos() {
                     <TableRow key={p.id}>
                       <TableCell className="min-w-64 max-w-sm">
                         <div className="flex items-start gap-3">
+                          {/* Sem `causa` de propósito: em 64px a etiqueta "Imagem
+                              ilustrativa" da foto de categoria não cabe. */}
                           <Capa
                             src={capaDoProjeto(p)}
                             alt=""
                             id={p.id}
                             nome={p.nome_projeto}
-                            causa={p.causa}
                             className="h-12 w-16 shrink-0 rounded-md"
                           />
                           <div className="min-w-0">

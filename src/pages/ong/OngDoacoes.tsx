@@ -188,7 +188,6 @@ export default function OngDoacoes() {
                     ? "doação aguardando sua confirmação"
                     : "doações aguardando sua confirmação"
                 }
-                destaque={qtdPendente > 0}
               />
               <Stat valor={formatCurrency(totalPendente)} rotulo="em dinheiro ainda não confirmado" />
               <Stat valor={formatCurrency(totalConfirmado)} rotulo="em dinheiro já confirmado" />
@@ -246,7 +245,7 @@ export default function OngDoacoes() {
                   }
                 />
               ) : (
-                <Table>
+                <Table className="min-w-[880px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Doador</TableHead>
@@ -275,7 +274,7 @@ export default function OngDoacoes() {
                           </TableCell>
 
                           <TableCell>
-                            {d.necessidade ? (
+                            {d.necessidade && d.quantidade !== null ? (
                               <span className="numero font-medium">
                                 {`${d.quantidade} ${d.necessidade.unidade ?? ""} de ${d.necessidade.nome}`.replace(/\s+/g, " ")}
                               </span>
