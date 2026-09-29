@@ -9,6 +9,7 @@ import { Callout } from "@/components/common/Callout";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ErrorState } from "@/components/common/ErrorState";
 import { CardNecessidadeUrgente } from "@/components/common/CardNecessidadeUrgente";
+import { Capa } from "@/components/common/Capa";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -39,18 +40,18 @@ export default function HomePage() {
 
       {/* ── Promessa ─────────────────────────────────────────────────────── */}
       <section className="border-b bg-gradient-to-b from-secondary/60 to-background">
-        <div className="container py-14 md:py-20">
+        <div className="container py-10 md:py-20">
           <div className="mx-auto max-w-3xl text-center">
             <Badge variant="outline" className="gap-1.5 bg-card">
               <BadgeCheck className="h-3.5 w-3.5 text-success" aria-hidden="true" />
-              A barra só anda quando a ONG confirma que recebeu
+              A barra só anda quando a ONG confirma
             </Badge>
 
-            <h1 className="mt-5 font-display text-3xl font-extrabold leading-[1.1] tracking-[-0.02em] md:text-[3.25rem]">
+            <h1 className="mt-5 font-display text-3xl font-extrabold">
               Veja do que as ONGs perto de você precisam agora
             </h1>
 
-            <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">
+            <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground md:text-lg">
               Cobertores, alimento, horas de voluntariado ou um Pix. Você escolhe o
               que falta de verdade e doa direto para a organização — sem taxa e sem
               precisar criar conta.
@@ -136,18 +137,21 @@ export default function HomePage() {
           <div className="ao-rolar-escalonado mx-auto mt-8 grid max-w-4xl gap-5 md:grid-cols-3">
             <Passo
               numero="1"
+              tinta="bg-tinta-agua"
               icone={Search}
               titulo="A ONG diz o que falta"
               texto="Não é um pedido genérico de doação: é “100 cobertores até 2 de outubro”, com quantidade e prazo."
             />
             <Passo
               numero="2"
+              tinta="bg-tinta-areia"
               icone={HandHeart}
               titulo="Você doa direto"
               texto="Pix na conta da própria organização. A plataforma não retém nada e não cobra taxa de ninguém."
             />
             <Passo
               numero="3"
+              tinta="bg-tinta-musgo"
               icone={BadgeCheck}
               titulo="A ONG confirma o recebimento"
               texto="Só então a barra de progresso sobe. É por isso que o número que você vê aqui corresponde ao que chegou."
@@ -238,15 +242,18 @@ function Numero({ valor, rotulo }: { valor: string; rotulo: string }) {
 }
 
 function Passo({
-  numero, icone: Icone, titulo, texto,
+  numero, icone: Icone, titulo, texto, tinta,
 }: {
   numero: string;
   icone: typeof Search;
   titulo: string;
   texto: string;
+  /* Card branco atrás de card branco vira grade monótona; a tinta dá ritmo
+     sem precisar de borda colorida nem de sombra pesada. */
+  tinta: string;
 }) {
   return (
-    <div className="rounded-xl border bg-card p-6 shadow-sutil">
+    <div className={`rounded-xl border p-6 ${tinta}`}>
       <div className="flex items-center gap-3">
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
           {numero}
@@ -268,15 +275,13 @@ function CardOng({ ong }: { ong: Record<string, any> }) {
       to={`/ongs/${ong.slug ?? ong.id}`}
       className="elevavel group flex overflow-hidden rounded-xl border bg-card shadow-sutil focus-visible:ring-2 focus-visible:ring-ring"
     >
-      <div className="relative w-28 shrink-0 bg-secondary sm:w-36">
-        {capa ? (
-          <img src={capa} alt="" className="h-full w-full object-cover" loading="lazy" />
-        ) : (
-          <div className="flex h-full items-center justify-center">
-            <Building2 className="h-7 w-7 text-muted-foreground" aria-hidden="true" />
-          </div>
-        )}
-      </div>
+      <Capa
+        src={capa}
+        alt=""
+        id={ong.id}
+        nome={ong.nome}
+        className="w-28 shrink-0 sm:w-36"
+      />
 
       <div className="min-w-0 flex-1 p-5">
         <div className="flex items-start gap-2">

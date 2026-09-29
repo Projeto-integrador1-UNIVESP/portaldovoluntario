@@ -23,7 +23,12 @@ export default {
         "2xl": ["2rem", { lineHeight: "2.5rem", letterSpacing: "-0.018em" }],
         // Quanto maior o texto, mais negativo o tracking: é o que faz um
         // título parecer desenhado em vez de digitado.
-        "3xl": ["3rem", { lineHeight: "1.06", letterSpacing: "-0.028em" }],
+        //
+        // O display é fluido porque 3rem fixo tomava a tela inteira em 390px:
+        // o herói enchia a primeira dobra e o visitante não via nenhum
+        // conteúdo antes de rolar — o contrário do que a página promete.
+        "3xl": ["clamp(2rem, 1.1rem + 4vw, 3rem)", { lineHeight: "1.08", letterSpacing: "-0.028em" }],
+        "2xl-fluido": ["clamp(1.5rem, 1.1rem + 1.8vw, 2rem)", { lineHeight: "1.15", letterSpacing: "-0.02em" }],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -71,6 +76,12 @@ export default {
           DEFAULT: "hsl(var(--cta))",
           foreground: "hsl(var(--cta-foreground))",
         },
+        tinta: {
+          agua: "hsl(var(--tinta-agua))",
+          areia: "hsl(var(--tinta-areia))",
+          musgo: "hsl(var(--tinta-musgo))",
+          lavanda: "hsl(var(--tinta-lavanda))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -87,7 +98,7 @@ export default {
         baixa: "var(--sombra-baixa)",
         media: "var(--sombra-media)",
         alta: "var(--sombra-alta)",
-        cta: "var(--sombra-cta)",
+        cta: "var(--sombra-cta), var(--brilho-interno)",
       },
       borderRadius: {
         xl: "calc(var(--radius) + 4px)",

@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PublicShell } from "@/components/layout/PublicShell";
 import { Footer } from "@/components/layout/Footer";
 import { Seo } from "@/components/common/Seo";
+import { CauseTag } from "@/components/common/CauseTag";
 import { Callout } from "@/components/common/Callout";
 import { Capa } from "@/components/common/Capa";
 import { EmptyState } from "@/components/common/EmptyState";
@@ -264,7 +265,7 @@ export default function OngPage() {
         {Array.isArray(ong.causas) && ong.causas.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2">
             {ong.causas.map((causa: string) => (
-              <Badge key={causa} variant="secondary">{causa}</Badge>
+              <CauseTag key={causa} causa={causa} />
             ))}
           </div>
         )}
