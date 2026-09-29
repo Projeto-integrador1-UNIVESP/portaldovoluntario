@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { capaDoProjeto } from "@/lib/capaDoProjeto";
 import { supabase } from "@/integrations/supabase/client";
 import { progressoPercent } from "@/lib/format";
 
@@ -91,7 +92,7 @@ export function useHome() {
                   slug: projeto.slug,
                   nome_projeto: projeto.nome_projeto,
                   causa: projeto.causa,
-                  capa: projeto.capa_url ?? projeto.img_url ?? null,
+                  capa: capaDoProjeto(projeto),
                 }
               : null,
             ong: projeto ? porOng.get(projeto.id_ong) ?? null : null,

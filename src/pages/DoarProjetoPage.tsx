@@ -1,4 +1,6 @@
 import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
+import { EASE_SUAVE } from "@/lib/movimento";
+import { capaDoProjeto } from "@/lib/capaDoProjeto";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useForm, type UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,7 +31,7 @@ import { useProjeto, type ProjetoPublico } from "@/hooks/queries/useProjeto";
 import type { Necessidade } from "@/components/common/NeedItem";
 import { maskCurrency, parseCurrency } from "@/lib/format";
 import { mensagemAmigavel } from "@/lib/erros";
-import { A_MARCA, MENSAGENS, CTA } from "@/lib/copy";
+import { MENSAGENS, CTA, A_MARCA_INICIAL } from "@/lib/copy";
 import { cn } from "@/lib/utils";
 import {
   doacaoDinheiroSchema, doacaoItemSchemaPara, unidadeAceitaFracao, VALORES_SUGERIDOS,
@@ -49,10 +51,8 @@ const PASSOS_ITEM: PassoDoFluxo[] = [
   { id: "doador", rotulo: "Seus dados" },
 ];
 
-const SUAVE = [0.16, 1, 0.3, 1] as const;
 
 /** "a Voluntá" começando frase. */
-const AMarca = A_MARCA.charAt(0).toUpperCase() + A_MARCA.slice(1);
 
 type CampoDoRegistro = "doador_nome" | "doador_email" | "valor" | "quantidade" | "forma_entrega";
 
@@ -459,7 +459,7 @@ export default function DoarProjetoPage() {
                           initial={{ x: 32, opacity: 0 }}
                           animate={{ x: 0, opacity: 1 }}
                           exit={{ x: -24, opacity: 0 }}
-                          transition={{ duration: 0.28, ease: SUAVE }}
+                          transition={{ duration: 0.28, ease: EASE_SUAVE }}
                         >
                           <Passo titulo="Pague com Pix" atual={passoAtual === 4}>
                             <ol className="space-y-1.5 text-sm text-muted-foreground">
@@ -532,14 +532,14 @@ export default function DoarProjetoPage() {
             >
               {ehItem ? (
                 <>
-                  {AMarca} não recebe nem guarda os itens: você entrega para{" "}
+                  {A_MARCA_INICIAL} não recebe nem guarda os itens: você entrega para{" "}
                   <strong className="font-medium text-foreground">{projeto.ong?.nome}</strong>, sem
                   taxa. Aqui você só registra a doação.
                 </>
               ) : (
                 <>
                   {temPix ? "O Pix sai da sua conta direto para " : "A transferência vai direto para "}
-                  <strong className="font-medium text-foreground">{nomeRecebedor}</strong>. {AMarca}{" "}
+                  <strong className="font-medium text-foreground">{nomeRecebedor}</strong>. {A_MARCA_INICIAL}{" "}
                   não processa o pagamento nem cobra taxa. Antes de confirmar no app do banco,
                   confira se o nome do recebedor é esse.
                 </>
@@ -573,7 +573,7 @@ function ResumoDoProjeto({
   return (
     <div className="overflow-hidden rounded-xl border bg-card shadow-sutil">
       <Capa
-        src={projeto.capa_url ?? projeto.img_url}
+        src={capaDoProjeto(projeto)}
         alt=""
         id={projeto.id}
         nome={projeto.nome_projeto}

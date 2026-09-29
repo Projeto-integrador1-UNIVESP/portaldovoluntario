@@ -20,3 +20,10 @@ const twMerge = extendTailwindMerge({
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+/**
+ * Grade de duas colunas com um número ímpar de itens: o último fecha a linha
+ * inteira em vez de deixar um buraco ao lado.
+ */
+export const larguraNaGrade = (indice: number, total: number) =>
+  total % 2 === 1 && indice === total - 1 ? "sm:col-span-2" : undefined;

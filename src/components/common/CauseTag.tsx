@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
  * AA sem uma paleta paralela.
  */
 
-const TINTAS = ["bg-tinta-azulpo", "bg-tinta-creme", "bg-tinta-salvia", "bg-tinta-pessego"] as const;
+export const TINTAS = ["bg-tinta-azulpo", "bg-tinta-creme", "bg-tinta-salvia", "bg-tinta-pessego"] as const;
 
 const TAMANHOS = {
   sm: "px-2.5 py-0.5 text-xs",

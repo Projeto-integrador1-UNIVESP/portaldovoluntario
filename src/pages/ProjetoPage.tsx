@@ -1,4 +1,5 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { capaDoProjeto } from "@/lib/capaDoProjeto";
 import { useState } from "react";
 import { CalendarDays, MapPin } from "lucide-react";
 import { toast } from "sonner";
@@ -30,8 +31,8 @@ import { useConfirmacoes } from "@/hooks/queries/useConfirmacoes";
 import { useTaxaConfirmacao } from "@/hooks/queries/useTaxaConfirmacao";
 import { mensagemAmigavel } from "@/lib/erros";
 import { MARCA } from "@/lib/copy";
-import { formatCurrency, formatDate, formatPrazo, progressoPercent, formatQuantidade } from "@/lib/format";
-import { cn } from "@/lib/utils";
+import { formatDate, formatPrazo, progressoPercent, quantoFalta } from "@/lib/format";
+import { cn, larguraNaGrade } from "@/lib/utils";
 
 /**
  * Página do projeto: a tela que converte.
@@ -123,7 +124,7 @@ export default function ProjetoPage() {
     );
   }
 
-  const capa = projeto.capa_url || projeto.img_url;
+  const capa = capaDoProjeto(projeto);
   const prazo = formatPrazo(projeto.data_fim);
   const linkDoar = `/doar/projeto/${projeto.slug ?? projeto.id}`;
   const local = projeto.cidade || (projeto.ong?.cidade
@@ -356,8 +357,6 @@ export default function ProjetoPage() {
  * Na grade de dois, o último item de uma contagem ímpar ocuparia meia linha
  * com um buraco ao lado. Ele passa a fechar a linha inteira.
  */
-const larguraNaGrade = (indice: number, total: number) =>
-  total % 2 === 1 && indice === total - 1 ? "sm:col-span-2" : undefined;
 
 type PainelProps = {
   necessidades: Necessidade[];
@@ -366,12 +365,6 @@ type PainelProps = {
   linkDoar: string;
 };
 
-const quantoFalta = (n: Necessidade) => {
-  const falta = Math.max(0, n.meta - n.arrecadado);
-  return n.tipo === "dinheiro"
-    ? formatCurrency(falta)
-    : formatQuantidade(falta, n.unidade);
-};
 
 /**
  * Resumo do que falta, com a única ação terracota da página.

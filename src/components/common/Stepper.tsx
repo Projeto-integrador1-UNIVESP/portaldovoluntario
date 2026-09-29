@@ -1,4 +1,5 @@
 import { AnimatePresence, m } from "motion/react";
+import { EASE_SUAVE } from "@/lib/movimento";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -15,7 +16,6 @@ type StepperProps = {
   className?: string;
 };
 
-const SUAVE = [0.16, 1, 0.3, 1] as const;
 
 /**
  * Indicador de progresso de um fluxo de várias etapas.
@@ -56,7 +56,7 @@ export function Stepper({ passos, atual, className }: StepperProps) {
                     className="absolute inset-0 origin-left rounded-full bg-primary"
                     initial={false}
                     animate={{ scaleX: concluido || ativo ? 1 : 0 }}
-                    transition={{ duration: 0.42, ease: SUAVE }}
+                    transition={{ duration: 0.42, ease: EASE_SUAVE }}
                   />
                 </span>
               )}
@@ -73,7 +73,7 @@ export function Stepper({ passos, atual, className }: StepperProps) {
                   <m.span
                     layoutId="stepper-passo-atual"
                     className="absolute inset-0 rounded-full bg-primary"
-                    transition={{ duration: 0.28, ease: SUAVE }}
+                    transition={{ duration: 0.28, ease: EASE_SUAVE }}
                     aria-hidden="true"
                   />
                 )}
@@ -106,7 +106,7 @@ export function Stepper({ passos, atual, className }: StepperProps) {
             initial={{ x: 20 }}
             animate={{ x: 0 }}
             exit={{ x: -20 }}
-            transition={{ duration: 0.28, ease: SUAVE }}
+            transition={{ duration: 0.28, ease: EASE_SUAVE }}
           >
             Passo <span className="numero">{indice}</span> de{" "}
             <span className="numero">{total}</span> · {passoAtual.rotulo}

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import "@/lib/zodPtBr";
-import { CAUSAS } from "@/lib/constants/causas";
+import { CAUSAS, ehCausa } from "@/lib/constants/causas";
 import { MENSAGENS } from "@/lib/copy";
 
 /**
@@ -12,8 +12,7 @@ import { MENSAGENS } from "@/lib/copy";
  */
 const urlOpcional = z.union([z.literal(""), z.string().trim().url(MENSAGENS.url)]).optional();
 
-export const projetoSchema = z
-  .object({
+const camposDoProjeto = z.object({
     nome_projeto: z
       .string()
       .trim()
@@ -31,22 +30,23 @@ export const projetoSchema = z
       .union([z.literal(""), z.enum(CAUSAS, { errorMap: () => ({ message: "Escolha uma causa da lista" }) })])
       .optional(),
     capa: urlOpcional,
-  })
-  .refine((d) => !d.data_inicio || !d.data_fim || d.data_fim >= d.data_inicio, {
+  });
+
+/** O término não pode vir antes do início. Vale para a ONG e para o admin. */
+const comDatasEmOrdem = <T extends z.ZodTypeAny>(schema: T) =>
+  schema.refine((d: { data_inicio?: string; data_fim?: string }) => !d.data_inicio || !d.data_fim || d.data_fim >= d.data_inicio, {
     path: ["data_fim"],
     message: MENSAGENS.dataFimAntesDoInicio,
   });
 
+export const projetoSchema = comDatasEmOrdem(camposDoProjeto);
+
 /** No admin, o projeto também precisa da ONG responsável. */
-export const projetoAdminSchema = projetoSchema.innerType().extend({
-  id_ong: z.string().min(1, "Escolha a ONG responsável"),
-}).refine((d) => !d.data_inicio || !d.data_fim || d.data_fim >= d.data_inicio, {
-  path: ["data_fim"],
-  message: MENSAGENS.dataFimAntesDoInicio,
-});
+export const projetoAdminSchema = comDatasEmOrdem(
+  camposDoProjeto.extend({ id_ong: z.string().min(1, "Escolha a ONG responsável") }),
+);
 
 export type ProjetoInput = z.infer<typeof projetoSchema>;
-export type ProjetoAdminInput = z.infer<typeof projetoAdminSchema>;
 
 export const PROJETO_VAZIO: ProjetoInput = {
   nome_projeto: "",
@@ -93,11 +93,9 @@ export function projetoParaFormulario(linha: {
     data_inicio: linha.data_inicio ?? "",
     data_fim: linha.data_fim ?? "",
     cidade: linha.cidade ?? "",
-    causa: (CAUSAS as readonly string[]).includes(linha.causa ?? "") ? (linha.causa as ProjetoInput["causa"]) : "",
+    causa: ehCausa(linha.causa) ? linha.causa : "",
     capa: linha.capa_url ?? linha.img_url ?? "",
   };
 }
 
-/** A capa a exibir: a coluna nova, com a antiga como reserva. */
-export const capaDoProjeto = (linha: { capa_url?: string | null; img_url?: string | null }) =>
-  linha.capa_url ?? linha.img_url ?? null;
+export { capaDoProjeto } from "@/lib/capaDoProjeto";

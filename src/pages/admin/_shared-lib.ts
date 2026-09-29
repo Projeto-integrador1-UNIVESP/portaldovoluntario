@@ -18,6 +18,9 @@ export { descreverDoacao, nomeDoDoador, rotuloDoTipo, situacaoDaDoacao } from "@
 /** Tamanho de página das listas que podem crescer (doações, usuários, ...). */
 export const POR_PAGINA = 25;
 
+/** Rótulos do interruptor de visibilidade no site. */
+export const VISIBILIDADE = [TERMOS.visivel, TERMOS.oculto] as const;
+
 /**
  * Executa uma consulta de contagem (`count: "exact", head: true`) e devolve só o
  * número. O servidor não manda linha nenhuma nesse modo.

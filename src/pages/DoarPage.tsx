@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { EASE_SUAVE } from "@/lib/movimento";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -24,13 +25,11 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { formatCurrency, formatDate, formatPrazo, maskCurrency, parseCurrency } from "@/lib/format";
 import { mensagemAmigavel } from "@/lib/erros";
-import { A_MARCA, CTA } from "@/lib/copy";
+import { CTA, A_MARCA_INICIAL } from "@/lib/copy";
 import { cn } from "@/lib/utils";
 import { doacaoAvulsaSchema, VALORES_SUGERIDOS, type DoacaoAvulsaInput } from "@/lib/schemas/doacao";
 
 const EH_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const SUAVE = [0.16, 1, 0.3, 1] as const;
-const AMarca = A_MARCA.charAt(0).toUpperCase() + A_MARCA.slice(1);
 
 /**
  * Doação para a organização, sem projeto escolhido. É o destino de links
@@ -304,7 +303,7 @@ export default function DoarPage() {
                         initial={{ x: 32, opacity: 0 }}
                         animate={{ x: 0, opacity: 1 }}
                         exit={{ x: -24, opacity: 0 }}
-                        transition={{ duration: 0.28, ease: SUAVE }}
+                        transition={{ duration: 0.28, ease: EASE_SUAVE }}
                       >
                         <h2 id="titulo-pix" className="font-display text-xl font-semibold">Pague com Pix</h2>
                         <ol className="mt-5 space-y-1.5 text-sm text-muted-foreground">
@@ -431,7 +430,7 @@ export default function DoarPage() {
 
             <Callout tom="confianca" titulo="O dinheiro vai direto para a conta da ONG">
               {ong.pix?.trim() ? "O Pix sai da sua conta direto para " : "A transferência vai direto para "}
-              <strong className="font-medium text-foreground">{nomeRecebedor}</strong>. {AMarca} não
+              <strong className="font-medium text-foreground">{nomeRecebedor}</strong>. {A_MARCA_INICIAL} não
               processa o pagamento nem cobra taxa. Antes de confirmar no app do banco, confira se o
               nome do recebedor é esse.
             </Callout>

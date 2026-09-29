@@ -3,17 +3,11 @@ import { ArrowRight, Flame } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Capa } from "@/components/common/Capa";
 import { ProgressBar } from "@/components/common/ProgressBar";
-import { formatPrazo, formatCurrency, formatQuantidade } from "@/lib/format";
+import { formatPrazo, quantoFalta } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { NecessidadeUrgente } from "@/hooks/queries/useHome";
 
-/** "77 kg" ou "R$ 1.200,00": o que ainda falta para a meta. */
-export function quantoFalta(n: NecessidadeUrgente) {
-  const falta = Math.max(0, n.meta - n.arrecadado);
-  return n.tipo === "dinheiro"
-    ? formatCurrency(falta)
-    : formatQuantidade(falta, n.unidade);
-}
+export { quantoFalta };
 
 /** Rota de doação já apontando para este pedido. */
 export function linkParaDoar(n: NecessidadeUrgente) {
