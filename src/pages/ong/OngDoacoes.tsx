@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, Clock, DollarSign, Package, Undo2, X } from "lucide-react";
+import { Check, Clock, DollarSign, Loader2, Package, Undo2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,6 +14,10 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Seo } from "@/components/common/Seo";
+import { Stat } from "@/components/common/Stat";
+import { Callout } from "@/components/common/Callout";
+import { SeloConfirmacao } from "@/components/common/SeloConfirmacao";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ErrorState } from "@/components/common/ErrorState";
 import { formatCurrency, formatDateTime } from "@/lib/format";
@@ -41,7 +45,7 @@ export default function OngDoacoes() {
       const { data: doacoes, error } = await supabase
         .from("doacoes")
         .select(
-          "id, valor, quantidade, status, tipo_doacao, data_doacao, doador_nome, doador_email, anonima, forma_entrega, id_usuario, id_projeto, id_necessidade",
+          "id, valor, quantidade, status, tipo_doacao, data_doacao, confirmada_em, doador_nome, doador_email, anonima, forma_entrega, id_usuario, id_projeto, id_necessidade",
         )
         .eq("id_ong", ongId!)
         .order("data_doacao", { ascending: false });
@@ -115,6 +119,10 @@ export default function OngDoacoes() {
     onError: (erro: Error) => toast.error(erro.message || "Não foi possível atualizar a doação."),
   });
 
+  // Em ação que mexe com dinheiro, travar a tela inteira esconde qual linha está
+  // sendo alterada: só a doação clicada mostra o carregamento.
+  const linhaEmAndamento = alterarStatus.isPending ? alterarStatus.variables?.id : null;
+
   const porStatus = useMemo(() => {
     const vazio = { pendente: [], confirmada: [], cancelada: [] } as Record<StatusDoacao, typeof data>;
     for (const d of data ?? []) (vazio[d.status as StatusDoacao] ??= []).push(d as never);
@@ -123,30 +131,58 @@ export default function OngDoacoes() {
 
   const totalConfirmado = (porStatus.confirmada ?? []).reduce((s, d) => s + d.valor, 0);
   const totalPendente = (porStatus.pendente ?? []).reduce((s, d) => s + d.valor, 0);
+  const qtdPendente = porStatus.pendente?.length ?? 0;
 
   const lista = porStatus[aba] ?? [];
 
   return (
     <DashboardLayout type="ong">
+      <Seo title="Doações" noIndex />
       <PageHeader
         title="Doações"
-        description={
-          isPending
-            ? "Carregando…"
-            : `${formatCurrency(totalConfirmado)} confirmados · ${formatCurrency(totalPendente)} aguardando sua confirmação`
-        }
-        icon={<DollarSign className="h-6 w-6" />}
+        description="Confirme o que chegou. É a confirmação que move a barra de progresso no site."
+        icon={<DollarSign className="h-6 w-6" aria-hidden="true" />}
       />
 
       {isError ? (
         <ErrorState title="Não foi possível carregar as doações" onRetry={() => refetch()} />
       ) : (
         <>
-          <Tabs value={aba} onValueChange={(v) => setAba(v as StatusDoacao)} className="mb-4">
+          {/* O resumo financeiro era a descrição cinza do cabeçalho, com o peso
+              visual de uma legenda. É o número que a gestora vem ver. */}
+          {isPending ? (
+            <div className="grid gap-4 sm:grid-cols-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-24 w-full rounded-lg" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Stat
+                valor={qtdPendente}
+                rotulo={
+                  qtdPendente === 1
+                    ? "doação aguardando sua confirmação"
+                    : "doações aguardando sua confirmação"
+                }
+                icone={Clock}
+                destaque={qtdPendente > 0}
+              />
+              <Stat
+                valor={formatCurrency(totalPendente)}
+                rotulo="em dinheiro ainda não confirmado"
+              />
+              <Stat valor={formatCurrency(totalConfirmado)} rotulo="em dinheiro já confirmado" />
+            </div>
+          )}
+
+          <Tabs
+            value={aba}
+            onValueChange={(v) => setAba(v as StatusDoacao)}
+            className="mt-6"
+          >
             <TabsList>
-              <TabsTrigger value="pendente">
-                Aguardando ({porStatus.pendente?.length ?? 0})
-              </TabsTrigger>
+              <TabsTrigger value="pendente">Aguardando ({qtdPendente})</TabsTrigger>
               <TabsTrigger value="confirmada">
                 Confirmadas ({porStatus.confirmada?.length ?? 0})
               </TabsTrigger>
@@ -156,14 +192,15 @@ export default function OngDoacoes() {
             </TabsList>
           </Tabs>
 
-          {aba === "pendente" && (porStatus.pendente?.length ?? 0) > 0 && (
-            <p className="mb-4 text-sm text-muted-foreground">
-              O progresso das necessidades só aumenta depois que você confirma o
-              recebimento. Confirme apenas o que chegou de fato.
-            </p>
+          {aba === "pendente" && qtdPendente > 0 && (
+            <Callout tom="confianca" className="mt-4">
+              O progresso das necessidades só aumenta depois que você confirma o recebimento.
+              Confirme apenas o que chegou de fato — é essa checagem que faz os números da
+              plataforma valerem alguma coisa.
+            </Callout>
           )}
 
-          <Card>
+          <Card className="mt-4 overflow-hidden">
             <CardContent className="p-0">
               {isPending ? (
                 <div className="space-y-3 p-6">
@@ -184,8 +221,13 @@ export default function OngDoacoes() {
                     }
                     description={
                       aba === "pendente"
-                        ? "Quando alguém doar, a doação aparece aqui para você confirmar."
-                        : undefined
+                        ? "Quando alguém doar, a doação aparece aqui para você confirmar. Publicar o que está faltando é o que traz doação específica."
+                        : "Assim que você confirmar um recebimento, ele aparece nesta aba."
+                    }
+                    action={
+                      aba === "pendente"
+                        ? { label: "Publicar o que está faltando", to: "/ong/necessidades" }
+                        : { label: "Ver a fila de confirmação", onClick: () => setAba("pendente") }
                     }
                   />
                 </div>
@@ -201,94 +243,120 @@ export default function OngDoacoes() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {lista.map((d) => (
-                      <TableRow key={d.id}>
-                        <TableCell>
-                          {d.anonima ? (
-                            <span className="text-muted-foreground">Doador anônimo</span>
-                          ) : (
-                            <>
-                              <div className="font-medium">
-                                {d.doador?.nome || d.doador_nome || "—"}
-                              </div>
+                    {lista.map((d) => {
+                      const carregando = linhaEmAndamento === d.id;
+
+                      return (
+                        <TableRow key={d.id}>
+                          <TableCell>
+                            {d.anonima ? (
+                              <span className="text-muted-foreground">Doador anônimo</span>
+                            ) : (
+                              <>
+                                <div className="font-medium">
+                                  {d.doador?.nome || d.doador_nome || "—"}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {d.doador?.email || d.doador_email || ""}
+                                </div>
+                              </>
+                            )}
+                          </TableCell>
+
+                          <TableCell>
+                            {d.necessidade ? (
+                              <span className="inline-flex items-center gap-1.5">
+                                <Package className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                                {d.quantidade} {d.necessidade.unidade ?? ""} de {d.necessidade.nome}
+                              </span>
+                            ) : (
+                              <span className="font-medium tabular-nums">
+                                {formatCurrency(d.valor)}
+                              </span>
+                            )}
+                            {d.forma_entrega && (
                               <div className="text-xs text-muted-foreground">
-                                {d.doador?.email || d.doador_email || ""}
+                                {d.forma_entrega === "levar" ? "Vai levar no local" : "Pediu coleta"}
                               </div>
-                            </>
-                          )}
-                        </TableCell>
+                            )}
+                          </TableCell>
 
-                        <TableCell>
-                          {d.necessidade ? (
-                            <span className="inline-flex items-center gap-1.5">
-                              <Package className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                              {d.quantidade} {d.necessidade.unidade ?? ""} de {d.necessidade.nome}
-                            </span>
-                          ) : (
-                            <span className="font-medium">{formatCurrency(d.valor)}</span>
-                          )}
-                          {d.forma_entrega && (
-                            <div className="text-xs text-muted-foreground">
-                              {d.forma_entrega === "levar" ? "Vai levar no local" : "Pediu coleta"}
-                            </div>
-                          )}
-                        </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {d.projeto?.nome_projeto ?? "Doação geral"}
+                          </TableCell>
 
-                        <TableCell className="text-sm text-muted-foreground">
-                          {d.projeto?.nome_projeto ?? "Doação geral"}
-                        </TableCell>
+                          <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                            {formatDateTime(d.data_doacao)}
+                          </TableCell>
 
-                        <TableCell className="text-sm text-muted-foreground">
-                          {formatDateTime(d.data_doacao)}
-                        </TableCell>
-
-                        <TableCell className="text-right">
-                          {d.status === "pendente" ? (
-                            <div className="flex justify-end gap-2">
-                              <Button
-                                size="sm"
-                                disabled={alterarStatus.isPending}
-                                onClick={() => alterarStatus.mutate({ id: d.id, status: "confirmada" })}
-                              >
-                                <Check className="mr-1 h-4 w-4" aria-hidden="true" />
-                                Recebi
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                disabled={alterarStatus.isPending}
-                                onClick={() => alterarStatus.mutate({ id: d.id, status: "cancelada" })}
-                              >
-                                <X className="mr-1 h-4 w-4" aria-hidden="true" />
-                                Não chegou
-                              </Button>
-                            </div>
-                          ) : (
-                            <div className="flex items-center justify-end gap-2">
-                              <Badge
-                                className={
-                                  d.status === "confirmada"
-                                    ? "bg-success text-success-foreground"
-                                    : undefined
-                                }
-                                variant={d.status === "confirmada" ? "default" : "secondary"}
-                              >
-                                {d.status === "confirmada" ? "Confirmada" : "Não recebida"}
-                              </Badge>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                disabled={alterarStatus.isPending}
-                                onClick={() => alterarStatus.mutate({ id: d.id, status: "pendente" })}
-                              >
-                                <Undo2 className="mr-1 h-4 w-4" aria-hidden="true" />
-                                Desfazer
-                              </Button>
-                            </div>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                          <TableCell className="text-right">
+                            {d.status === "pendente" ? (
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  size="sm"
+                                  className="pressionavel"
+                                  disabled={alterarStatus.isPending}
+                                  onClick={() =>
+                                    alterarStatus.mutate({ id: d.id, status: "confirmada" })
+                                  }
+                                >
+                                  {carregando ? (
+                                    <Loader2 className="mr-1 h-4 w-4 animate-spin" aria-hidden="true" />
+                                  ) : (
+                                    <Check className="mr-1 h-4 w-4" aria-hidden="true" />
+                                  )}
+                                  Recebi
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="pressionavel"
+                                  disabled={alterarStatus.isPending}
+                                  onClick={() =>
+                                    alterarStatus.mutate({ id: d.id, status: "cancelada" })
+                                  }
+                                >
+                                  {carregando ? (
+                                    <Loader2 className="mr-1 h-4 w-4 animate-spin" aria-hidden="true" />
+                                  ) : (
+                                    <X className="mr-1 h-4 w-4" aria-hidden="true" />
+                                  )}
+                                  Não chegou
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="flex flex-wrap items-center justify-end gap-2">
+                                {d.status !== "confirmada" ? (
+                                  <Badge variant="secondary">Não recebida</Badge>
+                                ) : d.confirmada_em ? (
+                                  <SeloConfirmacao confirmadaEm={d.confirmada_em} />
+                                ) : (
+                                  // Doação confirmada antes de existir a coluna de data.
+                                  <Badge className="bg-success text-success-foreground">
+                                    Confirmada
+                                  </Badge>
+                                )}
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  disabled={alterarStatus.isPending}
+                                  onClick={() =>
+                                    alterarStatus.mutate({ id: d.id, status: "pendente" })
+                                  }
+                                >
+                                  {carregando ? (
+                                    <Loader2 className="mr-1 h-4 w-4 animate-spin" aria-hidden="true" />
+                                  ) : (
+                                    <Undo2 className="mr-1 h-4 w-4" aria-hidden="true" />
+                                  )}
+                                  Desfazer
+                                </Button>
+                              </div>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               )}

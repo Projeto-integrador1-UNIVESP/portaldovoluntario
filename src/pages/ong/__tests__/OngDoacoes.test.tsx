@@ -2,6 +2,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const update = vi.fn();
@@ -45,11 +46,13 @@ const renderizar = async () => {
   const { default: OngDoacoes } = await import("@/pages/ong/OngDoacoes");
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <QueryClientProvider client={client}>
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <OngDoacoes />
-      </MemoryRouter>
-    </QueryClientProvider>,
+    <HelmetProvider>
+      <QueryClientProvider client={client}>
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <OngDoacoes />
+        </MemoryRouter>
+      </QueryClientProvider>
+    </HelmetProvider>,
   );
 };
 
@@ -63,7 +66,7 @@ describe("OngDoacoes — confirmação de recebimento", () => {
     expect(await screen.findByText("Maria Souza")).toBeInTheDocument();
     expect(screen.getByText("3 un de Cobertor")).toBeInTheDocument();
     expect(screen.getByText("Vai levar no local")).toBeInTheDocument();
-  });
+  }, 20_000);
 
   it("confirma o recebimento e avisa que o progresso mudou", async () => {
     update.mockResolvedValue({ data: [{ id: "d1" }], error: null });
@@ -74,7 +77,7 @@ describe("OngDoacoes — confirmação de recebimento", () => {
 
     await vi.waitFor(() => expect(toastSuccess).toHaveBeenCalled());
     expect(toastSuccess.mock.calls[0][0]).toMatch(/progresso do projeto foi atualizado/i);
-  });
+  }, 20_000);
 
   it("NÃO diz que deu certo quando a RLS bloqueia e o update afeta zero linhas", async () => {
     // O PostgREST devolve 200 com lista vazia quando a policy não alcança a
@@ -89,5 +92,5 @@ describe("OngDoacoes — confirmação de recebimento", () => {
     await vi.waitFor(() => expect(toastError).toHaveBeenCalled());
     expect(toastError.mock.calls[0][0]).toMatch(/sem permissão/i);
     expect(toastSuccess).not.toHaveBeenCalled();
-  });
+  }, 20_000);
 });

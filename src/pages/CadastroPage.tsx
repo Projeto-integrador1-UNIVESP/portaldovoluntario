@@ -2,14 +2,14 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useForm, type UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Building2, Check, Eye, EyeOff, HandHeart, Heart, Loader2, X } from "lucide-react";
+import { ArrowLeft, Building2, Check, Eye, EyeOff, HandHeart, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle,
+  Card, CardContent, CardDescription, CardFooter, CardHeader,
 } from "@/components/ui/card";
 import {
   Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage,
@@ -17,7 +17,9 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { PublicShell } from "@/components/layout/PublicShell";
 import { Seo } from "@/components/common/Seo";
+import { Callout } from "@/components/common/Callout";
 import { regrasDeSenha } from "@/lib/schemas/auth";
 import {
   cadastroDoadorSchema, cadastroOngSchema,
@@ -113,7 +115,11 @@ function CamposDeIdentificacao({
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                 aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
               >
-                {mostrarSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {mostrarSenha ? (
+                  <EyeOff className="h-4 w-4" aria-hidden="true" />
+                ) : (
+                  <Eye className="h-4 w-4" aria-hidden="true" />
+                )}
               </button>
             </div>
             <ChecklistDeSenha senha={field.value || ""} />
@@ -198,17 +204,18 @@ function FormularioDoador({ aoTrocarTipo }: { aoTrocarTipo: () => void }) {
         />
         <AceiteDosTermos form={form} />
 
-        <p className="text-xs text-muted-foreground">
-          Pedimos telefone e endereço só quando forem necessários — por exemplo, para
-          agendar a coleta de uma doação.
-        </p>
+        <Callout tom="info">
+          Só isso. Telefone e endereço a gente pede depois, e apenas quando fizerem
+          diferença — por exemplo, para agendar a coleta de uma doação.
+        </Callout>
 
-        <Button type="submit" className="w-full" size="lg" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        <Button type="submit" className="pressionavel w-full" size="lg" disabled={form.formState.isSubmitting}>
+          {form.formState.isSubmitting && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
           Criar conta
         </Button>
         <Button type="button" variant="ghost" className="w-full" onClick={aoTrocarTipo}>
-          ← Trocar tipo de conta
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          Trocar tipo de conta
         </Button>
       </form>
     </Form>
@@ -443,12 +450,13 @@ function FormularioOng({ aoTrocarTipo }: { aoTrocarTipo: () => void }) {
 
         <AceiteDosTermos form={form} />
 
-        <Button type="submit" className="w-full" size="lg" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        <Button type="submit" className="pressionavel w-full" size="lg" disabled={form.formState.isSubmitting}>
+          {form.formState.isSubmitting && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
           Cadastrar ONG
         </Button>
         <Button type="button" variant="ghost" className="w-full" onClick={aoTrocarTipo}>
-          ← Trocar tipo de conta
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          Trocar tipo de conta
         </Button>
       </form>
     </Form>
@@ -480,29 +488,24 @@ export default function CadastroPage() {
   }, [params]);
 
   const moldura = (titulo: string, descricao: React.ReactNode, conteudo: React.ReactNode, largura: string) => (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent p-4">
+    <PublicShell>
       <Seo title="Criar conta" description="Crie sua conta para doar, acompanhar projetos e ser voluntário." />
-      <Card className={`w-full ${largura}`}>
-        <CardHeader className="text-center">
-          <Link
-            to="/"
-            className="mb-4 inline-flex items-center justify-center gap-2"
-            aria-label="Solidariedade, página inicial"
-          >
-            <Heart className="h-8 w-8 text-primary" aria-hidden="true" />
-          </Link>
-          <CardTitle className="break-words text-2xl">{titulo}</CardTitle>
-          <CardDescription>{descricao}</CardDescription>
-        </CardHeader>
-        <CardContent>{conteudo}</CardContent>
-        <CardFooter className="justify-center">
-          <p className="text-sm text-muted-foreground">
-            Já tem conta?{" "}
-            <Link to="/login" className="text-primary underline underline-offset-2">Entrar</Link>
-          </p>
-        </CardFooter>
-      </Card>
-    </div>
+      <div className="container flex min-h-[70vh] items-center justify-center py-14">
+        <Card className={`w-full rounded-xl shadow-sutil ${largura}`}>
+          <CardHeader className="text-center">
+            <h1 className="break-words font-display text-2xl font-bold">{titulo}</h1>
+            <CardDescription>{descricao}</CardDescription>
+          </CardHeader>
+          <CardContent>{conteudo}</CardContent>
+          <CardFooter className="justify-center">
+            <p className="text-sm text-muted-foreground">
+              Já tem conta?{" "}
+              <Link to="/login" className="text-primary underline underline-offset-2">Entrar</Link>
+            </p>
+          </CardFooter>
+        </Card>
+      </div>
+    </PublicShell>
   );
 
   if (!tipoDeConta) {
@@ -515,10 +518,10 @@ export default function CadastroPage() {
             key={opcao.chave}
             type="button"
             onClick={() => setTipoDeConta(opcao.chave)}
-            className="min-h-40 rounded-lg border-2 border-border p-5 text-left transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-md"
+            className="elevavel min-h-40 rounded-xl border bg-card p-5 text-left shadow-sutil hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <opcao.icone className="mb-3 h-8 w-8 text-primary" aria-hidden="true" />
-            <div className="mb-1 break-words font-semibold">{opcao.titulo}</div>
+            <p className="mb-1 break-words font-semibold">{opcao.titulo}</p>
             <p className="text-sm text-muted-foreground">{opcao.descricao}</p>
           </button>
         ))}

@@ -71,6 +71,19 @@
     transform: scale(0.97);
   }
 
+  /* Alvo de toque de 44px mesmo quando o visual é menor, sem mexer no layout. */
+  .alvo-confortavel {
+    position: relative;
+  }
+  .alvo-confortavel::after {
+    content: "";
+    position: absolute;
+    inset: 50% 50%;
+    width: 44px;
+    height: 44px;
+    transform: translate(-50%, -50%);
+  }
+
   /* Card que se levanta levemente ao passar o mouse. */
   .elevavel {
     transition:

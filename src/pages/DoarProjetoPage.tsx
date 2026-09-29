@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, type UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, HandCoins, Loader2, Package } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Building2, HandCoins, Loader2, MapPin, Package } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,6 +13,8 @@ import { PageSkeleton } from "@/components/common/PageSkeleton";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ProgressBar } from "@/components/common/ProgressBar";
 import { PixQrCode } from "@/components/common/PixQrCode";
+import { Callout } from "@/components/common/Callout";
+import { Stepper, type PassoDoFluxo } from "@/components/common/Stepper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -22,19 +24,36 @@ import { Label } from "@/components/ui/label";
 import {
   Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage,
 } from "@/components/ui/form";
-import { useProjeto } from "@/hooks/queries/useProjeto";
-import { maskCurrency, parseCurrency, formatCurrency } from "@/lib/format";
+import { useProjeto, type OngDoProjeto } from "@/hooks/queries/useProjeto";
+import { maskCurrency, parseCurrency } from "@/lib/format";
 import {
   doacaoDinheiroSchema, doacaoItemSchema, VALORES_SUGERIDOS,
-  type DoacaoDinheiroInput, type DoacaoItemInput,
+  type DoacaoDinheiroInput, type DoacaoItemInput, type IdentificacaoDoador,
 } from "@/lib/schemas/doacao";
 
+const PASSOS_DINHEIRO: PassoDoFluxo[] = [
+  { id: "destino", rotulo: "O que doar" },
+  { id: "valor", rotulo: "Quanto doar" },
+  { id: "doador", rotulo: "Seus dados" },
+  { id: "pix", rotulo: "Pagar com Pix" },
+];
+
+const PASSOS_ITEM: PassoDoFluxo[] = [
+  { id: "destino", rotulo: "O que doar" },
+  { id: "quantidade", rotulo: "Quanto e como entregar" },
+  { id: "doador", rotulo: "Seus dados" },
+];
+
 /**
- * Fluxo de doação em uma página só, com os passos visíveis.
+ * Fluxo de doação em uma página só, com o passo atual sinalizado no `Stepper`.
  *
  * O login deixa de ser exigido: antes o visitante preenchia tudo e só então
  * descobria que precisava criar conta. Agora bastam nome e e-mail, e a conta
  * fica como sugestão na tela de agradecimento.
+ *
+ * O aviso de que o dinheiro vai direto para a ONG abre a tela de propósito:
+ * essa informação só existia nos Termos de Uso, e é ela que decide se a pessoa
+ * confia o suficiente para transferir.
  */
 export default function DoarProjetoPage() {
   const { slug } = useParams();
@@ -43,7 +62,10 @@ export default function DoarProjetoPage() {
   const { user, profile } = useAuth();
 
   const { data: projeto, isPending, isError } = useProjeto(slug);
-  const [idNecessidade, setIdNecessidade] = useState<string | null>(params.get("necessidade"));
+  const necessidadeDaUrl = params.get("necessidade");
+  const [idNecessidade, setIdNecessidade] = useState<string | null>(necessidadeDaUrl);
+  // Quem chega de um link com `?necessidade` já respondeu o passo 1.
+  const [destinoEscolhido, setDestinoEscolhido] = useState(Boolean(necessidadeDaUrl));
   const [enviando, setEnviando] = useState(false);
 
   const necessidade = useMemo(
@@ -107,8 +129,27 @@ export default function DoarProjetoPage() {
   }
 
   const valorEmReais = formDinheiro.watch("valor");
+  const quantidade = formItem.watch("quantidade");
   const nomeRecebedor =
     projeto.ong?.pix_nome_recebedor?.trim() || projeto.ong?.nome || "Organização";
+  const temPix = Boolean(projeto.ong?.pix?.trim());
+
+  const identificado =
+    (formDinheiro.watch("doador_nome") ?? "").trim().length >= 3 &&
+    (formDinheiro.watch("doador_email") ?? "").includes("@");
+
+  // A primeira opção já vem marcada, então quem aceita o padrão nunca toca no
+  // rádio: preencher valor ou quantidade também responde o passo 1.
+  const respondeuDestino = destinoEscolhido || valorEmReais > 0 || Boolean(quantidade);
+
+  const passos = ehItem ? PASSOS_ITEM : PASSOS_DINHEIRO;
+  const passoAtual = !respondeuDestino
+    ? 1
+    : ehItem
+      ? (quantidade ? 3 : 2)
+      : valorEmReais > 0
+        ? (identificado ? 4 : 3)
+        : 2;
 
   return (
     <PublicShell>
@@ -118,7 +159,8 @@ export default function DoarProjetoPage() {
         noIndex
       />
 
-      <div className="container max-w-2xl py-8">
+      {/* pb-28 no mobile reserva o espaço da barra fixa com a ação principal */}
+      <div className="container max-w-2xl py-8 pb-28 md:pb-8">
         <Button variant="ghost" size="sm" asChild className="mb-4 -ml-2">
           <Link to={`/projetos/${projeto.slug ?? projeto.id}`}>
             <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
@@ -126,18 +168,53 @@ export default function DoarProjetoPage() {
           </Link>
         </Button>
 
-        <h1 className="text-2xl font-bold">Doar para {projeto.nome_projeto}</h1>
-        <p className="mt-1 text-muted-foreground">{projeto.ong?.nome}</p>
+        <h1 className="font-display text-2xl font-bold tracking-[-0.02em]">
+          Doar para {projeto.nome_projeto}
+        </h1>
+
+        {projeto.ong && <SeloDaOng ong={projeto.ong} />}
+
+        <Callout
+          tom="confianca"
+          titulo={
+            ehItem
+              ? "A entrega é combinada direto com a organização"
+              : "O dinheiro vai direto para a conta da ONG"
+          }
+          className="mt-4"
+        >
+          {ehItem ? (
+            <>
+              A Solidariedade não recebe nem guarda os itens: você entrega para{" "}
+              <strong className="font-medium text-foreground">{projeto.ong?.nome}</strong>, sem
+              taxa nenhuma. Aqui você só registra a doação para a ONG poder confirmar o
+              recebimento.
+            </>
+          ) : (
+            <>
+              {temPix ? "O Pix sai da sua conta direto para " : "A transferência vai direto para "}
+              <strong className="font-medium text-foreground">{nomeRecebedor}</strong>. A
+              Solidariedade não processa o pagamento, não retém valor nenhum e não cobra taxa —
+              nem de você, nem da organização. Antes de confirmar, confira se o nome do recebedor
+              no app do seu banco é esse.
+            </>
+          )}
+        </Callout>
+
+        <Stepper passos={passos} atual={passoAtual} className="mt-6" />
 
         {/* Passo 1 — o que doar */}
-        <Card className="mt-6">
+        <Card className="mt-4">
           <CardHeader>
-            <CardTitle className="text-lg">1. O que você quer doar?</CardTitle>
+            <CardTitle className="text-lg">O que você quer doar?</CardTitle>
           </CardHeader>
           <CardContent>
             <RadioGroup
               value={idNecessidade ?? "dinheiro-livre"}
-              onValueChange={(v) => setIdNecessidade(v === "dinheiro-livre" ? null : v)}
+              onValueChange={(v) => {
+                setIdNecessidade(v === "dinheiro-livre" ? null : v);
+                setDestinoEscolhido(true);
+              }}
               className="space-y-2"
             >
               <div className="flex items-start gap-3 rounded-lg border p-3">
@@ -192,7 +269,7 @@ export default function DoarProjetoPage() {
             >
               <Card className="mt-4">
                 <CardHeader>
-                  <CardTitle className="text-lg">2. Quanto e como entregar</CardTitle>
+                  <CardTitle className="text-lg">Quanto e como entregar</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <FormField
@@ -264,12 +341,11 @@ export default function DoarProjetoPage() {
                 </CardContent>
               </Card>
 
-              <CamposDeIdentificacao form={formItem} />
+              <CamposDeIdentificacao form={formItem as unknown as UseFormReturn<IdentificacaoDoador>} />
 
-              <Button type="submit" size="lg" variant="cta" className="mt-4 w-full" disabled={enviando}>
-                {enviando && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Registrar doação
-              </Button>
+              <AvisoDeConfirmacao />
+
+              <BarraDeAcao rotulo="Registrar minha doação" enviando={enviando} />
             </form>
           </Form>
         ) : (
@@ -288,20 +364,27 @@ export default function DoarProjetoPage() {
             >
               <Card className="mt-4">
                 <CardHeader>
-                  <CardTitle className="text-lg">2. Quanto você quer doar?</CardTitle>
+                  <CardTitle className="text-lg">Quanto você quer doar?</CardTitle>
+                  <CardDescription>
+                    Escolha um valor ou digite outro. Não existe valor mínimo.
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex flex-wrap gap-2">
+                  {/* Sugestões em ordem crescente: começar por um valor alto ancora
+                      a decisão para cima e reduz a chance de a pessoa doar. */}
+                  <div className="grid grid-cols-3 gap-2">
                     {VALORES_SUGERIDOS.map((v) => (
                       <Button
                         key={v}
                         type="button"
                         variant={valorEmReais === v ? "default" : "outline"}
+                        aria-pressed={valorEmReais === v}
+                        className="pressionavel tabular-nums"
                         onClick={() =>
                           formDinheiro.setValue("valor", v, { shouldValidate: true })
                         }
                       >
-                        {formatCurrency(v)}
+                        R$ <span className="tabular-nums">{v}</span>
                       </Button>
                     ))}
                   </div>
@@ -316,6 +399,7 @@ export default function DoarProjetoPage() {
                           <Input
                             inputMode="numeric"
                             placeholder="R$ 0,00"
+                            className="tabular-nums"
                             value={field.value ? maskCurrency(String(Math.round(field.value * 100))) : ""}
                             onChange={(e) => field.onChange(parseCurrency(e.target.value) || undefined)}
                           />
@@ -327,12 +411,12 @@ export default function DoarProjetoPage() {
                 </CardContent>
               </Card>
 
-              <CamposDeIdentificacao form={formDinheiro} />
+              <CamposDeIdentificacao form={formDinheiro as unknown as UseFormReturn<IdentificacaoDoador>} />
 
               {valorEmReais > 0 && (
                 <Card className="mt-4">
                   <CardHeader>
-                    <CardTitle className="text-lg">4. Pague com Pix</CardTitle>
+                    <CardTitle className="text-lg">Pague com Pix</CardTitle>
                     <CardDescription>
                       Faça a transferência no app do seu banco e depois registre a doação
                       aqui, para a ONG conseguir confirmar o recebimento.
@@ -355,10 +439,19 @@ export default function DoarProjetoPage() {
                 </Card>
               )}
 
-              <Button type="submit" size="lg" variant="cta" className="mt-4 w-full" disabled={enviando}>
-                {enviando && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Já paguei, registrar doação
-              </Button>
+              <AvisoDeConfirmacao />
+
+              {/* Sem valor não há QR Code na tela: liberar o registro aqui criaria uma
+                  doação pendente que a ONG teria de perseguir e cancelar. */}
+              <BarraDeAcao
+                rotulo={
+                  valorEmReais > 0
+                    ? "Já paguei, registrar minha doação"
+                    : "Escolha um valor para continuar"
+                }
+                desabilitado={!(valorEmReais > 0)}
+                enviando={enviando}
+              />
             </form>
           </Form>
         )}
@@ -368,12 +461,97 @@ export default function DoarProjetoPage() {
   );
 }
 
-/** Passo 3, igual para item e dinheiro. */
-function CamposDeIdentificacao({ form }: { form: ReturnType<typeof useForm<any>> }) {
+/**
+ * Quem chega por link compartilhado cai direto aqui e nunca viu o perfil da
+ * organização. O nome, a cidade e o selo de verificada são o mínimo para saber
+ * para quem o dinheiro está indo.
+ */
+function SeloDaOng({ ong }: { ong: OngDoProjeto }) {
+  const local = [ong.cidade, ong.estado].filter(Boolean).join(", ");
+
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
+      <Link
+        to={`/ongs/${ong.slug ?? ong.id}`}
+        className="inline-flex items-center gap-2 font-medium text-primary hover:underline"
+      >
+        <Building2 className="h-4 w-4" aria-hidden="true" />
+        {ong.nome}
+      </Link>
+
+      {ong.verificada_em && (
+        <span className="inline-flex items-center gap-1 text-sm font-medium text-success">
+          <BadgeCheck className="h-4 w-4" aria-hidden="true" />
+          ONG verificada
+        </span>
+      )}
+
+      {local && (
+        <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+          <MapPin className="h-4 w-4" aria-hidden="true" />
+          {local}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Antecipa a espera. Isso só era dito na tela de agradecimento, depois do
+ * envio: a pessoa voltava ao projeto, via a barra igual e achava que o
+ * registro tinha falhado.
+ */
+function AvisoDeConfirmacao() {
+  return (
+    <Callout tom="info" titulo="A barra do projeto não sobe na hora" className="mt-4">
+      Depois de registrar, sua doação fica aguardando a organização confirmar que recebeu — é
+      isso que mantém os números daqui honestos. Você recebe um e-mail quando a confirmação
+      sair.
+    </Callout>
+  );
+}
+
+/**
+ * Ação principal. No celular vira barra fixa no rodapé: o formulário é longo e
+ * o botão ficava fora do alcance do polegar depois do QR Code. Fica dentro do
+ * `<form>` de propósito, para continuar submetendo.
+ */
+function BarraDeAcao({
+  rotulo,
+  enviando,
+  desabilitado,
+}: {
+  rotulo: string;
+  enviando: boolean;
+  desabilitado?: boolean;
+}) {
+  return (
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 p-3 backdrop-blur md:static md:mt-4 md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
+      <div className="mx-auto max-w-2xl">
+        <Button
+          type="submit"
+          size="lg"
+          variant="cta"
+          className="pressionavel w-full shadow-cta"
+          disabled={enviando || desabilitado}
+        >
+          {enviando && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
+          {rotulo}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Identificação do doador, igual para item e dinheiro. Os dois esquemas estendem
+ * `identificacaoDoadorSchema`, então o componente enxerga só essa parte.
+ */
+function CamposDeIdentificacao({ form }: { form: UseFormReturn<IdentificacaoDoador> }) {
   return (
     <Card className="mt-4">
       <CardHeader>
-        <CardTitle className="text-lg">3. Quem está doando</CardTitle>
+        <CardTitle className="text-lg">Quem está doando</CardTitle>
         <CardDescription>
           Não é preciso criar senha. Usamos o e-mail para avisar quando a ONG confirmar.
         </CardDescription>

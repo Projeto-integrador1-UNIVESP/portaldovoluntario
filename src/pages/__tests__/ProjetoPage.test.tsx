@@ -23,6 +23,19 @@ vi.mock("@/contexts/AuthContext", () => ({
 }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
+// A página também conta as doações da ONG (taxa de confirmação). Sem este mock
+// o teste tentaria rede de verdade; o contador zerado esconde o bloco.
+vi.mock("@/integrations/supabase/client", () => {
+  const consulta = {
+    select: () => consulta,
+    eq: () => consulta,
+    insert: () => Promise.resolve({ error: null }),
+    then: (resolver: (r: unknown) => unknown) =>
+      Promise.resolve({ count: 0, data: null, error: null }).then(resolver),
+  };
+  return { supabase: { from: () => consulta } };
+});
+
 const renderizar = async (slug: string) => {
   const { default: ProjetoPage } = await import("@/pages/ProjetoPage");
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -87,14 +100,37 @@ describe("ProjetoPage", () => {
 
     await renderizar("campanha-do-agasalho");
 
-    expect(await screen.findByText("Do que este projeto precisa")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: /Do que este projeto precisa/ }),
+    ).toBeInTheDocument();
     expect(screen.getByText("Cobertor solteiro")).toBeInTheDocument();
-    expect(screen.getByText("30 de 100 un")).toBeInTheDocument();
+
+    // O número em destaque é o que falta; a barra fica como contexto.
+    expect(screen.getByText("Faltam 70 un")).toBeInTheDocument();
+    expect(screen.getByText("30 un de 100 un")).toBeInTheDocument();
     expect(screen.getByText("30%")).toBeInTheDocument();
 
     // A necessidade urgente é sinalizada; a que bateu a meta também.
     expect(screen.getByText("Urgente")).toBeInTheDocument();
     expect(screen.getByText("Meta atingida")).toBeInTheDocument();
+    expect(screen.getByText("R$ 2.000,00 já recebidos")).toBeInTheDocument();
+  });
+
+  it("explica a regra da confirmação junto dos botões de doar", async () => {
+    buscarProjeto.mockResolvedValue({
+      ...projetoBase,
+      necessidades: [{
+        id: "n1", tipo: "item", nome: "Cobertor", categoria: null, unidade: "un",
+        meta: 100, arrecadado: 0, urgencia: 2, prazo: null,
+      }],
+    });
+
+    await renderizar("campanha-do-agasalho");
+
+    expect(
+      await screen.findByText(/só andam quando a ONG confirma que recebeu/),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/não recebe nem retém o seu dinheiro/)).toBeInTheDocument();
   });
 
   it("leva ao fluxo de doação já com a necessidade escolhida", async () => {
@@ -126,6 +162,7 @@ describe("ProjetoPage", () => {
   it("exibe o selo de ONG verificada", async () => {
     buscarProjeto.mockResolvedValue(projetoBase);
     await renderizar("campanha-do-agasalho");
-    expect(await screen.findByLabelText("ONG verificada")).toBeInTheDocument();
+    // Visível, não só no aria-label: é sinal de confiança, não decoração.
+    expect(await screen.findByText("ONG verificada")).toBeInTheDocument();
   });
 });

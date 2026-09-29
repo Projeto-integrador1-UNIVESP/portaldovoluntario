@@ -1,165 +1,282 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  BadgeCheck, Building2, Eye, EyeOff, HandHeart, Landmark, Loader2, ShieldCheck,
+} from "lucide-react";
+import { toast } from "sonner";
+import type { LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { PublicShell } from "@/components/layout/PublicShell";
+import { Seo } from "@/components/common/Seo";
+import { Callout } from "@/components/common/Callout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Heart, Eye, EyeOff, Quote, HandHeart, Building2 } from "lucide-react";
-import { toast } from "sonner";
-import volunteers from "@/assets/login-volunteers.jpg";
-import donation from "@/assets/login-donation.jpg";
-import community from "@/assets/login-community.jpg";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import {
+  Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
+} from "@/components/ui/form";
+import { loginSchema, type LoginInput } from "@/lib/schemas/auth";
 
-const slides = [
-  {
-    img: volunteers,
-    title: "O poder do voluntariado",
-    text: "Uma tarde por mês já mantém projetos inteiros funcionando. Escolha um turno que caiba na sua rotina.",
-  },
-  {
-    img: donation,
-    title: "Cada doação importa",
-    text: "Pequenos gestos de solidariedade somados constroem grandes mudanças. Doe, voluntarie-se, multiplique impacto.",
-  },
-  {
-    img: community,
-    title: "Comunidades fortalecidas",
-    text: "Quando nos unimos por uma causa, criamos redes de apoio que protegem quem mais precisa.",
-  },
-];
+/**
+ * Entrar.
+ *
+ * A coluna ao lado do formulário já foi um carrossel de fotos com frases
+ * genéricas. Saiu: era conteúdo de preenchimento que se movia sozinho, o que
+ * ainda obrigava a oferecer pausa e respeitar `prefers-reduced-motion` (WCAG
+ * 2.2.2) para não informar nada. No lugar ficam as três garantias da
+ * plataforma — é o argumento que faz alguém criar conta aqui.
+ */
+
+/**
+ * Um `?redirect=` só pode levar para dentro do site.
+ *
+ * Quem resolve isso é o parser de URL, não comparação de prefixo: o react-router
+ * cai em `window.location.assign` quando o `pushState` estoura por ser
+ * cross-origin, então um destino externo sai do site de verdade. E a lista de
+ * grafias que viram `//evil.com` é maior do que parece — `/\evil.com` (o parser
+ * trata `\` como `/`) e `/%09/evil.com` (o tab é descartado) passariam por um
+ * teste de prefixo.
+ */
+function caminhoInterno(valor: string | null) {
+  if (!valor) return null;
+  try {
+    const url = new URL(valor, window.location.origin);
+    if (url.origin !== window.location.origin) return null;
+    return url.pathname + url.search + url.hash;
+  } catch {
+    return null;
+  }
+}
+
+/** Quem chega por redirect foi interrompido no meio de algo; a tela diz o quê. */
+function motivoDoRedirect(destino: string | null) {
+  if (!destino) return null;
+  if (destino.startsWith("/doar/")) {
+    return "Sua conta é o que permite a ONG confirmar, no seu nome, que a doação chegou — e é essa confirmação que faz a barra de progresso andar.";
+  }
+  // Só a página de um projeto pede inscrição; a listagem `/projetos` não.
+  if (destino.startsWith("/projetos/")) {
+    return "Para se inscrever como voluntário a organização precisa saber quem vai aparecer e como falar com você.";
+  }
+  return "Entre para continuar de onde você parou.";
+}
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const redirect = params.get("redirect");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [showPwd, setShowPwd] = useState(false);
-  const [slide, setSlide] = useState(0);
+  const [mostrarSenha, setMostrarSenha] = useState(false);
 
-  useEffect(() => {
-    const t = setInterval(() => setSlide((s) => (s + 1) % slides.length), 5500);
-    return () => clearInterval(t);
-  }, []);
+  const destino = caminhoInterno(params.get("redirect"));
+  const motivo = motivoDoRedirect(destino);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
+  const form = useForm<LoginInput>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+  });
+
+  const entrar = async ({ email, password }: LoginInput) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim().toLowerCase(),
+      password,
+    });
+
     if (error) {
-      toast.error(
-        "E-mail ou senha incorretos. Confira os dados ou use \"Esqueci minha senha\".",
-      );
-    } else {
-      toast.success("Login realizado!");
-      if (redirect) { navigate(redirect); return; }
-      const { data } = await supabase.from("user_roles").select("role").eq("user_id", (await supabase.auth.getUser()).data.user?.id || "");
-      const roles = data?.map(r => r.role) || [];
-      if (roles.includes("admin")) navigate("/admin");
-      else if (roles.includes("ong")) navigate("/ong");
-      else navigate("/");
+      toast.error('E-mail ou senha incorretos. Confira os dados ou use "Esqueci minha senha".');
+      return;
     }
+
+    toast.success("Tudo certo. Bom te ver de volta.");
+
+    if (destino) {
+      navigate(destino);
+      return;
+    }
+
+    // Sem destino explícito, cada papel cai no painel que usa de fato.
+    const { data: papeis } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", data.user?.id ?? "");
+    const lista = papeis?.map((p) => p.role) ?? [];
+
+    if (lista.includes("admin")) navigate("/admin");
+    else if (lista.includes("ong")) navigate("/ong");
+    else navigate("/");
   };
 
-  return (
-    <div className="min-h-screen grid lg:grid-cols-2 bg-background">
-      {/* Carrossel de notícias */}
-      <div className="relative hidden lg:block overflow-hidden bg-primary">
-        {slides.map((s, i) => (
-          <div
-            key={i}
-            className="absolute inset-0 transition-opacity duration-1000"
-            style={{ opacity: i === slide ? 1 : 0 }}
-          >
-            <img src={s.img} alt={s.title} className="absolute inset-0 h-full w-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/60 to-primary/30" />
-            <div className="relative z-10 flex h-full flex-col justify-end p-12 text-primary-foreground">
-              <Quote className="h-10 w-10 mb-4 opacity-80" />
-              <h2 className="text-3xl font-bold mb-3 leading-tight">{s.title}</h2>
-              <p className="text-lg opacity-90 max-w-md">{s.text}</p>
-            </div>
-          </div>
-        ))}
-        <div className="absolute bottom-6 right-8 z-20 flex gap-2">
-          {slides.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setSlide(i)}
-              aria-label={`Slide ${i + 1}`}
-              className={`h-2 rounded-full transition-all ${i === slide ? "w-8 bg-primary-foreground" : "w-2 bg-primary-foreground/50"}`}
-            />
-          ))}
-        </div>
-        <Link to="/" aria-label="Solidariedade, página inicial" className="absolute top-6 left-8 z-20 flex items-center gap-2 text-primary-foreground font-bold">
-          <Heart className="h-6 w-6" /> Solidariedade
-        </Link>
-      </div>
+  const enviando = form.formState.isSubmitting;
 
-      {/* Formulário */}
-      <div className="flex items-center justify-center p-6 sm:p-12">
-        <div className="w-full max-w-sm animate-fade-in">
-          <Link to="/" aria-label="Solidariedade, página inicial" className="lg:hidden inline-flex items-center gap-2 mb-8 text-primary font-bold">
-            <Heart className="h-6 w-6" /> Solidariedade
-          </Link>
-          <h1 className="text-3xl font-bold mb-2">Bem-vindo de volta</h1>
-          <p className="text-muted-foreground mb-8">Entre para continuar transformando vidas.</p>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="seu@email.com" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPwd ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  placeholder="••••••••"
-                  className="pr-10"
+  return (
+    <PublicShell>
+      <Seo title="Entrar" noIndex />
+
+      <div className="container grid items-start gap-8 py-14 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:gap-12">
+        <Card className="rounded-xl shadow-sutil">
+          <CardHeader>
+            <h1 className="font-display text-2xl font-bold">Entrar</h1>
+            <p className="text-sm text-muted-foreground">
+              Use o e-mail e a senha que você cadastrou.
+            </p>
+          </CardHeader>
+
+          <CardContent>
+            {motivo && (
+              <Callout tom="info" titulo="Por que precisamos que você entre" className="mb-6">
+                {motivo}
+              </Callout>
+            )}
+
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(entrar)} noValidate className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>E-mail</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          autoComplete="email"
+                          placeholder="voce@exemplo.com"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPwd((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  aria-label={showPwd ? "Ocultar senha" : "Mostrar senha"}
+
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Senha</FormLabel>
+                      <div className="relative">
+                        <FormControl>
+                          <Input
+                            type={mostrarSenha ? "text" : "password"}
+                            autoComplete="current-password"
+                            className="pr-10"
+                            {...field}
+                          />
+                        </FormControl>
+                        <button
+                          type="button"
+                          onClick={() => setMostrarSenha((v) => !v)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
+                        >
+                          {mostrarSenha ? (
+                            <EyeOff className="h-4 w-4" aria-hidden="true" />
+                          ) : (
+                            <Eye className="h-4 w-4" aria-hidden="true" />
+                          )}
+                        </button>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex justify-end">
+                  <Link
+                    to="/esqueci-senha"
+                    className="text-sm text-primary underline underline-offset-2"
+                  >
+                    Esqueci minha senha
+                  </Link>
+                </div>
+
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="pressionavel w-full"
+                  disabled={enviando}
                 >
-                  {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-            </div>
-            <div className="flex justify-end">
-              <Link to="/esqueci-senha" className="text-sm text-primary underline underline-offset-2">
-                Esqueci minha senha
-              </Link>
-            </div>
-            <Button type="submit" className="w-full" disabled={loading} size="lg">
-              {loading ? "Entrando..." : "Entrar"}
-            </Button>
-            <div className="pt-3 space-y-3">
-              <p className="text-sm text-muted-foreground text-center">Não tem conta? Escolha como participar:</p>
-              <div className="grid grid-cols-2 gap-3">
-                <Button type="button" variant="outline" className="h-auto min-h-24 flex-col gap-2 whitespace-normal text-center" asChild>
-                  <Link to="/cadastro?tipo=doador" aria-label="Criar conta de doador e acompanhar projetos">
-                    <HandHeart className="h-5 w-5" />
-                    <span>Doador e projetos</span>
+                  {enviando && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+                  {enviando ? "Entrando…" : "Entrar"}
+                </Button>
+              </form>
+            </Form>
+
+            <div className="mt-6 border-t pt-6">
+              <p className="text-sm text-muted-foreground">
+                Ainda não tem conta? Escolha como participar:
+              </p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <Button
+                  variant="outline"
+                  asChild
+                  className="h-auto min-h-20 flex-col gap-2 whitespace-normal py-3 text-center"
+                >
+                  <Link to="/cadastro?tipo=doador">
+                    <HandHeart className="h-5 w-5 text-primary" aria-hidden="true" />
+                    <span>Quero doar ou ser voluntário</span>
                   </Link>
                 </Button>
-                <Button type="button" variant="outline" className="h-auto min-h-24 flex-col gap-2 whitespace-normal text-center" asChild>
-                  <Link to="/cadastro?tipo=ong" aria-label="Cadastrar ONG com chave de acesso">
-                    <Building2 className="h-5 w-5" />
-                    <span>ONG com chave</span>
+                <Button
+                  variant="outline"
+                  asChild
+                  className="h-auto min-h-20 flex-col gap-2 whitespace-normal py-3 text-center"
+                >
+                  <Link to="/cadastro?tipo=ong">
+                    <Building2 className="h-5 w-5 text-primary" aria-hidden="true" />
+                    <span>Sou ONG e tenho uma chave</span>
                   </Link>
                 </Button>
               </div>
             </div>
-          </form>
-        </div>
+          </CardContent>
+        </Card>
+
+        <aside
+          className="rounded-xl border bg-secondary/50 p-6"
+          aria-labelledby="titulo-garantias"
+        >
+          <h2 id="titulo-garantias" className="font-display text-lg font-bold">
+            O que esta plataforma garante
+          </h2>
+          <ul className="mt-6 space-y-6">
+            <Garantia
+              icone={BadgeCheck}
+              titulo="A barra de progresso é um recibo, não uma promessa"
+              texto="Ela só sobe quando alguém da organização confirma que o item ou o valor chegou. Por isso ela demora mais para andar — e por isso ela significa alguma coisa."
+            />
+            <Garantia
+              icone={Landmark}
+              titulo="O Pix cai direto na conta da ONG"
+              texto="A plataforma não retém o dinheiro em nenhum momento e não cobra taxa — nem de você, nem da organização."
+            />
+            <Garantia
+              icone={ShieldCheck}
+              titulo="Pedimos o mínimo de dados"
+              texto="Nome, e-mail e senha. Telefone e endereço só quando forem necessários, por exemplo para agendar a coleta de uma doação."
+            />
+          </ul>
+        </aside>
       </div>
-    </div>
+    </PublicShell>
+  );
+}
+
+function Garantia({
+  icone: Icone, titulo, texto,
+}: {
+  icone: LucideIcon;
+  titulo: string;
+  texto: string;
+}) {
+  return (
+    <li className="flex items-start gap-3">
+      <Icone className="mt-0.5 h-5 w-5 shrink-0 text-success" aria-hidden="true" />
+      <div className="min-w-0">
+        <p className="font-semibold">{titulo}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{texto}</p>
+      </div>
+    </li>
   );
 }

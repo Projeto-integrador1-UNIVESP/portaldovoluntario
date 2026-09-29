@@ -1,0 +1,62 @@
+/*
+ * Acabamento: detalhes pequenos que, somados, separam uma interface cuidada
+ * de uma interface montada. Quase tudo aqui é uma linha.
+ */
+
+@layer base {
+  ::selection {
+    background-color: hsl(var(--primary) / 0.16);
+  }
+
+  html {
+    /* Sem isto, o iOS Safari mostra um flash cinza no toque que conflita com
+       o nosso próprio feedback de .pressionavel. */
+    -webkit-tap-highlight-color: transparent;
+    /* Âncora não fica escondida atrás do cabeçalho fixo. */
+    scroll-padding-top: 5rem;
+  }
+
+  button,
+  a,
+  [role="button"],
+  label {
+    /* Elimina o atraso de 300ms herdado do duplo toque para zoom. */
+    touch-action: manipulation;
+  }
+
+  /* Abaixo de 16px o iOS dá zoom ao focar o campo e desmonta o layout. */
+  input,
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+  }
+
+  /* Títulos não terminam com uma palavra órfã sozinha na última linha. */
+  h1, h2, h3,
+  .titulo-equilibrado {
+    text-wrap: balance;
+  }
+
+  /* Dinheiro, quantidade e percentual nunca mudam de largura ao atualizar. */
+  .numero,
+  [data-numero] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  :where([id]) {
+    scroll-margin-top: 5rem;
+  }
+}
+
+@layer utilities {
+  /* Impede a rolagem de vazar para a página atrás de modal e gaveta. */
+  .rolagem-contida {
+    overscroll-behavior: contain;
+  }
+
+  /* Respeita a área segura de aparelhos com notch ou barra de gestos: sem
+     isto, a barra fixa de doar fica embaixo do indicador e o toque não chega. */
+  .barra-fixa-inferior {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+}
