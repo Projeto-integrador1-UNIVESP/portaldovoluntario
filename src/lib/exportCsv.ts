@@ -8,11 +8,11 @@ import { SUCESSO } from "@/lib/copy";
  */
 export function exportToCsv(
   filename: string,
-  rows: Record<string, any>[],
+  rows: Record<string, unknown>[],
   opcoes: { silencioso?: boolean } = {},
 ) {
   const headers = rows.length ? Object.keys(rows[0]) : ["sem_dados"];
-  const escape = (v: any) => {
+  const escape = (v: unknown) => {
     if (v === null || v === undefined) return "";
     const s = String(v).replace(/"/g, '""');
     return /[",\n;]/.test(s) ? `"${s}"` : s;
