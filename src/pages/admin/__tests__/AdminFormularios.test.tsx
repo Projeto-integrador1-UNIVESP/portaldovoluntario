@@ -156,6 +156,24 @@ describe("formulários do painel enviados vazios", () => {
     await esperaInvalido(dialogo, "novo-senha", /Informe uma senha|A senha precisa ter/);
   }, 20_000);
 
+  it("Editar usuário: apagar o nome mostra o erro no campo", async () => {
+    dados.profiles = [
+      { id: "perfil-1", user_id: "user-1", nome: "Maria Souza", email: "maria@exemplo.com.br", ativo: true, created_at: "2026-09-01" },
+    ];
+    try {
+      await renderizar("AdminUsuarios");
+      await userEvent.click(await screen.findByRole("button", { name: "Editar Maria Souza" }));
+      const dialogo = within(await screen.findByRole("dialog"));
+      await userEvent.clear(dialogo.getByLabelText(/Nome/));
+      await userEvent.click(dialogo.getByRole("button", { name: "Salvar cadastro" }));
+
+      await esperaInvalido(dialogo, "usuario-nome", /Informe o nome/);
+      expect(escritas.filter((e) => e.tabela === "profiles")).toHaveLength(0);
+    } finally {
+      delete dados.profiles;
+    }
+  }, 20_000);
+
   it("Projeto: nome, ONG (Select) e datas", async () => {
     await renderizar("AdminProjetos");
     const dialogo = await abrir(/^Novo projeto$/);
