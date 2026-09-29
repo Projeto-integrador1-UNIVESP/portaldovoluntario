@@ -94,6 +94,36 @@ describe("ProjetosPage", () => {
     expect(titulos).toEqual(["Longe da meta", "Quase pronto"]);
   });
 
+  /**
+   * Ritmo editorial: na primeira página sem filtro, o primeiro projeto ocupa
+   * duas colunas. Com filtro ativo a lista é resultado de busca e volta a ser
+   * uma grade regular.
+   */
+  it("destaca o primeiro projeto como card largo só na primeira página sem filtros", async () => {
+    const usuario = userEvent.setup();
+    rpc.mockResolvedValue({
+      data: [
+        linha({ id: "p1", nome_projeto: "Primeiro", total_encontrado: 2 }),
+        linha({ id: "p2", nome_projeto: "Segundo", total_encontrado: 2 }),
+      ],
+      error: null,
+    });
+    await renderizar();
+
+    await screen.findByText("Primeiro");
+    const cards = screen.getAllByRole("link", { name: /Ver o que falta/ });
+    expect(cards[0]).toHaveClass("sm:col-span-2");
+    expect(cards[1]).not.toHaveClass("sm:col-span-2");
+
+    await usuario.type(screen.getByLabelText("Buscar projetos"), "Primeiro");
+    await usuario.click(screen.getByRole("button", { name: "Buscar" }));
+
+    await screen.findByRole("button", { name: "Limpar filtros" });
+    for (const card of screen.getAllByRole("link", { name: /Ver o que falta/ })) {
+      expect(card).not.toHaveClass("sm:col-span-2");
+    }
+  });
+
   it("não pisca o estado vazio enquanto carrega", async () => {
     rpc.mockReturnValue(new Promise(() => {}));
     await renderizar();
