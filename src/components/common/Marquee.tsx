@@ -47,8 +47,8 @@ export function Marquee({ children, duracao = 48, rotulo, className }: MarqueePr
           onClick={() => setPausado((p) => !p)}
           aria-pressed={pausado}
           aria-controls={id}
-          aria-label={pausado ? "Retomar a rolagem" : "Pausar a rolagem"}
-          className="absolute -bottom-1 right-2 inline-flex h-8 w-8 items-center justify-center rounded-full border bg-card/90 text-muted-foreground shadow-sutil backdrop-blur-sm hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          aria-label="Pausar a rolagem"
+          className="alvo-confortavel absolute -bottom-1 right-2 inline-flex h-8 w-8 items-center justify-center rounded-full border bg-card/90 text-muted-foreground shadow-sutil backdrop-blur-sm hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           {pausado ? <Play className="h-3.5 w-3.5" aria-hidden="true" /> : <Pause className="h-3.5 w-3.5" aria-hidden="true" />}
         </button>
