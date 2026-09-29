@@ -1,20 +1,24 @@
+import { Link } from "react-router-dom";
 import { PaginaDeConteudo } from "./PaginaDeConteudo";
+import { formatDate } from "@/lib/format";
 
 /** Versão do texto registrada junto com o aceite do usuário no cadastro. */
-export const VERSAO_TERMOS = "2026-09-28";
+export const VERSAO_TERMOS = "2026-09-29";
 
 export default function TermosPage() {
   return (
     <PaginaDeConteudo
+      eyebrow="Legal"
       titulo="Termos de Uso"
-      descricao={`Regras de uso da plataforma, na versão de ${new Date(VERSAO_TERMOS).toLocaleDateString("pt-BR")}.`}
+      descricao={`Regras de uso da plataforma. Versão de ${formatDate(VERSAO_TERMOS)}.`}
+      tipo="website"
     >
       <h2>1. O que a plataforma é</h2>
       <p>
-        O Voluntá é um espaço que conecta organizações a doadores e voluntários.
-        Nós <strong>não processamos pagamentos</strong>: quando você doa em dinheiro, a
-        transferência acontece diretamente entre você e a ONG, por PIX ou transferência
-        bancária, usando os dados que a organização cadastrou.
+        A Voluntá conecta organizações a doadores e voluntários. Nós{" "}
+        <strong>não processamos pagamentos</strong>: quando você doa em dinheiro, a
+        transferência acontece direto entre você e a ONG, por Pix, usando a chave que a
+        organização cadastrou.
       </p>
 
       <h2>2. Responsabilidade pelas informações</h2>
@@ -37,15 +41,16 @@ export default function TermosPage() {
 
       <h2>4. Doações e voluntariado</h2>
       <p>
-        Uma doação registrada fica com status <em>aguardando confirmação</em> até que a ONG
-        confirme o recebimento. Inscrições em turnos de voluntariado podem ser canceladas
-        por você ou pela organização, com aviso prévio sempre que possível.
+        Uma doação registrada fica como <em>aguardando confirmação</em> até que a ONG confirme
+        o recebimento. Inscrições em turnos de voluntariado podem ser canceladas por você ou
+        pela organização, com aviso prévio sempre que possível.
       </p>
 
       <h2>5. Encerramento</h2>
       <p>
-        Você pode encerrar sua conta quando quiser. Podemos suspender contas que violem
-        estes termos, especialmente em casos de fraude contra doadores ou organizações.
+        Para encerrar sua conta, escreva para a equipe pelo contato indicado na{" "}
+        <Link to="/privacidade">Política de Privacidade</Link>. Podemos suspender contas que
+        violem estes termos, em especial nos casos de fraude contra doadores ou organizações.
       </p>
 
       <h2>6. Mudanças nestes termos</h2>
