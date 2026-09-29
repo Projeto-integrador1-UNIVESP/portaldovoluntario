@@ -279,13 +279,16 @@ export default function ProjetosPage() {
               setOrdem(v as Ordem);
             }}
           >
-            <SelectTrigger id={`${idPrefixo}-ordem`} className={gatilho}>
-              <span className="flex min-w-0 items-center gap-2">
-                {!rotulosVisiveis && (
-                  <ArrowUpDown className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                )}
-                <SelectValue />
-              </span>
+            {/* Sem rótulo visível, o ícone diz que este select é de ordem. O
+                chevron do trigger é o último filho e vai para a direita. */}
+            <SelectTrigger
+              id={`${idPrefixo}-ordem`}
+              className={cn(gatilho, !rotulosVisiveis && "justify-start gap-2 [&>svg:last-child]:ml-auto")}
+            >
+              {!rotulosVisiveis && (
+                <ArrowUpDown className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+              )}
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {Object.entries(ORDENACOES).map(([valor, rotulo]) => (
