@@ -133,6 +133,26 @@
   }
 }
 
+@layer utilities {
+  /*
+   * Confirmação de recebimento.
+   *
+   * É a única animação do produto que carrega significado em vez de enfeite:
+   * quando a ONG registra que a doação chegou, a barra sobe na frente de quem
+   * está olhando. O overshoot leve do easing elástico é o que faz parecer que
+   * algo aconteceu de verdade, e não que a tela apenas trocou de número.
+   */
+  .confirmou {
+    animation: pulsar-sucesso var(--duracao-lenta) var(--easing-elastico) both;
+  }
+
+  /* O valor só anima quando muda de fato. Contador que sobe a cada
+     carregamento de página é enfeite: adiciona espera e nenhuma informação. */
+  .numero-vivo {
+    transition: color var(--duracao-media) var(--easing-suave);
+  }
+}
+
 @keyframes pulsar-sucesso {
   0% { transform: scale(0.8); opacity: 0; }
   60% { transform: scale(1.06); opacity: 1; }

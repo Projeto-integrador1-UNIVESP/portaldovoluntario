@@ -60,7 +60,10 @@ export function ProgressBar({
       >
         <div
           className={cn(
-            "barra-anima h-full transition-[width] duration-500",
+            // A transição de largura é o que faz a barra subir na frente de
+            // quem olha quando a ONG confirma, em vez de simplesmente aparecer
+            // maior no próximo carregamento.
+            "h-full transition-[width] duration-700 ease-out motion-reduce:transition-none",
             atingida ? "bg-success" : "bg-primary",
           )}
           style={{ width: `${confirmado}%` }}

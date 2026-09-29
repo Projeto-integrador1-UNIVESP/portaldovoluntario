@@ -15,6 +15,8 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { ErrorState } from "@/components/common/ErrorState";
 import { NeedItem } from "@/components/common/NeedItem";
 import { ShareButton } from "@/components/common/ShareButton";
+import { LinhaDoTempoConfirmacoes } from "@/components/common/LinhaDoTempoConfirmacoes";
+import { useConfirmacoes } from "@/hooks/queries/useConfirmacoes";
 import { TaxaDeConfirmacao } from "@/components/common/SeloConfirmacao";
 import { useTaxaConfirmacao } from "@/hooks/queries/useTaxaConfirmacao";
 import { Button } from "@/components/ui/button";
@@ -55,6 +57,7 @@ export default function ProjetoPage() {
    * público falta uma RPC pública agregada, fora do escopo desta tela.
    */
   const { data: taxa } = useTaxaConfirmacao(idOng);
+  const { data: confirmacoes } = useConfirmacoes(projeto?.id);
 
   const participar = async () => {
     if (!user) {
@@ -294,6 +297,13 @@ export default function ProjetoPage() {
             </Button>
           </div>
         </section>
+
+        {confirmacoes && confirmacoes.length > 0 && (
+
+          <LinhaDoTempoConfirmacoes confirmacoes={confirmacoes} className="mt-10" />
+
+        )}
+
 
         {projeto.descricao && (
           <section className="mt-10" aria-labelledby="titulo-sobre">
