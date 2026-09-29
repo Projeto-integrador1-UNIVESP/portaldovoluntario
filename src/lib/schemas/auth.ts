@@ -1,8 +1,10 @@
 import { z } from "zod";
+import { MENSAGENS } from "@/lib/copy";
 
 export const emailSchema = z
   .string()
-  .min(1, "Informe seu e-mail")
+  .trim()
+  .min(1, MENSAGENS.obrigatorio("seu e-mail"))
   .email("E-mail inválido");
 
 /**
@@ -18,7 +20,7 @@ export const regrasDeSenha = [
 
 export const senhaSchema = z
   .string()
-  .min(1, "Informe uma senha")
+  .min(1, MENSAGENS.obrigatorio("uma senha"))
   .superRefine((valor, ctx) => {
     for (const regra of regrasDeSenha) {
       if (!regra.testa(valor)) {
@@ -29,7 +31,7 @@ export const senhaSchema = z
 
 export const loginSchema = z.object({
   email: emailSchema,
-  password: z.string().min(1, "Informe sua senha"),
+  password: z.string().min(1, MENSAGENS.obrigatorio("sua senha")),
 });
 
 export const esqueciSenhaSchema = z.object({
@@ -43,7 +45,7 @@ export const redefinirSenhaSchema = z
   })
   .refine((dados) => dados.password === dados.confirmacao, {
     path: ["confirmacao"],
-    message: "As senhas não coincidem",
+    message: "As duas senhas precisam ser iguais",
   });
 
 export type LoginInput = z.infer<typeof loginSchema>;

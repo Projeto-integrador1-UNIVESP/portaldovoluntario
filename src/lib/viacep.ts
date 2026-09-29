@@ -6,16 +6,22 @@ export type EnderecoViaCep = {
   logradouro: string;
 };
 
+/** Depois disso o campo volta a ser preenchível à mão, sem "Buscando…" preso. */
+const TEMPO_LIMITE_MS = 6000;
+
 /**
- * Consulta o ViaCEP e devolve o endereço, ou `null` quando o CEP não existe
- * ou o serviço está fora do ar. Nesse caso o formulário segue preenchível à mão.
+ * Consulta o ViaCEP e devolve o endereço, ou `null` quando o CEP não existe,
+ * o serviço está fora do ar ou demora demais. Nesse caso o formulário segue
+ * preenchível à mão.
  */
 export async function buscarCep(cep: string): Promise<EnderecoViaCep | null> {
   const digitos = onlyDigits(cep, 8);
   if (digitos.length !== 8) return null;
 
   try {
-    const resposta = await fetch(`https://viacep.com.br/ws/${digitos}/json/`);
+    const resposta = await fetch(`https://viacep.com.br/ws/${digitos}/json/`, {
+      signal: AbortSignal.timeout(TEMPO_LIMITE_MS),
+    });
     if (!resposta.ok) return null;
 
     const dados = await resposta.json();
