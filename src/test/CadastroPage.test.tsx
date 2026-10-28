@@ -1,9 +1,9 @@
-
- // @vitest-environment jsdom
+// @vitest-environment jsdom
 
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import CadastroPage from "../pages/CadastroPage";
 
 vi.mock("@/integrations/supabase/client", () => ({
@@ -17,13 +17,19 @@ vi.mock("@/integrations/supabase/client", () => ({
   },
 }));
 
-describe("Cadastro do Portal do Voluntário", () => {
-  it("deve apresentar as opções de tipo de conta", () => {
-    render(
-      <MemoryRouter initialEntries={["/cadastro"]}>
+function renderCadastro(initialEntry = "/cadastro") {
+  return render(
+    <HelmetProvider>
+      <MemoryRouter initialEntries={[initialEntry]}>
         <CadastroPage />
       </MemoryRouter>
-    );
+    </HelmetProvider>
+  );
+}
+
+describe("Cadastro do Portal do Voluntário", () => {
+  it("deve apresentar as opções de tipo de conta", () => {
+    renderCadastro();
 
     expect(
       screen.getByRole("heading", {
@@ -45,11 +51,7 @@ describe("Cadastro do Portal do Voluntário", () => {
   });
 
   it("deve exibir o formulário de doador ao selecionar essa opção", () => {
-    render(
-      <MemoryRouter initialEntries={["/cadastro"]}>
-        <CadastroPage />
-      </MemoryRouter>
-    );
+    renderCadastro();
 
     fireEvent.click(
       screen.getByRole("button", {
@@ -63,25 +65,13 @@ describe("Cadastro do Portal do Voluntário", () => {
       })
     ).toBeInTheDocument();
 
-    expect(
-      screen.getByLabelText("Nome completo")
-    ).toBeInTheDocument();
-
-    expect(
-      screen.getByLabelText("E-mail")
-    ).toBeInTheDocument();
-
-    expect(
-      screen.getByLabelText("Senha")
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Nome completo")).toBeInTheDocument();
+    expect(screen.getByLabelText("E-mail")).toBeInTheDocument();
+    expect(screen.getByLabelText("Senha")).toBeInTheDocument();
   });
 
   it("deve exibir os campos específicos ao selecionar ONG", () => {
-    render(
-      <MemoryRouter initialEntries={["/cadastro"]}>
-        <CadastroPage />
-      </MemoryRouter>
-    );
+    renderCadastro();
 
     fireEvent.click(
       screen.getByRole("button", {
@@ -95,29 +85,14 @@ describe("Cadastro do Portal do Voluntário", () => {
       })
     ).toBeInTheDocument();
 
-    expect(
-      screen.getByLabelText("Nome da ONG")
-    ).toBeInTheDocument();
-
-    expect(
-      screen.getByLabelText("Chave de acesso")
-    ).toBeInTheDocument();
-
-    expect(
-      screen.getByLabelText("Nome do responsável")
-    ).toBeInTheDocument();
-
-    expect(
-      screen.getByLabelText("Telefone")
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Nome da ONG")).toBeInTheDocument();
+    expect(screen.getByLabelText("Chave de acesso")).toBeInTheDocument();
+    expect(screen.getByLabelText("Nome do responsável")).toBeInTheDocument();
+    expect(screen.getByLabelText("Telefone")).toBeInTheDocument();
   });
 
   it("deve abrir diretamente o formulário de ONG quando a URL contém tipo=ong", () => {
-    render(
-      <MemoryRouter initialEntries={["/cadastro?tipo=ong"]}>
-        <CadastroPage />
-      </MemoryRouter>
-    );
+    renderCadastro("/cadastro?tipo=ong");
 
     expect(
       screen.getByRole("heading", {
